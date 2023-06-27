@@ -2,9 +2,9 @@ import { exec } from 'child_process';
 import fs from 'fs';
 import { addToImportFile } from './util';
 
-const skipFirst = true;
-const skipMid = true;
-const skipToMid: number | null = 34; // set to null to turn off
+const skipFirst = false;
+const skipMid = false;
+const skipToMid: number | null = null; // set to null to turn off
 
 export function witnessWeakestPreFiles(leanPath: string, funcName: string, parts: number, bufferWidth: number) {
 	console.log("Creating witness weakest pre files");

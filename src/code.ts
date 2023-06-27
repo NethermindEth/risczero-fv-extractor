@@ -141,6 +141,14 @@ function getIRLines(irLines: string[], argIdToName: Map<string, string>): [line:
 				const op1 = rhs.slice(op1Start, op1End);
 				const op2 = rhs.slice(op2Start, op2End);
 				fullLines.push([`"${name}" ←ₐ ⟨"${op1}"⟩ &₀ ⟨"${op2}"⟩`, nondet]);
+			} else if (rhs.startsWith("cirgen.bitAnd ")) {
+				const op1Start = rhs.indexOf("%");
+				const op1End = rhs.indexOf(" ", op1Start);
+				const op2Start = rhs.indexOf("%", op1End);
+				const op2End = rhs.indexOf(" ", op2Start);
+				const op1 = rhs.slice(op1Start, op1End);
+				const op2 = rhs.slice(op2Start, op2End);
+				fullLines.push([`"${name}" ←ₐ .BitAnd ⟨"${op1}"⟩ ⟨"${op2}"⟩`, nondet]);
 			} else {
 				throw `Unhandled line ${line}`;
 			}

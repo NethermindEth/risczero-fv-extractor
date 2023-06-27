@@ -3,7 +3,7 @@ import fs from 'fs';
 import { addToImportFile } from './util';
 
 const skipFirst = false;
-const skipMid = true;
+const skipMid = false;
 
 export function constraintsWeakestPreFiles(leanPath: string, funcName: string, parts: number, callback: () => void) {
 	console.log("Creating constraints weakest pre files");
