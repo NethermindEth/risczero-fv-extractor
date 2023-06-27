@@ -1,11 +1,12 @@
 import { exec } from 'child_process';
 import fs from 'fs';
 import { addToImportFile } from './util';
+import { IR } from './IR';
 
 const skip = false;
 
 export function createCodeFiles(leanPath: string, linesPerPart: number, callback: (funcName: string, constraintsParts: number, witnessParts: number) => void) {
-	console.log("Creating code files");
+	console.log(`Creating code files ${skip ? "skipped" : ""}`);
 	const witness = loadWitnessMLIR();
 	const constraints = loadConstraintsMLIR();
 	const [funcName, args, argIdToName] = parseFuncLine(witness[1]);
@@ -82,8 +83,8 @@ function parseFuncLine(funcLine: string): [string, Arg[], Map<string, string>] {
 	return [funcName, args, argIdToName];
 }
 
-function getIRLines(irLines: string[], argIdToName: Map<string, string>): [line: string, nondet: boolean][] {
-	let fullLines: [line: string, nondet: boolean][] = [];
+function parseIRLines(irLines: string[], argIdToName: Map<string, string>): IR.Statement[] {
+	let instructions: IR.Statement[] = [];
 	let nondet = false;
 	for (let lineIndex = 2; lineIndex < irLines.length; ++lineIndex) {
 		const line = irLines[lineIndex];
@@ -92,18 +93,19 @@ function getIRLines(irLines: string[], argIdToName: Map<string, string>): [line:
 			const name = line.slice(0, nameEnd);
 			const rhsStart = nameEnd + " = ".length;
 			const rhs = line.slice(rhsStart);
+			let rhsVal: IR.Val | undefined;
 			if (rhs.startsWith("cirgen.const ")) {
 				const val = line.slice(rhsStart + "cirgen.const ".length);
-				fullLines.push([`"${name}" ←ₐ .Const ${val}`, nondet]);
+				rhsVal = new IR.Const(val);
 			} else if (rhs.startsWith("cirgen.true")) {
-				fullLines.push([`"${name}"←ₐ ⊤`, nondet]);
+				rhsVal = new IR.True();
 			} else if (rhs.startsWith("cirgen.get ")) {
 				const bufferArg = rhs.slice("cirgen.get ".length, rhs.indexOf("["));
 				const offset = rhs.slice(rhs.indexOf("[") + 1, rhs.indexOf("]"));
 				const backStart = rhs.indexOf("back ") + "back ".length;
 				const backEnd = rhs.indexOf(" ", backStart);
 				const back = rhs.slice(backStart, backEnd);
-				fullLines.push([`"${name}" ←ₐ .Get ⟨"${argIdToName.get(bufferArg)}"⟩ ${back} ${offset}`, nondet]);
+				rhsVal = new IR.Get(`${argIdToName.get(bufferArg)}`, back, offset);
 			} else if (rhs.startsWith("cirgen.mul ")) {
 				const op1Start = "cirgen.mul ".length;
 				const op1End = rhs.indexOf(" ", op1Start);
@@ -111,7 +113,7 @@ function getIRLines(irLines: string[], argIdToName: Map<string, string>): [line:
 				const op2End = rhs.indexOf(" ", op2Start);
 				const op1 = rhs.slice(op1Start, op1End);
 				const op2 = rhs.slice(op2Start, op2End);
-				fullLines.push([`"${name}" ←ₐ .Mul ⟨"${op1}"⟩ ⟨"${op2}"⟩`, nondet]);
+				rhsVal = new IR.BinOp("Mul", op1, op2);
 			} else if (rhs.startsWith("cirgen.add ")) {
 				const op1Start = "cirgen.add ".length;
 				const op1End = rhs.indexOf(" ", op1Start);
@@ -119,7 +121,7 @@ function getIRLines(irLines: string[], argIdToName: Map<string, string>): [line:
 				const op2End = rhs.indexOf(" ", op2Start);
 				const op1 = rhs.slice(op1Start, op1End);
 				const op2 = rhs.slice(op2Start, op2End);
-				fullLines.push([`"${name}" ←ₐ .Add ⟨"${op1}"⟩ ⟨"${op2}"⟩`, nondet]);
+				rhsVal = new IR.BinOp("Add", op1, op2);
 			} else if (rhs.startsWith("cirgen.sub ")) {
 				const op1Start = "cirgen.sub ".length;
 				const op1End = rhs.indexOf(" ", op1Start);
@@ -127,12 +129,12 @@ function getIRLines(irLines: string[], argIdToName: Map<string, string>): [line:
 				const op2End = rhs.indexOf(" ", op2Start);
 				const op1 = rhs.slice(op1Start, op1End);
 				const op2 = rhs.slice(op2Start, op2End);
-				fullLines.push([`"${name}" ←ₐ .Sub ⟨"${op1}"⟩ ⟨"${op2}"⟩`, nondet]);
+				rhsVal = new IR.BinOp("Sub", op1, op2);
 			} else if (rhs.startsWith("cirgen.isz ")) {
 				const opStart = rhs.indexOf("%");
 				const opEnd = rhs.indexOf(" ", opStart);
 				const op = rhs.slice(opStart, opEnd);
-				fullLines.push([`"${name}" ←ₐ ??₀⟨"${op}"⟩`, nondet]);
+				rhsVal = new IR.IsZ(op);
 			} else if (rhs.startsWith("cirgen.and_eqz ")) {
 				const op1Start = rhs.indexOf("%");
 				const op1End = rhs.indexOf(",", op1Start);
@@ -140,7 +142,7 @@ function getIRLines(irLines: string[], argIdToName: Map<string, string>): [line:
 				const op2End = rhs.indexOf(" ", op2Start);
 				const op1 = rhs.slice(op1Start, op1End);
 				const op2 = rhs.slice(op2Start, op2End);
-				fullLines.push([`"${name}" ←ₐ ⟨"${op1}"⟩ &₀ ⟨"${op2}"⟩`, nondet]);
+				rhsVal = new IR.AndEqz(op1, op2);
 			} else if (rhs.startsWith("cirgen.bitAnd ")) {
 				const op1Start = rhs.indexOf("%");
 				const op1End = rhs.indexOf(" ", op1Start);
@@ -148,10 +150,11 @@ function getIRLines(irLines: string[], argIdToName: Map<string, string>): [line:
 				const op2End = rhs.indexOf(" ", op2Start);
 				const op1 = rhs.slice(op1Start, op1End);
 				const op2 = rhs.slice(op2Start, op2End);
-				fullLines.push([`"${name}" ←ₐ .BitAnd ⟨"${op1}"⟩ ⟨"${op2}"⟩`, nondet]);
+				rhsVal = new IR.BinOp("BitAnd", op1, op2);
 			} else {
 				throw `Unhandled line ${line}`;
 			}
+			instructions.push(new IR.Assign(name, rhsVal, nondet));
 		} else if (line.startsWith("cirgen.nondet ")) {
 			nondet = true;
 		} else if (line.startsWith("cirgen.set ")) {
@@ -164,13 +167,13 @@ function getIRLines(irLines: string[], argIdToName: Map<string, string>): [line:
 			const buffer = line.slice(bufferStart, bufferEnd);
 			const index = line.slice(indexStart, indexEnd);
 			const val = line.slice(valStart, valEnd);
-			const bufferName = argIdToName.get(buffer);
-			fullLines.push([`⟨"${bufferName}"⟩[${index}] ←ᵢ ⟨"${val}"⟩`, nondet]);
+			const bufferName = `${argIdToName.get(buffer)}`;
+			instructions.push(new IR.SetInstr(bufferName, index, val, nondet));
 		} else if (line.startsWith("cirgen.eqz ")) {
 			const valStart = line.indexOf("%");
 			const valEnd = line.indexOf(" ", valStart);
 			const val = line.slice(valStart, valEnd);
-			fullLines.push([`?₀ ⟨"${val}"⟩`, nondet]);
+			instructions.push(new IR.Eqz(val, nondet));
 		} else if (line.startsWith("}") && nondet == true) {
 			nondet = false;
 		} else if (line.startsWith("cirgen.barrier ")) {
@@ -181,49 +184,43 @@ function getIRLines(irLines: string[], argIdToName: Map<string, string>): [line:
 			throw `Unhandled line ${line}`;
 		}
 	}
-	return fullLines;
+	return instructions;
 }
 
-function irLinesToLean(lines: [string, boolean][]) {
-	const [combinedText, nonDet] = lines.reduce(([acc, accNondet], [line, lineNondet]) => {
-		if (accNondet) {
-			if (lineNondet) {
-				if (acc == "") {
-					return [`  nondet (\n    ${line})`, true];
-				} else {
-					return [`${acc};\n    ${line}`, true];
-				}
+function irLinesToLean(ir: IR.Statement[]): string {
+	let nondet = false;
+	let res = "";
+	for (let i = 0; i < ir.length; ++i) {
+		//Add the continuation between the previous statement and this
+		if (ir[i].nondet && !nondet) {
+			if (i == 0) {
+				res = "  nondet (\n    ";
 			} else {
-				if (acc == "") {
-					return [`  ${line}`, false];
-				} else {
-					return [`${acc}\n  );\n  ${line}`, false];
-				}
+				res = `${res};\n  nondet (\n    `;
 			}
+			nondet = true;
+		} else if (!ir[i].nondet && nondet) {
+			res = `${res}\n  );\n  `;
+			nondet = false;
+		} else if (i == 0) {
+			res = "  ";
+		} else if (nondet) {
+			res = `${res};\n    `;
 		} else {
-			if (lineNondet) {
-				if (acc == "") {
-					return [`  nondet (\n    ${line}`, true];
-				} else {
-					return [`${acc};\n  nondet (\n    ${line}`, true];
-				}
-			} else {
-				if (acc == "") {
-					return [`  ${line}`, false];
-				} else {
-					return [`${acc};\n  ${line}`, false];
-				}
-			}
+			res = `${res};\n  `;
 		}
-	}, ["", false]);
-	if (nonDet) {
-		return `${combinedText}\n  )`;
-	} else {
-		return combinedText;
+
+		//Add the current statement
+		res = `${res}${ir[i].toString()}`
+
+		if (i == ir.length - 1 && nondet) {
+			res = `${res}\n  )`
+		}
 	}
+	return res;
 }
 
-function irLinesToParts(lines: [string, boolean][], linesPerPart: number): string {
+function irLinesToParts(lines: IR.Statement[], linesPerPart: number): string {
 	let output: string[] = [];
 	for (let i = 0; i * linesPerPart < lines.length; ++i) {
 		output.push(`def part${i} : MLIRProgram :=`);
@@ -249,7 +246,7 @@ function getConstraintsReturn(constraintsCode: string[]): string {
 				const op = line.slice(opStart, opEnd);
 				return [
 					"def getReturn (st: State) : Prop :=",
-					`  st.props[(⟨"${op}"⟩: PropVar)].get!`
+					`  st.constraintsInVar ⟨"${op}"⟩`
 				].join("\n");
 			} else {
 				return "";
@@ -266,7 +263,7 @@ function parts(length: number, linesPerPart: number): string[] {
 	return output.map(i => `part${i}`);
 }
 
-function partsCombine(fullLines: [string, boolean][], linesPerPart: number): string {
+function partsCombine(fullLines: IR.Statement[], linesPerPart: number): string {
 	let tactics: string[] = [];
 	for (let part = 0; part * linesPerPart < fullLines.length; ++part) {
 		tactics.push(`  unfold part${part}`);
@@ -274,7 +271,7 @@ function partsCombine(fullLines: [string, boolean][], linesPerPart: number): str
 			tactics.push(`  rfl`)
 		} else {
 			for (let i = 0; i < linesPerPart && part * linesPerPart + i < fullLines.length; ++i) {
-				const [_, nondet] = fullLines[part * linesPerPart + i];
+				const nondet = fullLines[part * linesPerPart + i].nondet;
 				if (!nondet) {
 					if (i == linesPerPart - 1) {
 						tactics.push(`  apply MLIR.seq_step_eq\n  intro st`)
@@ -283,7 +280,7 @@ function partsCombine(fullLines: [string, boolean][], linesPerPart: number): str
 					}
 				} else {
 					// TODO range check this
-					const [_, nextNondet] = fullLines[part * linesPerPart + i + 1]
+					const nextNondet = fullLines[part * linesPerPart + i + 1].nondet
 					if (nextNondet) { // nondet s1; s2 = nondet (s1; s3); s4
 						if (i == linesPerPart - 1) {
 							tactics.push(`  apply MLIR.nondet_step_eq\n  intro st`)
@@ -311,7 +308,7 @@ function partsCombine(fullLines: [string, boolean][], linesPerPart: number): str
 }
 
 function createWitnessCodeLean(funcName: string, witness: string[], argIdToName: Map<string, string>, linesPerPart: number): [string, number] {
-	const witnessFullLines = getIRLines(witness, argIdToName);
+	const witnessFullLines = parseIRLines(witness, argIdToName);
 	return [[
 		"import Risc0.Basic",
 		"import Risc0.Lemmas",
@@ -337,7 +334,7 @@ function createWitnessCodeLean(funcName: string, witness: string[], argIdToName:
 }
 
 function createConstraintsCodeLean(funcName: string, constraints: string[], argIdToName: Map<string, string>, linesPerPart: number): [string, number] {
-	const constraintsFullLines = getIRLines(constraints, argIdToName);
+	const constraintsFullLines = parseIRLines(constraints, argIdToName);
 	return [[
 		"import Risc0.Basic",
 		"import Risc0.Lemmas",
