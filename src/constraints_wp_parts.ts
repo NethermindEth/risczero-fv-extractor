@@ -2,8 +2,8 @@ import { exec } from 'child_process';
 import fs from 'fs';
 import { addToImportFile } from './util';
 
-const skipFirst = false;
-const skipMid = false;
+const skipFirst = true;
+const skipMid = true;
 
 export function constraintsWeakestPreFiles(leanPath: string, funcName: string, parts: number, callback: () => void) {
 	console.log("Creating constraints weakest pre files");

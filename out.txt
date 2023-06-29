@@ -1,0 +1,330 @@
+Creating code files unopt skipped 
+moved "%0" ←ₐ .Const 127 71
+Proved optimised_behaviour1
+moved "%1" ←ₐ .Const 48 59
+Proved optimised_behaviour2
+moved "%2" ←ₐ .Const 1981808641 56
+Proved optimised_behaviour3
+moved "%3" ←ₐ .Const 64 54
+Proved optimised_behaviour4
+moved "%4" ←ₐ .Const 3 48
+Proved optimised_behaviour5
+moved "%5" ←ₐ .Const 1509949441 45
+Proved optimised_behaviour6
+moved "%6" ←ₐ .Const 12 43
+Proved optimised_behaviour7
+moved "%7" ←ₐ .Const 4 76
+Proved optimised_behaviour8
+moved "%8" ←ₐ .Const 1 30
+Proved optimised_behaviour9
+moved "%9" ←ₐ .Const 1006632961 27
+Proved optimised_behaviour10
+moved "%10" ←ₐ .Const 6 25
+Proved optimised_behaviour11
+moved "%11" ←ₐ .Const 2 87
+Proved optimised_behaviour12
+moved "%12" ←ₐ .Const 1761607681 21
+Proved optimised_behaviour13
+moved "%13" ←ₐ .Const 8 19
+Proved optimised_behaviour14
+moved "%14" ←ₐ .Const 1887436801 16
+Proved optimised_behaviour15
+moved "%15" ←ₐ .Const 16 14
+Proved optimised_behaviour16
+moved "%16" ←ₐ .Const 1950351361 11
+Proved optimised_behaviour17
+moved "%17" ←ₐ .Const 96 9
+Proved optimised_behaviour18
+moved "%18" ←ₐ .Const 1997537281 6
+Proved optimised_behaviour19
+moved "%19" ←ₐ .Const 128 4
+Proved optimised_behaviour20
+moved "%20" ←ₐ .Get ⟨"in"⟩ 0 0 65
+Proved optimised_behaviour21
+moved "%21" ←ₐ .Get ⟨"in"⟩ 0 1 47
+Proved optimised_behaviour22
+moved "%22" ←ₐ .Get ⟨"in"⟩ 0 2 29
+Proved optimised_behaviour23
+moved "%23" ←ₐ .Get ⟨"in"⟩ 0 3 1
+Proved optimised_behaviour24
+moved "%24" ←ₐ .Get ⟨"data"⟩ 0 13 16
+Proved optimised_behaviour25
+moved "%25" ←ₐ .Get ⟨"data"⟩ 0 0 9
+Proved optimised_behaviour26
+moved "%26" ←ₐ .Get ⟨"data"⟩ 0 8 1
+Proved optimised_behaviour27
+moved "%28" ←ₐ .Get ⟨"data"⟩ 0 9 0
+moved "%30" ←ₐ .Get ⟨"data"⟩ 0 1 0
+moved "%35" ←ₐ .Get ⟨"data"⟩ 0 10 0
+moved "%41" ←ₐ .Get ⟨"data"⟩ 0 3 11
+Proved optimised_behaviour28
+moved "%42" ←ₐ .Get ⟨"data"⟩ 0 4 0
+moved "%44" ←ₐ .Get ⟨"data"⟩ 0 11 5
+Proved optimised_behaviour29
+moved "%45" ←ₐ .Get ⟨"data"⟩ 0 2 0
+moved "%47" ←ₐ .Get ⟨"data"⟩ 0 12 0
+moved "%55" ←ₐ .Get ⟨"data"⟩ 0 6 11
+Proved optimised_behaviour30
+moved "%56" ←ₐ .Get ⟨"data"⟩ 0 7 0
+moved "%58" ←ₐ .Get ⟨"data"⟩ 0 5 2
+Proved optimised_behaviour31
+moved "%59" ←ₐ .Get ⟨"data"⟩ 0 15 0
+moved "%63" ←ₐ .Get ⟨"data"⟩ 0 14 0
+moved "%69" ←ₐ .Get ⟨"data"⟩ 0 17 2
+Proved optimised_behaviour32
+moved "%70" ←ₐ .Get ⟨"data"⟩ 0 16 0
+"%0" ←ₐ .Const 127
+"%1" ←ₐ .Const 48
+"%2" ←ₐ .Const 1981808641
+"%3" ←ₐ .Const 64
+"%4" ←ₐ .Const 3
+"%5" ←ₐ .Const 1509949441
+"%6" ←ₐ .Const 12
+"%7" ←ₐ .Const 4
+"%8" ←ₐ .Const 1
+"%9" ←ₐ .Const 1006632961
+"%10" ←ₐ .Const 6
+"%11" ←ₐ .Const 2
+"%12" ←ₐ .Const 1761607681
+"%13" ←ₐ .Const 8
+"%14" ←ₐ .Const 1887436801
+"%15" ←ₐ .Const 16
+"%16" ←ₐ .Const 1950351361
+"%17" ←ₐ .Const 96
+"%18" ←ₐ .Const 1997537281
+"%19" ←ₐ .Const 128
+"%20" ←ₐ .Get ⟨"in"⟩ 0 0
+"%21" ←ₐ .Get ⟨"in"⟩ 0 1
+"%22" ←ₐ .Get ⟨"in"⟩ 0 2
+"%23" ←ₐ .Get ⟨"in"⟩ 0 3
+"%74" ←ₐ .BitAnd ⟨"%23"⟩ ⟨"%19"⟩
+"%75" ←ₐ .Mul ⟨"%74"⟩ ⟨"%18"⟩
+⟨"data"⟩[10] ←ᵢ ⟨"%75"⟩
+"%76" ←ₐ .BitAnd ⟨"%23"⟩ ⟨"%17"⟩
+"%77" ←ₐ .Mul ⟨"%76"⟩ ⟨"%16"⟩
+⟨"data"⟩[1] ←ᵢ ⟨"%77"⟩
+"%78" ←ₐ .BitAnd ⟨"%23"⟩ ⟨"%15"⟩
+"%79" ←ₐ .Mul ⟨"%78"⟩ ⟨"%14"⟩
+⟨"data"⟩[9] ←ᵢ ⟨"%79"⟩
+"%80" ←ₐ .BitAnd ⟨"%23"⟩ ⟨"%13"⟩
+"%81" ←ₐ .Mul ⟨"%80"⟩ ⟨"%12"⟩
+⟨"data"⟩[8] ←ᵢ ⟨"%81"⟩
+"%82" ←ₐ .BitAnd ⟨"%23"⟩ ⟨"%10"⟩
+"%83" ←ₐ .Mul ⟨"%82"⟩ ⟨"%9"⟩
+⟨"data"⟩[0] ←ᵢ ⟨"%83"⟩
+"%84" ←ₐ .BitAnd ⟨"%23"⟩ ⟨"%8"⟩
+⟨"data"⟩[13] ←ᵢ ⟨"%84"⟩
+"%85" ←ₐ .BitAnd ⟨"%22"⟩ ⟨"%19"⟩
+"%86" ←ₐ .Mul ⟨"%85"⟩ ⟨"%18"⟩
+⟨"data"⟩[12] ←ᵢ ⟨"%86"⟩
+"%87" ←ₐ .BitAnd ⟨"%22"⟩ ⟨"%17"⟩
+"%88" ←ₐ .Mul ⟨"%87"⟩ ⟨"%16"⟩
+⟨"data"⟩[2] ←ᵢ ⟨"%88"⟩
+"%89" ←ₐ .BitAnd ⟨"%22"⟩ ⟨"%15"⟩
+"%90" ←ₐ .Mul ⟨"%89"⟩ ⟨"%14"⟩
+⟨"data"⟩[11] ←ᵢ ⟨"%90"⟩
+"%91" ←ₐ .BitAnd ⟨"%22"⟩ ⟨"%6"⟩
+"%92" ←ₐ .Mul ⟨"%91"⟩ ⟨"%5"⟩
+⟨"data"⟩[4] ←ᵢ ⟨"%92"⟩
+"%93" ←ₐ .BitAnd ⟨"%22"⟩ ⟨"%4"⟩
+⟨"data"⟩[3] ←ᵢ ⟨"%93"⟩
+"%94" ←ₐ .BitAnd ⟨"%21"⟩ ⟨"%19"⟩
+"%95" ←ₐ .Mul ⟨"%94"⟩ ⟨"%18"⟩
+⟨"data"⟩[14] ←ᵢ ⟨"%95"⟩
+"%96" ←ₐ .BitAnd ⟨"%21"⟩ ⟨"%3"⟩
+"%97" ←ₐ .Mul ⟨"%96"⟩ ⟨"%2"⟩
+⟨"data"⟩[15] ←ᵢ ⟨"%97"⟩
+"%98" ←ₐ .BitAnd ⟨"%21"⟩ ⟨"%1"⟩
+"%99" ←ₐ .Mul ⟨"%98"⟩ ⟨"%14"⟩
+⟨"data"⟩[5] ←ᵢ ⟨"%99"⟩
+"%100" ←ₐ .BitAnd ⟨"%21"⟩ ⟨"%6"⟩
+"%101" ←ₐ .Mul ⟨"%100"⟩ ⟨"%5"⟩
+⟨"data"⟩[7] ←ᵢ ⟨"%101"⟩
+"%102" ←ₐ .BitAnd ⟨"%21"⟩ ⟨"%4"⟩
+⟨"data"⟩[6] ←ᵢ ⟨"%102"⟩
+"%103" ←ₐ .BitAnd ⟨"%20"⟩ ⟨"%19"⟩
+"%104" ←ₐ .Mul ⟨"%103"⟩ ⟨"%18"⟩
+⟨"data"⟩[16] ←ᵢ ⟨"%104"⟩
+"%105" ←ₐ .BitAnd ⟨"%20"⟩ ⟨"%0"⟩
+⟨"data"⟩[17] ←ᵢ ⟨"%105"⟩
+"%24" ←ₐ .Get ⟨"data"⟩ 0 13
+"%25" ←ₐ .Get ⟨"data"⟩ 0 0
+"%26" ←ₐ .Get ⟨"data"⟩ 0 8
+"%27" ←ₐ .Mul ⟨"%26"⟩ ⟨"%7"⟩
+"%28" ←ₐ .Get ⟨"data"⟩ 0 9
+"%29" ←ₐ .Mul ⟨"%28"⟩ ⟨"%13"⟩
+"%30" ←ₐ .Get ⟨"data"⟩ 0 1
+"%31" ←ₐ .Mul ⟨"%30"⟩ ⟨"%15"⟩
+"%32" ←ₐ .Add ⟨"%31"⟩ ⟨"%29"⟩
+"%33" ←ₐ .Add ⟨"%32"⟩ ⟨"%27"⟩
+"%34" ←ₐ .Add ⟨"%33"⟩ ⟨"%25"⟩
+"%35" ←ₐ .Get ⟨"data"⟩ 0 10
+"%36" ←ₐ .Mul ⟨"%35"⟩ ⟨"%3"⟩
+"%37" ←ₐ .Add ⟨"%36"⟩ ⟨"%34"⟩
+"%38" ←ₐ .Mul ⟨"%37"⟩ ⟨"%11"⟩
+"%39" ←ₐ .Add ⟨"%38"⟩ ⟨"%24"⟩
+"%40" ←ₐ .Sub ⟨"%23"⟩ ⟨"%39"⟩
+?₀ ⟨"%40"⟩
+"%41" ←ₐ .Get ⟨"data"⟩ 0 3
+"%42" ←ₐ .Get ⟨"data"⟩ 0 4
+"%43" ←ₐ .Mul ⟨"%42"⟩ ⟨"%7"⟩
+"%44" ←ₐ .Get ⟨"data"⟩ 0 11
+"%45" ←ₐ .Get ⟨"data"⟩ 0 2
+"%46" ←ₐ .Mul ⟨"%45"⟩ ⟨"%11"⟩
+"%47" ←ₐ .Get ⟨"data"⟩ 0 12
+"%48" ←ₐ .Mul ⟨"%47"⟩ ⟨"%13"⟩
+"%49" ←ₐ .Add ⟨"%48"⟩ ⟨"%46"⟩
+"%50" ←ₐ .Add ⟨"%49"⟩ ⟨"%44"⟩
+"%51" ←ₐ .Mul ⟨"%50"⟩ ⟨"%15"⟩
+"%52" ←ₐ .Add ⟨"%51"⟩ ⟨"%43"⟩
+"%53" ←ₐ .Add ⟨"%52"⟩ ⟨"%41"⟩
+"%54" ←ₐ .Sub ⟨"%22"⟩ ⟨"%53"⟩
+?₀ ⟨"%54"⟩
+"%55" ←ₐ .Get ⟨"data"⟩ 0 6
+"%56" ←ₐ .Get ⟨"data"⟩ 0 7
+"%57" ←ₐ .Mul ⟨"%56"⟩ ⟨"%7"⟩
+"%58" ←ₐ .Get ⟨"data"⟩ 0 5
+"%59" ←ₐ .Get ⟨"data"⟩ 0 15
+"%60" ←ₐ .Mul ⟨"%59"⟩ ⟨"%7"⟩
+"%61" ←ₐ .Add ⟨"%60"⟩ ⟨"%58"⟩
+"%62" ←ₐ .Mul ⟨"%61"⟩ ⟨"%15"⟩
+"%63" ←ₐ .Get ⟨"data"⟩ 0 14
+"%64" ←ₐ .Mul ⟨"%63"⟩ ⟨"%19"⟩
+"%65" ←ₐ .Add ⟨"%64"⟩ ⟨"%62"⟩
+"%66" ←ₐ .Add ⟨"%65"⟩ ⟨"%57"⟩
+"%67" ←ₐ .Add ⟨"%66"⟩ ⟨"%55"⟩
+"%68" ←ₐ .Sub ⟨"%21"⟩ ⟨"%67"⟩
+?₀ ⟨"%68"⟩
+"%69" ←ₐ .Get ⟨"data"⟩ 0 17
+"%70" ←ₐ .Get ⟨"data"⟩ 0 16
+"%71" ←ₐ .Mul ⟨"%70"⟩ ⟨"%19"⟩
+"%72" ←ₐ .Add ⟨"%71"⟩ ⟨"%69"⟩
+"%73" ←ₐ .Sub ⟨"%20"⟩ ⟨"%72"⟩
+?₀ ⟨"%73"⟩
+assign/binop set
+TODO hyp
+assign/binop assign/const
+TODO hyp
+assign/binop assign/const
+TODO hyp
+assign/binop assign/binop
+TODO hyp
+set assign/const
+TODO hyp
+set assign/binop
+TODO hyp
+assign/binop set
+TODO hyp
+assign/binop assign/const
+TODO hyp
+set assign/get
+TODO hyp
+set assign/binop
+TODO hyp
+%19 created at 0 dropped at 124
+%23 created at 1 dropped at 91
+%74 created at 2 dropped at 5
+%18 created at 3 dropped at 68
+%75 created at 4 dropped at 6
+%17 created at 6 dropped at 34
+%76 created at 7 dropped at 10
+%16 created at 8 dropped at 35
+%77 created at 9 dropped at 11
+%15 created at 11 dropped at 114
+%78 created at 12 dropped at 15
+%14 created at 13 dropped at 59
+%79 created at 14 dropped at 16
+%13 created at 16 dropped at 98
+%80 created at 17 dropped at 20
+%12 created at 18 dropped at 20
+%81 created at 19 dropped at 21
+%10 created at 21 dropped at 23
+%82 created at 22 dropped at 25
+%9 created at 23 dropped at 25
+%83 created at 24 dropped at 26
+%8 created at 26 dropped at 28
+%84 created at 27 dropped at 29
+%22 created at 29 dropped at 106
+%85 created at 30 dropped at 32
+%86 created at 31 dropped at 33
+%87 created at 33 dropped at 35
+%88 created at 34 dropped at 36
+%89 created at 36 dropped at 38
+%90 created at 37 dropped at 39
+%6 created at 39 dropped at 61
+%91 created at 40 dropped at 43
+%5 created at 41 dropped at 62
+%92 created at 42 dropped at 44
+%4 created at 44 dropped at 64
+%93 created at 45 dropped at 47
+%21 created at 47 dropped at 121
+%94 created at 48 dropped at 50
+%95 created at 49 dropped at 51
+%3 created at 51 dropped at 85
+%96 created at 52 dropped at 55
+%2 created at 53 dropped at 55
+%97 created at 54 dropped at 56
+%1 created at 56 dropped at 58
+%98 created at 57 dropped at 59
+%99 created at 58 dropped at 60
+%100 created at 60 dropped at 62
+%101 created at 61 dropped at 63
+%102 created at 63 dropped at 65
+%20 created at 65 dropped at 127
+%103 created at 66 dropped at 68
+%104 created at 67 dropped at 69
+%0 created at 69 dropped at 71
+%105 created at 70 dropped at 72
+%7 created at 72 dropped at 111
+%26 created at 73 dropped at 75
+%27 created at 74 dropped at 81
+%28 created at 75 dropped at 77
+%29 created at 76 dropped at 80
+%30 created at 77 dropped at 79
+%31 created at 78 dropped at 80
+%32 created at 79 dropped at 81
+%33 created at 80 dropped at 83
+%25 created at 81 dropped at 83
+%34 created at 82 dropped at 86
+%35 created at 83 dropped at 85
+%36 created at 84 dropped at 86
+%37 created at 85 dropped at 88
+%11 created at 86 dropped at 96
+%38 created at 87 dropped at 90
+%24 created at 88 dropped at 90
+%39 created at 89 dropped at 91
+%40 created at 90 dropped at 92
+%42 created at 92 dropped at 94
+%43 created at 93 dropped at 103
+%45 created at 94 dropped at 96
+%46 created at 95 dropped at 99
+%47 created at 96 dropped at 98
+%48 created at 97 dropped at 99
+%49 created at 98 dropped at 101
+%44 created at 99 dropped at 101
+%50 created at 100 dropped at 102
+%51 created at 101 dropped at 103
+%52 created at 102 dropped at 105
+%41 created at 103 dropped at 105
+%53 created at 104 dropped at 106
+%54 created at 105 dropped at 107
+%56 created at 107 dropped at 109
+%57 created at 108 dropped at 118
+%59 created at 109 dropped at 111
+%60 created at 110 dropped at 113
+%58 created at 111 dropped at 113
+%61 created at 112 dropped at 114
+%62 created at 113 dropped at 117
+%63 created at 114 dropped at 116
+%64 created at 115 dropped at 117
+%65 created at 116 dropped at 118
+%66 created at 117 dropped at 120
+%55 created at 118 dropped at 120
+%67 created at 119 dropped at 121
+%68 created at 120 dropped at 122
+%70 created at 122 dropped at 124
+%71 created at 123 dropped at 126
+%69 created at 124 dropped at 126
+%72 created at 125 dropped at 127
+%73 created at 126 dropped at 128
+128 106 106

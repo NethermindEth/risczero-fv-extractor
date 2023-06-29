@@ -1,39 +1,50 @@
 import { exec } from 'child_process';
 import fs from 'fs';
 import { addToImportFile } from './util';
-import { IR } from './IR';
+import { IR, irLinesToLean, irLinesToParts, parts } from './IR';
+import { delayConstsAndGets, getDelayProof, getStepwiseOptimisations } from './reordering';
+import { createWitnessCodeWithDropsLean } from './drops';
+import { createWitnessPartsLean } from './code_parts';
 
-const skip = false;
+const skipUnOpt = true;
+const skipOpt = false;
 
 export function createCodeFiles(leanPath: string, linesPerPart: number, callback: (funcName: string, constraintsParts: number, witnessParts: number) => void) {
-	console.log(`Creating code files ${skip ? "skipped" : ""}`);
+	console.log(`Creating code files ${skipUnOpt ? "unopt skipped" : ""} ${skipOpt ? "opt skipped" : ""}`);
 	const witness = loadWitnessMLIR();
 	const constraints = loadConstraintsMLIR();
 	const [funcName, args, argIdToName] = parseFuncLine(witness[1]);
 
 	const [witnessCodeLean, witnessPartCount] = createWitnessCodeLean(funcName, witness, argIdToName, linesPerPart);
+	const [witnessReorderedIR, witnessReorderedLean] = createWitnessCodeReorderedLean(funcName, witness, argIdToName, linesPerPart);
+	const witnessPartsLean = createWitnessPartsLean(funcName, witnessReorderedIR, linesPerPart);
+	const witnessDroppedLean = createWitnessCodeWithDropsLean(funcName, witnessReorderedIR, linesPerPart);
 	const [constraintsCodeLean, constraintsPartCount] = createConstraintsCodeLean(funcName, constraints, argIdToName, linesPerPart);
-	if (skip) {
+	if (!skipUnOpt) {
+		outputCodeFiles(leanPath, funcName, witnessCodeLean, constraintsCodeLean);
+	}
+	if (!skipOpt) {
+		outputOptCodeFiles(leanPath, funcName, witnessReorderedLean, witnessPartsLean, witnessDroppedLean);
+	}
+	if (skipUnOpt && skipOpt) {
 		callback(funcName, constraintsPartCount, witnessPartCount);
 	} else {
-		outputCodeFiles(leanPath, funcName, witnessCodeLean, constraintsCodeLean);
-	
-		exec(`cd ${leanPath}; lake build`, (error, stdout, stderr) => {
-			if (stdout !== "") {
-				console.log("---stdout---:\n\n");
-				console.log(stdout);
-			}
-			if (stderr !== "") {
-				console.log("---stderr:\n\n");
-				console.log(stderr);
-			}
-			if (error !== null) {
-				console.log("---error---:\n\n");
-				console.log(error);
-			} else {
-				callback(funcName, constraintsPartCount, witnessPartCount);
-			}
-		})
+		// exec(`cd ${leanPath}; lake build`, (error, stdout, stderr) => {
+		// 	if (stdout !== "") {
+		// 		console.log("---stdout---:\n\n");
+		// 		console.log(stdout);
+		// 	}
+		// 	if (stderr !== "") {
+		// 		console.log("---stderr:\n\n");
+		// 		console.log(stderr);
+		// 	}
+		// 	if (error !== null) {
+		// 		console.log("---error---:\n\n");
+		// 		console.log(error);
+		// 	} else {
+		// 		callback(funcName, constraintsPartCount, witnessPartCount);
+		// 	}
+		// })
 	}
 }
 
@@ -187,48 +198,6 @@ function parseIRLines(irLines: string[], argIdToName: Map<string, string>): IR.S
 	return instructions;
 }
 
-function irLinesToLean(ir: IR.Statement[]): string {
-	let nondet = false;
-	let res = "";
-	for (let i = 0; i < ir.length; ++i) {
-		//Add the continuation between the previous statement and this
-		if (ir[i].nondet && !nondet) {
-			if (i == 0) {
-				res = "  nondet (\n    ";
-			} else {
-				res = `${res};\n  nondet (\n    `;
-			}
-			nondet = true;
-		} else if (!ir[i].nondet && nondet) {
-			res = `${res}\n  );\n  `;
-			nondet = false;
-		} else if (i == 0) {
-			res = "  ";
-		} else if (nondet) {
-			res = `${res};\n    `;
-		} else {
-			res = `${res};\n  `;
-		}
-
-		//Add the current statement
-		res = `${res}${ir[i].toString()}`
-
-		if (i == ir.length - 1 && nondet) {
-			res = `${res}\n  )`
-		}
-	}
-	return res;
-}
-
-function irLinesToParts(lines: IR.Statement[], linesPerPart: number): string {
-	let output: string[] = [];
-	for (let i = 0; i * linesPerPart < lines.length; ++i) {
-		output.push(`def part${i} : MLIRProgram :=`);
-		output.push(irLinesToLean(lines.slice(i * linesPerPart, (i + 1) * linesPerPart)));
-	}
-	return output.join("\n");
-}
-
 function getWitnessReturn(witnessCode: string[]): string {
 	return [
 		"def getReturn (st: State) : BufferAtTime :=",
@@ -256,57 +225,6 @@ function getConstraintsReturn(constraintsCode: string[]): string {
 	[0];
 }
 
-function parts(length: number, linesPerPart: number): string[] {
-	const numParts = Math.ceil(length / linesPerPart);
-	let output = [];
-	for (let i = 0; i < numParts; ++i) output.push(i);
-	return output.map(i => `part${i}`);
-}
-
-function partsCombine(fullLines: IR.Statement[], linesPerPart: number): string {
-	let tactics: string[] = [];
-	for (let part = 0; part * linesPerPart < fullLines.length; ++part) {
-		tactics.push(`  unfold part${part}`);
-		if ((part + 1) * linesPerPart >= fullLines.length) {
-			tactics.push(`  rfl`)
-		} else {
-			for (let i = 0; i < linesPerPart && part * linesPerPart + i < fullLines.length; ++i) {
-				const nondet = fullLines[part * linesPerPart + i].nondet;
-				if (!nondet) {
-					if (i == linesPerPart - 1) {
-						tactics.push(`  apply MLIR.seq_step_eq\n  intro st`)
-					} else {
-						tactics.push(`  apply MLIR.nested_seq_step_eq\n  intro st`);
-					}
-				} else {
-					// TODO range check this
-					const nextNondet = fullLines[part * linesPerPart + i + 1].nondet
-					if (nextNondet) { // nondet s1; s2 = nondet (s1; s3); s4
-						if (i == linesPerPart - 1) {
-							tactics.push(`  apply MLIR.nondet_step_eq\n  intro st`)
-						} else { // nondet (s1; s2); s3 = nondet (s1; s4); s5
-							tactics.push(`  apply MLIR.nondet_seq_step_eq\n  intro st`)
-						}
-					} else {
-						if (i == linesPerPart - 1) { // nondet s1; s2 = nondet s1; s3
-							tactics.push(`  apply MLIR.seq_step_eq\n  intro st`)
-						} else { // (nondet s1; s2); s3 = nondet s1; s4
-							tactics.push(`  apply MLIR.nondet_end_step_eq\n  intro st`)
-						}
-					}
-				}
-			}
-		}
-	}
-	return [
-		"lemma parts_combine {st: State} :",
-		"  Γ st ⟦parts_combined⟧ =",
-		"  Γ st ⟦full⟧ := by",
-		"  unfold full parts_combined",
-		...tactics
-	].join("\n");
-}
-
 function createWitnessCodeLean(funcName: string, witness: string[], argIdToName: Map<string, string>, linesPerPart: number): [string, number] {
 	const witnessFullLines = parseIRLines(witness, argIdToName);
 	return [[
@@ -322,15 +240,36 @@ function createWitnessCodeLean(funcName: string, witness: string[], argIdToName:
 		getWitnessReturn(witness),
 		"def run (st: State) : BufferAtTime :=",
 		"  getReturn (full.runProgram st)",
-		irLinesToParts(witnessFullLines, linesPerPart),
-		"",
-		"abbrev parts_combined : MLIRProgram :=",
-		`  ${parts(witnessFullLines.length, linesPerPart).join("; ")}`,
-		partsCombine(witnessFullLines, linesPerPart),
+		// irLinesToParts(witnessFullLines, linesPerPart),
+		// "",
+		// "abbrev parts_combined : MLIRProgram :=",
+		// `  ${parts(witnessFullLines.length, linesPerPart).join("; ")}`,
+		// partsCombine(witnessFullLines, linesPerPart),
 		"",
 		`end Risc0.${funcName}.Witness.Code`,
 		""
 	].join("\n"), Math.ceil(witnessFullLines.length / linesPerPart)];
+}
+
+function createWitnessCodeReorderedLean(funcName: string, witness: string[], argIdToName: Map<string, string>, linesPerPart: number): [ir: IR.Statement[], lean: string] {
+	const IR = parseIRLines(witness, argIdToName);
+	const [reorderedIR, reorderedLean] = getStepwiseOptimisations(IR, linesPerPart);
+	IR.forEach(x => console.log(x.toString()));
+	return [
+		reorderedIR,
+		[
+			"import Risc0.Map",
+			"import Risc0.MlirTactics",
+			"import Risc0.Optimisation",
+			`import Risc0.Gadgets.${funcName}.Witness.Code`,
+			"",
+			`namespace Risc0.${funcName}.Witness.Code`,
+			"",
+			"open MLIRNotation",
+			reorderedLean,
+			"end Risc0.ComputeDecode.Witness.Code",
+		].join("\n")
+	];
 }
 
 function createConstraintsCodeLean(funcName: string, constraints: string[], argIdToName: Map<string, string>, linesPerPart: number): [string, number] {
@@ -348,7 +287,7 @@ function createConstraintsCodeLean(funcName: string, constraints: string[], argI
 		getConstraintsReturn(constraints),
 		"def run (st: State) : Prop :=",
 		"  getReturn (full.runProgram st)",
-		irLinesToParts(constraintsFullLines, linesPerPart),
+		irLinesToParts(constraintsFullLines, linesPerPart).join("\n"),
 		"",
 		"abbrev parts_combined : MLIRProgram :=",
 		`  ${parts(constraintsFullLines.length, linesPerPart).join("; ")}`,
@@ -371,8 +310,21 @@ function outputCodeFiles(prefix: string, funcName: string, witnessCodeLean: stri
 	fs.writeFileSync(`${prefix}/Risc0/Gadgets/${funcName}/Witness/Code.lean`, witnessCodeLean);
 	fs.writeFileSync(`${prefix}/Risc0/Gadgets/${funcName}/Constraints/Code.lean`, constraintsCodeLean);
 
-	addToImportFile(prefix, `${funcName}.Witness.Code`);
+	addToImportFile(prefix, `${funcName}.Witness.Code`); // TODO add opt
 	addToImportFile(prefix, `${funcName}.Constraints.Code`);
+}
+
+function outputOptCodeFiles(prefix: string, funcName: string, reordered: string, parts: string, optimised: string) {
+	mkDirIfNeeded(`${prefix}/Risc0/Gadgets/${funcName}`);
+	mkDirIfNeeded(`${prefix}/Risc0/Gadgets/${funcName}/Witness`);
+	mkDirIfNeeded(`${prefix}/Risc0/Gadgets/${funcName}/Constraints`);
+	fs.writeFileSync(`${prefix}/Risc0/Gadgets/${funcName}/Witness/CodeReordered.lean`, reordered);
+	fs.writeFileSync(`${prefix}/Risc0/Gadgets/${funcName}/Witness/CodeOptimised.lean`, optimised);
+	fs.writeFileSync(`${prefix}/Risc0/Gadgets/${funcName}/Witness/CodeParts.lean`, parts);
+	// fs.writeFileSync(`${prefix}/Risc0/Gadgets/${funcName}/Constraints/Code.lean`, constraintsCodeLean);
+
+	// addToImportFile(prefix, `${funcName}.Witness.Code`); // TODO add opt
+	// addToImportFile(prefix, `${funcName}.Constraints.Code`);
 }
 
 function mkDirIfNeeded(path: string) {
