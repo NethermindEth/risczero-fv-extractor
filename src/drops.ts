@@ -15,6 +15,20 @@ export function createWitnessCodeWithDropsLean(funcName: string, ir: IR.Statemen
 	].join("\n");
 }
 
+export function getPartDrops(ir: IR.Statement[], linesPerPart: number): IR.DropFelt[][] {
+	const dropLocations = calculateDropPoints(ir);
+	let res: IR.DropFelt[][] = [];
+	for (let i = 0; i < Math.ceil(ir.length / linesPerPart); ++i) {
+		res.push([]);
+	}
+	dropLocations.forEach((lineNumber, idx) => {
+		const partNumber = Math.min(res.length-1, Math.floor((lineNumber-1)/linesPerPart));
+		console.log(`Drop ${idx} at line ${lineNumber}. Part${partNumber}`);
+		res[partNumber].push(new IR.DropFelt(idx, false));
+	});
+	return res;
+}
+
 function insertDrops(ir: IR.Statement[], linesPerPart: number): IR.Statement[] {
 	let retIR = ir.slice(0);
 	const dropLocations = calculateDropPoints(ir);
