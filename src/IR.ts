@@ -189,29 +189,18 @@ export function partsCombine(fullLines: IR.Statement[], fullName: string, linesP
 		if ((part + 1) * linesPerPart >= fullLines.length) {
 			tactics.push(`  rfl`)
 		} else {
+			tactics.push(`  rewrite [MLIR.part_assoc_${fullLines.slice(part*linesPerPart, (part+1)*linesPerPart).map(stmt => stmt.nondet?"n":"d").join("")}]`);
 			for (let i = 0; i < linesPerPart && part * linesPerPart + i < fullLines.length; ++i) {
 				const nondet = fullLines[part * linesPerPart + i].nondet;
 				if (!nondet) {
-					if (i == linesPerPart - 1) {
-						tactics.push(`  apply MLIR.seq_step_eq\n  intro st`)
-					} else {
-						tactics.push(`  apply MLIR.nested_seq_step_eq\n  intro st`);
-					}
+					tactics.push(`  apply MLIR.seq_step_eq\n  intro st`)
 				} else {
 					// TODO range check this
 					const nextNondet = fullLines[part * linesPerPart + i + 1].nondet
 					if (nextNondet) { // nondet s1; s2 = nondet (s1; s3); s4
-						if (i == linesPerPart - 1) {
-							tactics.push(`  apply MLIR.nondet_step_eq\n  intro st`)
-						} else { // nondet (s1; s2); s3 = nondet (s1; s4); s5
-							tactics.push(`  apply MLIR.nondet_seq_step_eq\n  intro st`)
-						}
+						tactics.push(`  apply MLIR.nondet_step_eq\n  intro st`)
 					} else {
-						if (i == linesPerPart - 1) { // nondet s1; s2 = nondet s1; s3
-							tactics.push(`  apply MLIR.seq_step_eq\n  intro st`)
-						} else { // (nondet s1; s2); s3 = nondet s1; s4
-							tactics.push(`  apply MLIR.nondet_end_step_eq\n  intro st`)
-						}
+						tactics.push(`  apply MLIR.seq_step_eq\n  intro st`)
 					}
 				}
 			}

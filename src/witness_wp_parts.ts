@@ -1,53 +1,57 @@
 import { exec } from 'child_process';
 import fs from 'fs';
 import { addToImportFile } from './util';
+import { IR } from './IR';
 
-const skipFirst = true;
+const skipFirst = false;
 const skipMid = false;
-const skipToMid: number | null = 19; // set to null to turn off
+const skipToMid: number | null = null; // set to null to turn off
 
-export function witnessWeakestPreFiles(leanPath: string, funcName: string, parts: number, bufferWidth: number) {
+export function witnessWeakestPreFiles(leanPath: string, funcName: string, ir: IR.Statement[], linesPerPart: number, partDrops: IR.DropFelt[][], bufferWidth: number, callback: ()=>void) {
 	console.log("Creating witness weakest pre files");
 	if (skipFirst) {
 		if (skipToMid === null) {
-			recurseThroughMidFiles(leanPath, funcName, 1, parts, bufferWidth);
+			recurseThroughMidFiles(leanPath, funcName, 1, ir , linesPerPart, partDrops, bufferWidth, callback);
 		} else {
-			recurseThroughMidFiles(leanPath, funcName, skipToMid, parts, bufferWidth);
+			recurseThroughMidFiles(leanPath, funcName, skipToMid, ir, linesPerPart, partDrops, bufferWidth, callback);
 		}
 	} else {
-		const part0 = witnessWeakestPrePart0(funcName, parts, bufferWidth, "sorry");
+		const part0 = witnessWeakestPrePart0(funcName, partDrops, bufferWidth, undefined, undefined);
 		fs.writeFileSync(`${leanPath}/Risc0/Gadgets/${funcName}/Witness/WeakestPresPart0.lean`, part0);
 		addToImportFile(leanPath, `${funcName}.Witness.WeakestPresPart0`)
 		console.log("  0 - sorry");
 		exec(`cd ${leanPath}; lake build`, (error, stdout, stderr) => {
-			const stateTransformer = extractStateTransformer(stderr, funcName, 0);
+			const [stateTransformer, cumulativeTransformer] = extractStateTransformers(stderr, funcName, 0);
 			console.log(stateTransformer);
-			const part0 = witnessWeakestPrePart0(funcName, parts, bufferWidth, stateTransformer);
+			console.log(cumulativeTransformer);
+			const part0 = witnessWeakestPrePart0(funcName, partDrops, bufferWidth, stateTransformer, cumulativeTransformer);
 			console.log("  0 - corrected");
 			fs.writeFileSync(`${leanPath}/Risc0/Gadgets/${funcName}/Witness/WeakestPresPart0.lean`, part0);
 			exec(`cd ${leanPath}; lake build`, (error, stdout, stderr) => {
 				if (skipToMid === null) {
-					recurseThroughMidFiles(leanPath, funcName, 1, parts, bufferWidth);
+					recurseThroughMidFiles(leanPath, funcName, 1, ir , linesPerPart, partDrops, bufferWidth, callback);
 				} else {
-					recurseThroughMidFiles(leanPath, funcName, skipToMid, parts, bufferWidth);
+					recurseThroughMidFiles(leanPath, funcName, skipToMid, ir, linesPerPart, partDrops, bufferWidth, callback);
 				}
 			});
-		});
+		}).stdout?.pipe(process.stdout);
 	}
 }
 
-function recurseThroughMidFiles(leanPath: string, funcName: string, part: number, parts: number, bufferWidth: number) {
+function recurseThroughMidFiles(leanPath: string, funcName: string, part: number, ir: IR.Statement[], linesPerPart: number, partDrops: IR.DropFelt[][], bufferWidth: number, callback: ()=>void) {
 	if (skipMid) {
-		lastFile(leanPath, funcName, parts, bufferWidth);
+		lastFile(leanPath, funcName, ir, linesPerPart, partDrops, bufferWidth, callback);
 	} else {
-		const mid = witnessWeakestPreMid(funcName, part, parts, bufferWidth, "sorry");
+		console.log(`Part ${part} of ${partDrops.length}`);
+		const mid = witnessWeakestPreMid(funcName, part, ir, linesPerPart, partDrops, bufferWidth, undefined, undefined);
 		fs.writeFileSync(`${leanPath}/Risc0/Gadgets/${funcName}/Witness/WeakestPresPart${part}.lean`, mid);
 		addToImportFile(leanPath, `${funcName}.Witness.WeakestPresPart${part}`)
 		console.log(`  ${part} - sorry`);
 		exec(`cd ${leanPath}; lake build`, (error, stdout, stderr) => {
-			const stateTransformer = extractStateTransformer(stderr, funcName, part);
+			const [stateTransformer, cumulativeTransformer] = extractStateTransformers(stderr, funcName, part);
 			console.log(stateTransformer);
-			const mid = witnessWeakestPreMid(funcName, part, parts, bufferWidth, stateTransformer);
+			console.log(cumulativeTransformer);
+			const mid = witnessWeakestPreMid(funcName, part, ir, linesPerPart, partDrops, bufferWidth, stateTransformer, cumulativeTransformer);
 			console.log(`  ${part} - corrected`);
 			fs.writeFileSync(`${leanPath}/Risc0/Gadgets/${funcName}/Witness/WeakestPresPart${part}.lean`, mid);
 			exec(`cd ${leanPath}; lake build`, (error, stdout, stderr) => {
@@ -55,51 +59,60 @@ function recurseThroughMidFiles(leanPath: string, funcName: string, part: number
 				if (fixed !== null) {
 					fs.writeFileSync(`${leanPath}/Risc0/Gadgets/${funcName}/Witness/WeakestPresPart${part}.lean`, fixed);
 				}
-				if (part+1 < parts) {
-					recurseThroughMidFiles(leanPath, funcName, part+1, parts, bufferWidth);
+				if (part+1 < partDrops.length - 1) {
+					recurseThroughMidFiles(leanPath, funcName, part+1, ir, linesPerPart, partDrops, bufferWidth, callback);
 				} else {
-					lastFile(leanPath, funcName, parts, bufferWidth);
+					lastFile(leanPath, funcName, ir, linesPerPart, partDrops, bufferWidth, callback);
 				}
-			});
-		});
+			}).stdout?.pipe(process.stdout);
+		}).stdout?.pipe(process.stdout);
 	}
 }
 
-function lastFile(leanPath: string, funcName: string, parts: number, bufferWidth: number) {
-	const part = parts-1;
-	const last = witnessWeakestPreLast(funcName, parts, bufferWidth, "sorry");
+function lastFile(leanPath: string, funcName: string, ir: IR.Statement[], linesPerPart: number, partDrops: IR.DropFelt[][], bufferWidth: number, callback: ()=>void) {
+	const part = partDrops.length-1;
+	const last = witnessWeakestPreLast(funcName, ir, linesPerPart, partDrops, bufferWidth, undefined, undefined, undefined);
 	fs.writeFileSync(`${leanPath}/Risc0/Gadgets/${funcName}/Witness/WeakestPresPart${part}.lean`, last);
 	addToImportFile(leanPath, `${funcName}.Witness.WeakestPresPart${part}`)
 	console.log(`  ${part} - sorry`);
 	exec(`cd ${leanPath}; lake build`, (error, stdout, stderr) => {
-		const stateTransformer = extractStateTransformerLast(stderr, funcName, part);
+		const [stateTransformer, cumulativeTransformer] = extractStateTransformers(stderr, funcName, part);
 		console.log(stateTransformer);
-		const last = witnessWeakestPreLast(funcName, parts, bufferWidth, stateTransformer);
+		console.log(cumulativeTransformer);
+		const last = witnessWeakestPreLast(funcName, ir, linesPerPart, partDrops, bufferWidth, stateTransformer, cumulativeTransformer, undefined);
 		console.log(`  ${part} - corrected`);
 		fs.writeFileSync(`${leanPath}/Risc0/Gadgets/${funcName}/Witness/WeakestPresPart${part}.lean`, last);
 		exec(`cd ${leanPath}; lake build`, (error, stdout, stderr) => {
-			if (stdout !== "") {
-				console.log("---stdout---:\n\n");
-				console.log(stdout);
-			}
-			if (stderr !== "") {
-				console.log("---stderr:\n\n");
-				console.log(stderr);
-			}
-			if (error !== null) {
-				console.log("---error---:\n\n");
-				console.log(error);
-			}
-			console.log("Done")
-		});
-	});
+			const closedForm = extractClosedForm(stderr);
+			console.log(closedForm);
+			const last = witnessWeakestPreLast(funcName, ir, linesPerPart, partDrops, bufferWidth, stateTransformer, cumulativeTransformer, closedForm);
+			console.log(`  closed form`);
+			fs.writeFileSync(`${leanPath}/Risc0/Gadgets/${funcName}/Witness/WeakestPresPart${part}.lean`, last);
+			exec(`cd ${leanPath}; lake build`, (error, stdout, stderr) => {
+				callback();
+				if (stdout !== "") {
+					console.log("---stdout---:\n\n");
+					console.log(stdout);
+				}
+				if (stderr !== "") {
+					console.log("---stderr:\n\n");
+					console.log(stderr);
+				}
+				if (error !== null) {
+					console.log("---error---:\n\n");
+					console.log(error);
+				}
+				console.log("Done")
+			}).stdout?.pipe(process.stdout);
+		}).stdout?.pipe(process.stdout);
+	}).stdout?.pipe(process.stdout);
 }
 
-function witnessWeakestPrePart0(funcName: string, parts: number, bufferWidth: number, stateTransformer: string): string {
+function witnessWeakestPrePart0(funcName: string, partDrops: IR.DropFelt[][], bufferWidth: number, stateTransformer: string | undefined, cumulativeTransformer: string | undefined): string {
 	return [
 		`import Risc0.Basic`,
 		`import Risc0.MlirTactics`,
-		`import Risc0.Gadgets.${funcName}.Witness.Code`,
+		`import Risc0.Gadgets.${funcName}.Witness.CodeDrops`,
 		``,
 		`namespace Risc0.${funcName}.Witness.WP`,
 		``,
@@ -107,30 +120,58 @@ function witnessWeakestPrePart0(funcName: string, parts: number, bufferWidth: nu
 		``,
 		`-- The state obtained by running Code.part0 on st`,
 		`def part0_state (st: State) : State :=`,
-		`  ${stateTransformer}`,
+		`  ${stateTransformer ?? "sorry"}`,
+		``,
+		`def part0_drops (st: State) : State :=`,
+		`  ${getPartDropsDef(partDrops[0])}`,
 		``,
 		`-- Run the whole program by using part0_state rather than Code.part0`,
 		`def part0_state_update (st: State): State :=`,
-		`  Γ (part0_state st) ⟦${codePartsRange(1, parts)}⟧`,
+		`  Γ (part0_drops (part0_state st)) ⟦${codePartsRange(1, partDrops, true)}⟧`,
 		``,
 		`-- Prove that substituting part0_state for Code.part0 produces the same result`,
 		`lemma part0_wp {st : State} {${variableList("y", " ", bufferWidth)} : Option Felt} :`,
-		`  Code.run st = [${variableList("y", ", ", bufferWidth)}] ↔`,
+		`  Code.getReturn (Γ st ⟦${codePartsRange(0, partDrops, true)}⟧) = [${variableList("y", ", ", bufferWidth)}] ↔`,
 		`  Code.getReturn (part0_state_update st) = [${variableList("y", ", ", bufferWidth)}] := by`,
-		`  unfold Code.run MLIR.runProgram; simp only`,
-		`  rewrite [←Code.parts_combine]; unfold Code.parts_combined`,
-		`  generalize eq : (${codePartsRange(1, parts)}) = prog`,
+		`  generalize eq : (${codePartsRange(0, partDrops, false)}) = prog`,
 		`  unfold Code.part0`,
 		`  MLIR`,
-		`  unfold part0_state_update part0_state`,
-		`  rewrite [←eq]`,
-		`  rfl`,
+		...(stateTransformer === undefined
+			? []
+			: [
+				`  unfold part0_state_update part0_state part0_drops`,
+				`  ${getDropEvaluationRewrites(partDrops, 0)}`,
+				`  rewrite [←eq]`,
+				`  rfl`,
+			]),
+		``,
+		`lemma part0_cumulative_wp :`,
+		`  Code.run (start_state [x0,x1,x2,x3]) = [y0,y1,y2,y3,y4,y5,y6,y7,y8,y9,y10,y11,y12,y13,y14,y15,y16,y17] ↔`,
+		`  ${cumulativeTransformer ?? "sorry"} := by`,
+		`    unfold Code.run start_state`,
+		`    rewrite [Code.optimised_behaviour_full]`,
+		`    unfold MLIR.runProgram`,
+		`    rewrite [←Code.parts_combine]`,
+		`    unfold Code.parts_combined`,
+		`    rewrite [←Code.getReturn_ignores_drops]`,
+		`    rewrite [←Code.behaviour_with_drops]`,
+		`    rewrite [part0_wp]`,
+		`    rfl`,
 		``,
 		`end Risc0.${funcName}.Witness.WP`,
 	].join("\n");
 }
 
-function witnessWeakestPreMid(funcName: string, part: number, parts: number, bufferWidth: number, stateTransformer: string): string {
+function witnessWeakestPreMid(
+	funcName: string,
+	part: number,
+	ir: IR.Statement[],
+	linesPerPart: number,
+	partDrops: IR.DropFelt[][],
+	bufferWidth: number,
+	stateTransformer: string | undefined,
+	cumulativeTransformer: string | undefined
+): string {
 	return [
 		`import Risc0.Basic`,
 		`import Risc0.MlirTactics`,
@@ -143,91 +184,209 @@ function witnessWeakestPreMid(funcName: string, part: number, parts: number, buf
 		``,
 		`-- The state obtained by running Code.part${part} on st`,
 		`def part${part}_state (st: State) : State :=`,
-		`  ${stateTransformer}`,
+		`  ${stateTransformer ?? "sorry"}`,
+		``,
+		`def part${part}_drops (st: State) : State :=`,
+		`  ${getPartDropsDef(partDrops[part])}`,
 		``,
 		`-- Run the program from part${part} onwards by using part${part}_state rather than Code.part${part}`,
 		`def part${part}_state_update (st: State): State :=`,
-		`  Γ (part${part}_state st) ⟦${codePartsRange(part+1, parts)}⟧`,
+		`  Γ (part${part}_drops (part${part}_state st)) ⟦${codePartsRange(part+1, partDrops, true)}⟧`,
 		``,
 		`-- Prove that substituting part${part}_state for Code.part${part} produces the same result`,
 		`lemma part${part}_wp {st : State} {${variableList("y", " ", bufferWidth)} : Option Felt} :`,
-		`  Code.getReturn (MLIR.runProgram (${codePartsRange(part, parts)}) st) = [${variableList("y", ", ", bufferWidth)}] ↔`,
+		`  Code.getReturn (MLIR.runProgram (${codePartsRange(part, partDrops, true)}) st) = [${variableList("y", ", ", bufferWidth)}] ↔`,
 		`  Code.getReturn (part${part}_state_update st) = [${variableList("y", ", ", bufferWidth)}] := by`,
 		`  unfold MLIR.runProgram; simp only`,
-		`  generalize eq : (${codePartsRange(part+1, parts)}) = prog`,
+		`  generalize eq : (${codePartsRange(part, partDrops, false)}) = prog`,
 		`  unfold Code.part${part}`,
 		`  MLIR`,
-		`  rewrite [←eq]`,
-		`  unfold part${part}_state_update part${part}_state`,
-		`  rfl`,
+		...(stateTransformer === undefined
+			? []
+			: [
+				`  rewrite [←eq]`,
+				`  ${getDropEvaluationRewrites(partDrops, part)}`,
+				`  unfold part${part}_state_update part${part}_drops part${part}_state`,
+				`  rfl`,
+			]
+		),
 		``,
 		`lemma part${part}_updates_opaque {st : State} : `,
 		`  Code.getReturn (part${part-1}_state_update st) = [${variableList("y", ", ", bufferWidth)}] ↔`,
-		`  Code.getReturn (part${part}_state_update (part${part-1}_state st)) = [${variableList("y", ", ", bufferWidth)}] := by`,
+		`  Code.getReturn (part${part}_state_update (part${part-1}_drops (part${part-1}_state st))) = [${variableList("y", ", ", bufferWidth)}] := by`,
 		`  simp [part${part-1}_state_update, part${part}_wp]`,
+		``,
+		// TODO extract input width constant
+		`lemma part${part}_cumulative_wp {${variableList("x"," ",4)}: Felt} :`,
+		`  Code.run (start_state [${variableList("x",",",4)}]) = [${variableList("y",",",bufferWidth)}] ↔`,
+		`  ${cumulativeTransformer ?? "sorry"} := by`,
+		cumulative_wp_proof(part, ir, linesPerPart, partDrops, cumulativeTransformer === undefined),
 		``,
 		`end Risc0.${funcName}.Witness.WP`,
 	].join("\n");
 }
 
-function witnessWeakestPreLast(funcName: string, parts: number, bufferWidth: number, stateTransformer: string): string {
+function cumulative_wp_proof(part: number, ir: IR.Statement[], linesPerPart: number, partDrops: IR.DropFelt[][], firstPass: boolean): string {
+	const dropCount = partDrops[part-1].length;
+	const previousPart = ir.slice((part-1)*linesPerPart, part*linesPerPart);
+	const setCount = previousPart.filter(stmt => stmt.kind === "set").length;
+	const eqzCount = previousPart.filter(stmt => stmt.kind === "eqz").length;
+	return [
+		`    rewrite [part${part-1}_cumulative_wp]`,
+		part === partDrops.length
+			? `    unfold part${part-1}_state_update`
+			: `    rewrite [part${part}_updates_opaque]`,
+		`    unfold part${part-1}_state`,
+		`    MLIR_states_updates`,
+		`    -- ${eqzCount} withEqZero${eqzCount === 1 ? "" : "s"}`,
+		Array(Math.max(1,eqzCount)).fill([
+			`    ${eqzCount === 0 ? "-- " : ""}rewrite [withEqZero_def]`,
+			`    ${eqzCount === 0 ? "-- " : ""}MLIR_states_updates`,
+		].join("\n")).join("\n"),
+		`    unfold part${part-1}_drops`,
+		`    -- ${dropCount} drop${dropCount === 1 ? "" : "s"}`,
+		`    ${dropCount === 0 ? "-- " : ""}simp only [State.drop_update_swap, State.drop_update_same]`,
+		`    ${dropCount === 0 ? "-- " : ""}rewrite [State.dropFelts]`,
+		`    ${dropCount === 0 ? "-- " : ""}simp only [State.dropFelts_buffers, State.dropFelts_bufferWidths, State.dropFelts_constraints, State.dropFelts_cycle, State.dropFelts_felts, State.dropFelts_isFailed, State.dropFelts_props, State.dropFelts_vars]`,
+		`    ${dropCount === 0 ? "-- " : ""}simp only [Map.drop_base, ne_eq, Map.update_drop_swap, Map.update_drop]`,
+		`    -- ${setCount} set${setCount === 1 ? "" : "s"}`,
+		`    ${setCount === 0 ? "-- " : ""}rewrite [Map.drop_of_updates]`,
+		`    ${setCount === 0 ? "-- " : ""}simp only [Map.drop_base, ne_eq, Map.update_drop_swap, Map.update_drop]`,
+		...(firstPass || (dropCount + setCount + eqzCount === 0) ? [`    rfl`] : []),
+	].join("\n");
+}
+
+function witnessWeakestPreLast(
+	funcName: string,
+	ir: IR.Statement[],
+	linesPerPart: number,
+	partDrops: IR.DropFelt[][],
+	bufferWidth: number,
+	stateTransformer: string | undefined,
+	cumulativeTransformer: string | undefined,
+	closedForm: string | undefined,
+): string {
+	const part = partDrops.length-1;
 	return [
 		`import Risc0.Basic`,
 		`import Risc0.MlirTactics`,
 		`import Risc0.Gadgets.${funcName}.Witness.Code`,
-		`import Risc0.Gadgets.${funcName}.Witness.WeakestPresPart${parts-2}`,
+		`import Risc0.Gadgets.${funcName}.Witness.WeakestPresPart${part-1}`,
 		``,
 		`namespace Risc0.${funcName}.Witness.WP`,
 		``,
 		`open MLIRNotation`,
 		``,
-		`-- The state obtained by running Code.part${parts-1} on st`,
-		`def part${parts-1}_state (st: State) : State := `,
-		`  ${stateTransformer}`,
+		`-- The state obtained by running Code.part${part} on st`,
+		`def part${part}_state (st: State) : State :=`,
+		`  ${stateTransformer ?? "sorry"}`,
 		``,
-		`-- Prove that substituting part${parts-1}_state for Code.part${parts-1} produces the same result`,
-		`lemma part${parts-1}_wp {st : State} {${variableList("y", " ", bufferWidth)} : Option Felt} :`,
-		`  Code.getReturn (MLIR.runProgram Code.part${parts-1} st) = [${variableList("y", ", ", bufferWidth)}] ↔`,
-		`  Code.getReturn (part${parts-1}_state st) = [${variableList("y", ", ", bufferWidth)}] := by`,
+		`def part${part}_drops (st: State) : State :=`,
+		`  ${getPartDropsDef(partDrops[part])}`,
+		``,
+		`-- Run the program from part${part} onwards by using part${part}_state rather than Code.part${part}`,
+		`def part${part}_state_update (st: State): State :=`,
+		`  part${part}_drops (part${part}_state st)`,
+		``,
+		`-- Prove that substituting part${part}_state for Code.part${part} produces the same result`,
+		`lemma part${part}_wp {st : State} {${variableList("y", " ", bufferWidth)} : Option Felt} :`,
+		`  Code.getReturn (MLIR.runProgram (${codePartsRange(part, partDrops, true)}) st) = [${variableList("y", ", ", bufferWidth)}] ↔`,
+		`  Code.getReturn (part${part}_state_update st) = [${variableList("y", ", ", bufferWidth)}] := by`,
 		`  unfold MLIR.runProgram; simp only`,
-		`  unfold Code.part${parts-1}`,
+		`  generalize eq : (${codePartsRange(part, partDrops, false)}) = prog`,
+		`  unfold Code.part${part}`,
 		`  MLIR`,
-		`  unfold part${parts-1}_state`,
-		`  rfl`,
+		...(stateTransformer === undefined
+			? []
+			: [
+				`  rewrite [←eq]`,
+				`  ${getDropEvaluationRewrites(partDrops, part)}`,
+				`  unfold part${part}_state_update part${part}_drops part${part}_state`,
+				`  rfl`,
+			]
+		),
 		``,
-		`lemma part${parts-1}_updates_opaque {st : State} : `,
-		`  Code.getReturn (part${parts-2}_state_update st) = [${variableList("y", ", ", bufferWidth)}] ↔`,
-		`  Code.getReturn (part${parts-1}_state (part${parts-2}_state st)) = [${variableList("y", ", ", bufferWidth)}] := by`,
-		`  simp [part${parts-2}_state_update, part${parts-1}_wp]`,
+		`lemma part${part}_updates_opaque {st : State} : `,
+		`  Code.getReturn (part${part-1}_state_update st) = [${variableList("y", ", ", bufferWidth)}] ↔`,
+		`  Code.getReturn (part${part}_state_update (part${part-1}_drops (part${part-1}_state st))) = [${variableList("y", ", ", bufferWidth)}] := by`,
+		`  simp [part${part-1}_state_update, part${part}_wp]`,
 		``,
+		// TODO extract input width constant
+		`lemma part${part}_cumulative_wp {${variableList("x"," ",4)}: Felt} :`,
+		`  Code.run (start_state [${variableList("x",",",4)}]) = [${variableList("y",",",bufferWidth)}] ↔`,
+		`  ${cumulativeTransformer ?? "sorry"} := by`,
+		cumulative_wp_proof(part, ir, linesPerPart, partDrops, cumulativeTransformer === undefined),
+		``,
+		...(cumulativeTransformer === undefined
+			? []
+			: [
+				`lemma closed_form {${variableList("x"," ",4)}: Felt} :`,
+				`  Code.run (start_state [${variableList("x",",",4)}]) = [${variableList("y",",",bufferWidth)}] ↔`,
+				`  ${closedForm ?? "sorry"} := by`,
+				cumulative_wp_proof(part+1, ir, linesPerPart, partDrops, false),
+				`    unfold Code.getReturn`,
+				`    simp only`,
+				`    simp [Map.update_get_wobbly, List.getLast!]`,
+			]
+		),
 		`end Risc0.${funcName}.Witness.WP`,
 	].join("\n");
 }
 
-function codePartsRange(start: number, end: number): string {
-	let result = `Code.part${start}`;
-	for (let i = start + 1; i < end; ++i) {
-		result = `${result}; Code.part${i}`;
+function getPartDropsDef(drops: IR.DropFelt[]): string {
+	return drops.reduce((st, drop) => `State.dropFelts (${st}) ⟨"${drop.val}"⟩`, "st");
+}
+
+function getDropEvaluationRewrites(drops: IR.DropFelt[][], part: number): string {
+	if (drops[part].length === 0) {
+		return "";
+	} else {
+		return `rewrite [${drops[part].map((_,idx) => 
+			part === drops.length - 1 && idx === drops[part].length - 1
+				? "MLIR.run_dropfelt"
+				: "MLIR.run_seq_def,MLIR.run_dropfelt"
+		).join(", ")}]`;
 	}
-	return result;
 }
 
-function extractStateTransformer(stderr: string, funcName: string, part: number): string {
-	const searchStart = stderr.indexOf(`${funcName}/Witness/WeakestPresPart${part}.lean:`);
-	const gammaIdx = stderr.indexOf("Γ", searchStart);
-	const codeStart = stderr.indexOf("⟦", gammaIdx);
-	return stderr.slice(gammaIdx+1, codeStart);
+// includeFirstPart is the different between part${start};drops;part${start+1}... and drops;part${start+1}
+export function codePartsRange(start: number, drops: IR.DropFelt[][], includeFirstPart: boolean): string {
+	return drops
+		.slice(start)
+		.flatMap((drops, index) => [
+			...(index===0 && !includeFirstPart ? [] : [`Code.part${index+start}`]),
+			...drops.map(d => d.toString())
+		]).join(";");
 }
 
-function extractStateTransformerLast(stderr: string, funcName: string, part: number): string {
-	const searchStart = stderr.indexOf(`${funcName}/Witness/WeakestPresPart${part}.lean:`);
-	const startIdx = stderr.indexOf("Code.getReturn", searchStart) + "Code.getReturn".length;
-	const iffIdx = stderr.indexOf("↔", startIdx);
-	const endIdx = stderr.slice(0, iffIdx).lastIndexOf("=");
+function extractStateTransformers(stderr: string, funcName: string, part: number): [stateTransformer: string, cumulativeTransformer: string] {
+	// console.log(`STDERR----------------\n${stderr.split("\n").join("----\n----")}\n-------------`);
+	const firstErrorStart = stderr.split("\n").findIndex(line => line.includes(`${funcName}/Witness/WeakestPresPart${part}.lean:`) && line.includes("error: unsolved goals"));
+	// console.log(`First error start line: ${firstErrorStart}`);
+	const secondErrorStart = stderr.split("\n").slice(firstErrorStart+1).findIndex(line => line.includes(`${funcName}/Witness/WeakestPresPart${part}.lean:`) && line.includes("error: type mismatch")) + firstErrorStart + 1;
+	// console.log(`Second error start line: ${secondErrorStart}`);
+	const firstError = stderr.split("\n").slice(firstErrorStart, secondErrorStart).join("\n");
+	const secondError = stderr.split("\n").slice(secondErrorStart).join("\n");
+	// console.log(`FIRST ERROR--\n--\n--\n${firstError}`);
+	// console.log(`\n\n\n\nSECOND ERROR--\n--\n--\n${secondError}`);
+
+	const gammaIdx = firstError.indexOf("Γ");
+	const codeStart = firstError.indexOf("⟦", gammaIdx);
+	const stateTransformer = firstError.slice(gammaIdx+1, codeStart);
+
+	const getReturnIdx = secondError.indexOf("Code.getReturn");
+	const iffIdx = secondError.indexOf("↔");
+	const cumulativeTransformer = secondError.slice(getReturnIdx, iffIdx);
+	return [stateTransformer, cumulativeTransformer];
+}
+
+function extractClosedForm(stderr: string): string {
+	const startIdx = stderr.indexOf("⊢") + 1;
+	const endIdx = stderr.indexOf("↔")
 	return stderr.slice(startIdx, endIdx);
 }
 
-function variableList(name: string, separator: string, count: number): string {
+export function variableList(name: string, separator: string, count: number): string {
 	let result = `${name}0`;
 	for (let i = 1; i < count; ++i) {
 		result = `${result}${separator}${name}${i}`;

@@ -4,9 +4,13 @@ import { witnessWeakestPreFiles } from './witness_wp_parts';
 
 const leanPath = "../is0"
 const outputWidth = 18;
+const linesPerPart = 4;
 
-createCodeFiles(leanPath, 4, (funcName, constraintsParts, witnessParts) => {
+createCodeFiles(leanPath, linesPerPart, (funcName, constraintsParts, witnessIR, witnessDrops) => {
+	witnessWeakestPreFiles(leanPath, funcName, witnessIR, linesPerPart, witnessDrops, outputWidth, () => {
+	// 	witnessWeakestPreFull(leanPath, funcName, witnessIR, witnessDrops, linesPerPart)
+	});
+	// TODO parse bufferWidth/generalise output
 	// constraintsWeakestPreFiles(leanPath, funcName, constraintsParts, () => {
-	// 	witnessWeakestPreFiles(leanPath, funcName, witnessParts, outputWidth); // TODO parse bufferWidth/generalise output
 	// });
 });

@@ -9,11 +9,10 @@ export function getStepwiseOptimisations(ir: IR.Statement[], linesPerPart: numbe
 		const [newCode, moved, done] = delayConstsAndGets(oldCode, visited);
 		if (done) break;
 		moved.forEach((x) => visited.add(x));
-		// console.log(visited);
 		const leanPart = [
 			`def opt${i+1} : MLIRProgram :=`,
 			flattenLeanIR(irLinesToLean(newCode)),
-			// getDelayProof(oldCode, newCode, moved, i),
+			getDelayProof(oldCode, newCode, moved, i),
 			"",
 		]
 		lean = `${lean}\n${leanPart.join("\n")}`;
@@ -24,34 +23,27 @@ export function getStepwiseOptimisations(ir: IR.Statement[], linesPerPart: numbe
 	lean = [
 		lean,
 		optimisedBehaviourFull(i),
-		// irLinesToParts(reorderedCode, linesPerPart),
 	].join("\n");
 	return [reorderedCode, lean];
 }
 
 function optimisedBehaviourFull(count: number): string {
-	return `def opt_full : MLIRProgram := opt${count}`;
-	// let res = [
-	// 	`def opt_full : MLIRProgram := opt${count}`,
-	// 	"lemma optimised_behaviour_full :",
-	// 	"  getReturn (full.runProgram st) =",
-	// 	`  getReturn (opt_full.runProgram st) := by`,
-	// 	`    simp [opt_full`
-	// ].join("\n");
-	// for (let i = 1; i <= count; ++i) {
-	// 	res = `${res},optimised_behaviour${i}`;
-	// }
-	// return `${res}]\n`;
+	return [
+		`def opt_full : MLIRProgram := opt${count}`,
+		`lemma opt_full_def : opt_full = opt${count} := rfl`,
+		`lemma optimised_behaviour_full :`,
+		`  getReturn (full.runProgram st) =`,
+		`  getReturn (opt_full.runProgram st) := by`,
+		`  rewrite [optimised_behaviour${count}]`,
+		`  rw [opt_full]`,
+	].join("\n");
 }
 
 export function delayConstsAndGets(ir: IR.Statement[], visited: Set<string>): [code: IR.Statement[], moved: Set<string>, done: boolean] {
-	const original = ir;
 	let optIR = ir.slice(0);
 	let i = 0;
 	let moved: Set<string> = new Set();
 	while (i < optIR.length && moved.size < 1) {
-		// console.log(`i=${i}`);
-		// visited.forEach((x) => console.log(x));
 		const statement = optIR[i];
 		if (statement.kind !== "assign" || visited.has(statement.target) || !["get", "const"].includes(statement.val.kind)) {
 			++i;
@@ -86,8 +78,9 @@ export function getDelayProof(original: IR.Statement[], optimised: IR.Statement[
 	let ir = original.slice(0);
 	let proofLines = [
 		`lemma optimised_behaviour${proofId+1} :`,
-		`  getReturn (${oldCodeName}.runProgram st) =`,
+		`  getReturn (full.runProgram st) =`,
 		`  getReturn (opt${proofId+1}.runProgram st) := by`,
+		...(proofId === 0 ? [] : [`    rewrite [optimised_behaviour${proofId}]`]),
 		`    unfold getReturn MLIR.runProgram ${oldCodeName}`,
 	];
 
@@ -131,8 +124,6 @@ export function getDelayProof(original: IR.Statement[], optimised: IR.Statement[
 		`    unfold opt${proofId+1}`,
 		"    simp only"
 	]);
-
-	// movedInOrder.forEach((x) => console.log(x.toString()));
 
 	return proofLines.join("\n");
 }
