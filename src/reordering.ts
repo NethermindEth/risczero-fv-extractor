@@ -222,6 +222,8 @@ export function getHypotheses(stmt1: IR.Statement, stmt2: IR.Statement): string 
 	if (ids === "assign/const assign/binop") count = 3;
 	if (ids === "assign/const assign/const") count = 1;
 	if (ids === "assign/const assign/get") count = 1;
+	if (ids === "assign/const assign/isz") count = 2;
+	if (ids === "assign/const eqz") count = 1;
 	if (ids === "assign/const set") count = 1;
 	if (ids === "assign/const assign/true") count = 1;
 	if (ids === "assign/get assign/andEqz") count = 3;

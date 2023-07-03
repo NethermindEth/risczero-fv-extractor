@@ -265,13 +265,13 @@ function createWitnessCodeLean(funcName: string, witness: string[], argIdToName:
 		"",
 		// TODO generalize start state
 		`def start_state (input : BufferAtTime) : State :=`,
-		`  { buffers := Map.fromList [(⟨"in"⟩, [input]), (⟨"data"⟩, [[none, none]])]`,
-		`  , bufferWidths := Map.fromList [(⟨"in"⟩, 1), (⟨"data"⟩, 2)]`,
+		`  { buffers := Map.fromList [(⟨"code"⟩, [input]), (⟨"data"⟩, [[none, none, none, none, none, none, none, none, none, none, none, none, none, none, none, none, none, none, none, none]])]`,
+		`  , bufferWidths := Map.fromList [(⟨"code"⟩, 1), (⟨"data"⟩, 20)]`,
 		`  , constraints := []`,
 		`  , cycle := 0`,
 		`  , felts := Map.empty`,
 		`  , props := Map.empty`,
-		`  , vars := [⟨"in"⟩, ⟨"data"⟩]`,
+		`  , vars := [⟨"code"⟩, ⟨"data"⟩]`,
 		`  , isFailed := false`,
 		`  }`,
 		"",
@@ -300,13 +300,13 @@ function createConstraintsCodeLean(funcName: string, constraints: string[], argI
 		"",
 		// TODO generalize start state
 		`def start_state (input data : BufferAtTime) : State :=`,
-		`  { buffers := Map.fromList [(⟨"in"⟩, [input]), (⟨"data"⟩, [data])]`,
-		`  , bufferWidths := Map.fromList [(⟨"in"⟩, 1), (⟨"data"⟩, 2)]`,
+		`  { buffers := Map.fromList [(⟨"code"⟩, [input]), (⟨"data"⟩, [data])]`,
+		`  , bufferWidths := Map.fromList [(⟨"code"⟩, 1), (⟨"data"⟩, 20)]`,
 		`  , constraints := []`,
 		`  , cycle := 0`,
 		`  , felts := Map.empty`,
 		`  , props := Map.empty`,
-		`  , vars := [⟨"in"⟩, ⟨"data"⟩]`,
+		`  , vars := [⟨"code"⟩, ⟨"data"⟩]`,
 		`  , isFailed := false`,
 		`  }`,
 		"",
@@ -331,7 +331,7 @@ function createConstraintsCodeReorderedLean(funcName: string, witness: string[],
 			"",
 			"open MLIRNotation",
 			reorderedLean,
-			"end Risc0.ComputeDecode.Constraints.Code",
+			`end Risc0.${funcName}.Constraints.Code`,
 		].join("\n")
 	];
 }
@@ -352,7 +352,7 @@ function createWitnessCodeReorderedLean(funcName: string, witness: string[], arg
 			"",
 			"open MLIRNotation",
 			reorderedLean,
-			"end Risc0.ComputeDecode.Witness.Code",
+			`end Risc0.${funcName}.Witness.Code`,
 		].join("\n")
 	];
 }

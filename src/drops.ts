@@ -1,4 +1,4 @@
-import { DataLocEq, IR, irLinesToLean, irLinesToParts, parts, partsCombine } from "./IR";
+import { DataLocEq, IR, irLinesToLean, irLinesToParts } from "./IR";
 import { getSwapLemmaNamePart } from "./reordering";
 
 export function createCodeDropsLean(funcName: string, ir: IR.Statement[], linesPerPart: number, witnessOrConstraints: "Witness" | "Constraints"): [lean: string, part_drops: IR.DropFelt[][]] {
@@ -12,7 +12,7 @@ export function createCodeDropsLean(funcName: string, ir: IR.Statement[], linesP
 		"",
 		parts_defs(ir, part_drops, linesPerPart),
 		"",
-		`end Risc0.ComputeDecode.${witnessOrConstraints}.Code`,
+		`end Risc0.${funcName}.${witnessOrConstraints}.Code`,
 	].join("\n"), part_drops];
 }
 
@@ -37,16 +37,33 @@ function accumulateDropsBeforePart(parts_drops: IR.DropFelt[][], part: number): 
 	return parts_drops.slice(0, part).flat();
 }
 
-function getDropsBeforeCode(parts_drops: IR.DropFelt[][], part: number): string {
+function getDropsBeforeCode(parts_drops: IR.DropFelt[][], part: number, dropCount: number): string {
 	return `${
-		accumulateDropsBeforePart(parts_drops, part).map(drop => drop.toString()).join(";")
+		accumulateDropsBeforePart(parts_drops, part).slice(-dropCount).map(drop => drop.toString()).join(";")
 	};part${part};rest`;
 }
 
-function getDropsAfterCode(parts_drops: IR.DropFelt[][], part: number): string {
+function getDropsBeforeCodeFull(parts_drops: IR.DropFelt[][], part: number): string {
+	return [
+		...accumulateDropsBeforePart(parts_drops, part).map(drop => drop.toString()),
+		...parts_drops.slice(part).flatMap((drops, idx) => [
+			`part${idx+part}`,
+			...drops.map(drop => `${drop.toString()}`)
+		])
+	].join(";");
+}
+
+function getDropsAfterCode(parts_drops: IR.DropFelt[][], part: number, dropCount: number): string {
 	return `part${part};${
-		accumulateDropsBeforePart(parts_drops, part).map(drop => drop.toString()).join(";")
+		accumulateDropsBeforePart(parts_drops, part).slice(-dropCount).map(drop => drop.toString()).join(";")
 	};rest`;
+}
+
+function getDropsAfterCodeFull(parts_drops: IR.DropFelt[][], part: number): string {
+	return [
+		...parts_drops.slice(part).map((_, idx) => `part${part+idx}`),
+		...parts_drops.flatMap(drops => drops.map(d => d.toString()))
+	].join(";");
 }
 
 function getUsedFelts(ir: IR.Statement[]): string[] {
@@ -61,57 +78,132 @@ function getUsedFelts(ir: IR.Statement[]): string[] {
 }
 
 function getDropsBehaviourProofs(parts_drops: IR.DropFelt[][], ir: IR.Statement[], linesPerPart: number): string {
+	const dropChunkSize = 10;
 	let lean: string = "";
-	for (let part = 0; part < parts_drops.length; ++part) {
+	for (let part = parts_drops.length-1; part >= 0; --part) {
 		const dropCount = accumulateDropsBeforePart(parts_drops, part).length;
-		if (dropCount === 0) continue;
-
-		const lhs = `Γ st ⟦${getDropsBeforeCode(parts_drops, part)}⟧`;
-		const rhs = `Γ st ⟦${getDropsAfterCode(parts_drops, part)}⟧`;
-		const lemmaDeclaration = `lemma behaviour_with_drops${part} :\n  ${lhs} =\n  ${rhs} := by`;
-		lean = `${lean}\n${lemmaDeclaration}`;
-
-		if (dropCount > 1) {
-			lean = `${lean}\n    rewrite[${Array(dropCount-1).fill("MLIR.run_seq_def").join(",")}]`;
-		}
 		const partStatements = ir.slice((part)*linesPerPart,(part+1)*linesPerPart);
 		const hyps = getUsedFelts(partStatements).map(() => " (by trivial)").join("");
-		lean = `${lean}\n${[
-			...Array(dropCount-1).fill(
-				`    rewrite [drop_past_part${part}${hyps}, ←MLIR.run_seq_def]`
-			),
-			`    rw [drop_past_part${part}${hyps}]`
-		].join("\n")}`;
+		if (dropCount === 0) {
+			lean = [
+				lean,
+				`lemma behaviour_with_drops${part===0?"":`${part}`} :`,
+				`  Γ st ⟦${getDropsBeforeCodeFull(parts_drops, part)}⟧ =`,
+				`  Γ st ⟦${getDropsAfterCodeFull(parts_drops, part)}⟧ := by`,
+				`    rewrite [MLIR.run_seq_def]`,
+				`    rewrite [${
+					part<parts_drops.length-1?`behaviour_with_drops${part+1}, `:""
+				}←MLIR.run_seq_def]`,
+				`    rfl`
+			].join("\n")
+		} else if (dropCount <= dropChunkSize) {
+			lean = [
+				lean,
+				`lemma behaviour_with_drops${part} :`,
+				`  Γ st ⟦${getDropsBeforeCodeFull(parts_drops, part)}⟧ =`,
+				`  Γ st ⟦${getDropsAfterCodeFull(parts_drops, part)}⟧ := by`,
+				...(dropCount > 1
+					? [
+						`    rewrite [${Array(dropCount-1).fill("MLIR.run_seq_def")}]`,
+						`    rewrite [${Array(dropCount-1).fill(`drop_past_part${part}${hyps}, ←MLIR.run_seq_def`)}]`
+					]
+					: []
+				),
+				`    rewrite [drop_past_part${part}${hyps}, MLIR.run_seq_def]`,
+				`    rewrite [${
+					part<parts_drops.length-1?`behaviour_with_drops${part+1}, `:""
+				}←MLIR.run_seq_def]`,
+				`    rfl`
+			].join("\n")
+		} else {
+			lean = [
+				lean,
+				`lemma behaviour_with_drops${part}_1 :`,
+				`  Γ st ⟦${getDropsBeforeCode(parts_drops, part, dropChunkSize)}⟧ =`,
+				`  Γ st ⟦${getDropsAfterCode(parts_drops, part, dropChunkSize)}⟧ := by`,
+				`    rewrite [${Array(dropChunkSize-1).fill("MLIR.run_seq_def")}]`,
+				`    rewrite [${Array(dropChunkSize-1).fill(`drop_past_part${part}${hyps}, ←MLIR.run_seq_def`)}]`,
+				`    rw [drop_past_part${part}${hyps}]`,
+			].join("\n");
+			const lemmaCount = Math.ceil(dropCount/dropChunkSize);
+			for (let i = 2; i < lemmaCount; ++i) {
+				lean = [
+					lean,
+					`lemma behaviour_with_drops${part}_${i} :`,
+					`  Γ st ⟦${getDropsBeforeCode(parts_drops, part, i*dropChunkSize)}⟧ =`,
+					`  Γ st ⟦${getDropsAfterCode(parts_drops, part, i*dropChunkSize)}⟧ := by`,
+					`    rewrite [${Array(dropChunkSize).fill("MLIR.run_seq_def")}]`,
+					`    rewrite [behaviour_with_drops${part}_${i-1}, ←MLIR.run_seq_def]`,
+					`    rewrite [${Array(dropChunkSize-1).fill(`drop_past_part${part}${hyps}, ←MLIR.run_seq_def`)}]`,
+					`    rw [drop_past_part${part}${hyps}]`,
+				].join("\n");
+			}
+			const count = dropCount-(lemmaCount-1)*dropChunkSize;
+			lean = [
+				lean,
+				`lemma behaviour_with_drops${part} :`,
+				`  Γ st ⟦${getDropsBeforeCodeFull(parts_drops, part)}⟧ =`,
+				`  Γ st ⟦${getDropsAfterCodeFull(parts_drops, part)}⟧ := by`,
+				`    rewrite [${Array(count).fill("MLIR.run_seq_def")}]`,
+				`    rewrite [behaviour_with_drops${part}_${lemmaCount-1}, ←MLIR.run_seq_def]`,
+				...(count > 1
+					? [`    rewrite [${Array(count-1).fill(`drop_past_part${part}${hyps}, ←MLIR.run_seq_def`)}]`]
+					: []
+				),
+				`    rewrite [drop_past_part${part}${hyps}, MLIR.run_seq_def]`,
+				`    rewrite [${
+					part<parts_drops.length-1?`behaviour_with_drops${part+1}, `:""
+				}←MLIR.run_seq_def]`,
+				`    rfl`
+			].join("\n")
+		}
+
+		// const lhs = `Γ st ⟦${getDropsBeforeCode(parts_drops, part)}⟧`;
+		// const rhs = `Γ st ⟦${getDropsAfterCode(parts_drops, part)}⟧`;
+		// const lemmaDeclaration = `lemma behaviour_with_drops${part} :\n  ${lhs} =\n  ${rhs} := by`;
+		// lean = `${lean}\n${lemmaDeclaration}`;
+
+		// if (dropCount > 1) {
+		// 	lean = `${lean}\n    rewrite[${Array(dropCount-1).fill("MLIR.run_seq_def").join(",")}]`;
+		// }
+		// lean = `${lean}\n${[
+		// 	...Array(dropCount-1).fill(
+		// 		`    rewrite [drop_past_part${part}${hyps}, ←MLIR.run_seq_def]`
+		// 	),
+		// 	`    rw [drop_past_part${part}${hyps}]`
+		// ].join("\n")}`;
 	}
 
-	const lhs = `Γ st ⟦${parts_drops.flatMap((drops, idx) => [`part${idx}`,...drops.map(d => d.toString())]).join(";")}⟧`;
+	// const lhs = `Γ st ⟦${parts_drops.flatMap((drops, idx) => [`part${idx}`,...drops.map(d => d.toString())]).join(";")}⟧`;
 	const partsInSequence = Array(parts_drops.length).fill("part").map((s, idx) => `${s}${idx}`).join(";")
 	const rhs = `Γ st ⟦${partsInSequence};${
 		parts_drops.flat().map(d => d.toString()).join(";")
 	}⟧`;
-	const lemmaDeclaration = `lemma behaviour_with_drops :\n  ${lhs} =\n  ${rhs} := by`;
-	lean = `${lean}\n${lemmaDeclaration}`;
-	lean = [
-		lean,
-		`    let rhs : State := (${rhs})`,
-		`    have h_rhs : rhs = ${rhs} := rfl`,
-		`    rewrite [←h_rhs]`
-	].join("\n");
-	for (let part = 0; part < parts_drops.length; ++part) {
-		if (part > 0 && parts_drops[part-1].length > 0) {
-			lean = `${lean}\n    rewrite [behaviour_with_drops${part}]`;
-		}
-		lean = [
-			lean,
-			`    rewrite [MLIR.run_seq_def]`,
-			`    let st${part} : State := (Γ st${part===0?"":part-1} ⟦part${part}⟧)`,
-			`    have h_st${part} : st${part} = (Γ st${part===0?"":part-1} ⟦part${part}⟧) := rfl`,
-			`    rewrite [←h_st${part}]`
-		].join("\n");
-	}
-	for (let part = parts_drops.length - 1; part >= 0; --part) {
-		lean = `${lean}\n    ${part===0?"rw":"rewrite"} [h_st${part}, ←MLIR.run_seq_def]`;
-	}
+	// const lemmaDeclaration = `lemma behaviour_with_drops :\n  ${lhs} =\n  ${rhs} := by`;
+	// lean = `${lean}\n${lemmaDeclaration}`;
+	// lean = [
+	// 	lean,
+	// 	`    let rhs : State := (${rhs})`,
+	// 	`    have h_rhs : rhs = ${rhs} := rfl`,
+	// 	`    rewrite [←h_rhs]`
+	// ].join("\n");
+	// for (let part = 0; part < parts_drops.length; ++part) {
+	// 	if (part > 0 && parts_drops[part-1].length > 0) {
+	// 		lean = `${lean}\n    rewrite [behaviour_with_drops${part}]`;
+	// 	}
+	// 	lean = [
+	// 		lean,
+	// 		`    rewrite [MLIR.run_seq_def]`,
+	// 		`    let st${part} : State := (Γ st${part===0?"":part-1} ⟦part${part}⟧)`,
+	// 		`    have h_st${part} : st${part} = (Γ st${part===0?"":part-1} ⟦part${part}⟧) := rfl`,
+	// 		`    rewrite [←h_st${part}]`
+	// 	].join("\n");
+	// }
+	// for (let part = parts_drops.length - 1; part >= 0; --part) {
+	// 	lean = `${lean}\n    ${part===0?"rw":"rewrite"} [h_st${part}, ←MLIR.run_seq_def]`;
+	// }
+
+
 
 	lean = [
 		lean,
@@ -187,7 +279,7 @@ export function createWitnessCodeWithDropsLean(funcName: string, ir: IR.Statemen
 		"open MLIRNotation",
 		"def full_opt : MLIRProgram :=",
 		irLinesToLean(irWithDrops),
-		"end Risc0.ComputeDecode.Witness.Code",
+		"end Risc0.${funcName}.Witness.Code",
 	].join("\n");
 }
 

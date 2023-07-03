@@ -313,7 +313,7 @@ function constraintsWeakestPreLast(
 		`  simp [part${part-1}_state_update, part${part}_wp]`,
 		``,
 		// TODO extract input width constant
-		`lemma part${part}_cumulative_wp {${variableList("x"," ",1)} ${variableList("y"," ",18)}: Felt} :`,
+		`lemma part${part}_cumulative_wp {${variableList("x"," ",1)} ${variableList("y"," ",bufferWidth)}: Felt} :`,
 		`  Code.run (start_state [${variableList("x",",",1)}] ([${variableList("y",",",bufferWidth)}])) ↔`,
 		`  ${cumulativeTransformer ?? "sorry"} := by`,
 		cumulative_wp_proof(part, ir, linesPerPart, partDrops, cumulativeTransformer === undefined),

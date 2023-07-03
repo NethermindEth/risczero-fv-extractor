@@ -205,36 +205,5 @@ export function parts(length: number, linesPerPart: number): string[] {
 	return output.map(i => `part${i}`);
 }
 
-export function partsCombine(fullLines: IR.Statement[], fullName: string, linesPerPart: number): string {
-	let tactics: string[] = [];
-	for (let part = 0; part * linesPerPart < fullLines.length; ++part) {
-		tactics.push(`  unfold part${part}`);
-		if ((part + 1) * linesPerPart >= fullLines.length) {
-			tactics.push(`  rfl`)
-		} else {
-			tactics.push(`  rewrite [MLIR.part_assoc_${fullLines.slice(part*linesPerPart, (part+1)*linesPerPart).map(stmt => stmt.nondet?"n":"d").join("")}]`);
-			for (let i = 0; i < linesPerPart && part * linesPerPart + i < fullLines.length; ++i) {
-				const nondet = fullLines[part * linesPerPart + i].nondet;
-				if (!nondet) {
-					tactics.push(`  apply MLIR.seq_step_eq\n  intro st`)
-				} else {
-					// TODO range check this
-					const nextNondet = fullLines[part * linesPerPart + i + 1].nondet
-					if (nextNondet) { // nondet s1; s2 = nondet (s1; s3); s4
-						tactics.push(`  apply MLIR.nondet_step_eq\n  intro st`)
-					} else {
-						tactics.push(`  apply MLIR.seq_step_eq\n  intro st`)
-					}
-				}
-			}
-		}
-	}
-	return [
-		"lemma parts_combine {st: State} :",
-		"  Γ st ⟦parts_combined⟧ =",
-		`  Γ st ⟦${fullName}⟧ := by`,
-		`  unfold ${fullName} parts_combined`,
-		...tactics
-	].join("\n");
-}
+
 // TODO move these into an appropriate file
