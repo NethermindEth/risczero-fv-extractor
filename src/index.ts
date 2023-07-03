@@ -8,9 +8,7 @@ const linesPerPart = 4;
 
 createCodeFiles(leanPath, linesPerPart, (funcName, constraintsIR, constraintsDrops, witnessIR, witnessDrops) => {
 	constraintsWeakestPreFiles(leanPath, funcName, constraintsIR, linesPerPart, constraintsDrops, outputWidth, () => {
-		witnessWeakestPreFiles(leanPath, funcName, witnessIR, linesPerPart, witnessDrops, outputWidth, () => {
-		// 	witnessWeakestPreFull(leanPath, funcName, witnessIR, witnessDrops, linesPerPart)
-		});
+		witnessWeakestPreFiles(leanPath, funcName, witnessIR, linesPerPart, witnessDrops, outputWidth, () => {});
 	});
 	// TODO parse bufferWidth/generalise output
 });

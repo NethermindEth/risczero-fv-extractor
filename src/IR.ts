@@ -64,7 +64,16 @@ export namespace IR {
 		uses(): DataLoc[] { return [ {kind: "felt", idx: this.val}, {kind: "prop", idx: this.cond}]}
 	}
 
-	export type Val = Const | True | Get | BinOp | IsZ | AndEqz;
+	export class Inv {
+		kind: "inv" = "inv";
+		constructor (public op: string) {}
+		toString(): string {
+			return `Inv⟨"${this.op}"⟩`;
+		}
+		uses(): DataLoc[] { return [ {kind: "felt", idx: this.op}]}
+	}
+
+	export type Val = Const | True | Get | BinOp | IsZ | AndEqz | Inv;
 
 	export class Assign {
 		kind: "assign" = "assign";
@@ -109,6 +118,20 @@ export namespace IR {
 		uses(): DataLoc[] { return [ {kind: "felt", idx: this.val}]}
 		creates(): DataLoc[] { return [] }
 		id(): string { return `${this.kind}`}
+	}
+
+	export class If {
+		kind: "if" = "if";
+		constructor(public cond: string, public body: IR.Statement[]) {}
+		toString(): string {
+			return `guard ⟨"${this.cond}"⟩ then ${this.body.map(s => s.toString()).join("; ")}`;
+		}
+		uses(): DataLoc[] { return this.body.map(s => s.uses()).reduce((acc, curr) => [
+			...acc,
+			...curr.filter(x => !acc.some(y => DataLocEq(x, y)))
+		], [{kind: "felt", idx: this.cond}])}
+		creates(): DataLoc[] { return this.body.flatMap(x => x.creates()) }
+		id(): string { return `${this.kind}`} //TODO
 	}
 
 	export type Statement = Assign | SetInstr | Eqz | DropFelt;

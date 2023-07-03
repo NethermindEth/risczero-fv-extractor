@@ -156,6 +156,11 @@ function parseIRLines(irLines: string[], argIdToName: Map<string, string>): IR.S
 				const op1 = rhs.slice(op1Start, op1End);
 				const op2 = rhs.slice(op2Start, op2End);
 				rhsVal = new IR.BinOp("Sub", op1, op2);
+			} else if (rhs.startsWith("cirgen.inv ")) {
+				const opStart = rhs.indexOf("%");
+				const opEnd = rhs.indexOf(" ", opStart);
+				const op = rhs.slice(opStart, opEnd);
+				rhsVal = new IR.Inv(op);
 			} else if (rhs.startsWith("cirgen.isz ")) {
 				const opStart = rhs.indexOf("%");
 				const opEnd = rhs.indexOf(" ", opStart);
@@ -260,8 +265,8 @@ function createWitnessCodeLean(funcName: string, witness: string[], argIdToName:
 		"",
 		// TODO generalize start state
 		`def start_state (input : BufferAtTime) : State :=`,
-		`  { buffers := Map.fromList [(⟨"in"⟩, [input]), (⟨"data"⟩, [[none, none, none, none, none, none, none, none, none, none, none, none, none, none, none, none, none, none]])]`,
-		`  , bufferWidths := Map.fromList [(⟨"in"⟩, 4), (⟨"data"⟩, 18)] --input width 128?`,
+		`  { buffers := Map.fromList [(⟨"in"⟩, [input]), (⟨"data"⟩, [[none, none]])]`,
+		`  , bufferWidths := Map.fromList [(⟨"in"⟩, 1), (⟨"data"⟩, 2)]`,
 		`  , constraints := []`,
 		`  , cycle := 0`,
 		`  , felts := Map.empty`,
@@ -296,7 +301,7 @@ function createConstraintsCodeLean(funcName: string, constraints: string[], argI
 		// TODO generalize start state
 		`def start_state (input data : BufferAtTime) : State :=`,
 		`  { buffers := Map.fromList [(⟨"in"⟩, [input]), (⟨"data"⟩, [data])]`,
-		`  , bufferWidths := Map.fromList [(⟨"in"⟩, 4), (⟨"data"⟩, 18)] --input width 128?`,
+		`  , bufferWidths := Map.fromList [(⟨"in"⟩, 1), (⟨"data"⟩, 2)]`,
 		`  , constraints := []`,
 		`  , cycle := 0`,
 		`  , felts := Map.empty`,
