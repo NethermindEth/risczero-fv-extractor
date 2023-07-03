@@ -56,7 +56,7 @@ export namespace IR {
 	}
 	
 	export class AndEqz {
-		kind: "andeqz" = "andeqz";
+		kind: "andEqz" = "andEqz";
 		constructor (public cond: string, public val: string) {}
 		toString(): string {
 			return `⟨"${this.cond}"⟩ &₀ ⟨"${this.val}"⟩`;

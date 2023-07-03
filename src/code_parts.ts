@@ -1,12 +1,10 @@
-import { IR, flattenLeanIR, irLinesToLean, irLinesToParts, parts, partsCombine } from "./IR";
-import { getPartDrops } from "./drops";
-import { advance, bufferOpSwapSuffix, getSwapLemmaNamePart, retreat, swapForwards } from "./reordering";
+import { IR, irLinesToParts, parts, partsCombine } from "./IR";
 
-export function createWitnessPartsLean(funcName: string, ir: IR.Statement[], linesPerPart: number): string {
+export function createCodePartsLean(funcName: string, ir: IR.Statement[], linesPerPart: number, witnessOrConstraints: "Witness" | "Constraints"): string {
 	return [
-		`import Risc0.Gadgets.${funcName}.Witness.CodeReordered`,
+		`import Risc0.Gadgets.${funcName}.${witnessOrConstraints}.CodeReordered`,
 		"",
-		`namespace Risc0.${funcName}.Witness.Code`,
+		`namespace Risc0.${funcName}.${witnessOrConstraints}.Code`,
 		"",
 		"open MLIRNotation",
 		"",
@@ -15,6 +13,6 @@ export function createWitnessPartsLean(funcName: string, ir: IR.Statement[], lin
 		"abbrev parts_combined : MLIRProgram :=",
 		`  ${parts(ir.length, linesPerPart).join("; ")}`,
 		partsCombine(ir, "opt_full", linesPerPart),
-		"end Risc0.ComputeDecode.Witness.Code",
+		`end Risc0.ComputeDecode.${witnessOrConstraints}.Code`,
 	].join("\n");
 }

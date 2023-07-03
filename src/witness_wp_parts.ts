@@ -22,8 +22,8 @@ export function witnessWeakestPreFiles(leanPath: string, funcName: string, ir: I
 		console.log("  0 - sorry");
 		exec(`cd ${leanPath}; lake build`, (error, stdout, stderr) => {
 			const [stateTransformer, cumulativeTransformer] = extractStateTransformers(stderr, funcName, 0);
-			console.log(stateTransformer);
-			console.log(cumulativeTransformer);
+			console.log(`State transformer: "${stateTransformer}"`);
+			console.log(`Cumulative transformer: "${cumulativeTransformer}"`);
 			const part0 = witnessWeakestPrePart0(funcName, partDrops, bufferWidth, stateTransformer, cumulativeTransformer);
 			console.log("  0 - corrected");
 			fs.writeFileSync(`${leanPath}/Risc0/Gadgets/${funcName}/Witness/WeakestPresPart0.lean`, part0);
@@ -49,8 +49,8 @@ function recurseThroughMidFiles(leanPath: string, funcName: string, part: number
 		console.log(`  ${part} - sorry`);
 		exec(`cd ${leanPath}; lake build`, (error, stdout, stderr) => {
 			const [stateTransformer, cumulativeTransformer] = extractStateTransformers(stderr, funcName, part);
-			console.log(stateTransformer);
-			console.log(cumulativeTransformer);
+			console.log(`State transformer: "${stateTransformer}"`);
+			console.log(`Cumulative transformer: "${cumulativeTransformer}"`);
 			const mid = witnessWeakestPreMid(funcName, part, ir, linesPerPart, partDrops, bufferWidth, stateTransformer, cumulativeTransformer);
 			console.log(`  ${part} - corrected`);
 			fs.writeFileSync(`${leanPath}/Risc0/Gadgets/${funcName}/Witness/WeakestPresPart${part}.lean`, mid);
@@ -77,8 +77,8 @@ function lastFile(leanPath: string, funcName: string, ir: IR.Statement[], linesP
 	console.log(`  ${part} - sorry`);
 	exec(`cd ${leanPath}; lake build`, (error, stdout, stderr) => {
 		const [stateTransformer, cumulativeTransformer] = extractStateTransformers(stderr, funcName, part);
-		console.log(stateTransformer);
-		console.log(cumulativeTransformer);
+		console.log(`State transformer: "${stateTransformer}"`);
+		console.log(`Cumulative transformer: "${cumulativeTransformer}"`);
 		const last = witnessWeakestPreLast(funcName, ir, linesPerPart, partDrops, bufferWidth, stateTransformer, cumulativeTransformer, undefined);
 		console.log(`  ${part} - corrected`);
 		fs.writeFileSync(`${leanPath}/Risc0/Gadgets/${funcName}/Witness/WeakestPresPart${part}.lean`, last);
@@ -139,11 +139,12 @@ function witnessWeakestPrePart0(funcName: string, partDrops: IR.DropFelt[][], bu
 		...(stateTransformer === undefined
 			? []
 			: [
-				`  unfold part0_state_update part0_state part0_drops`,
-				`  ${getDropEvaluationRewrites(partDrops, 0)}`,
 				`  rewrite [←eq]`,
+				`  ${getDropEvaluationRewrites(partDrops, 0)}`,
+				`  unfold part0_state_update part0_drops part0_state`,
 				`  rfl`,
-			]),
+			]
+		),
 		``,
 		`lemma part0_cumulative_wp :`,
 		`  Code.run (start_state [x0,x1,x2,x3]) = [y0,y1,y2,y3,y4,y5,y6,y7,y8,y9,y10,y11,y12,y13,y14,y15,y16,y17] ↔`,
@@ -377,6 +378,13 @@ function extractStateTransformers(stderr: string, funcName: string, part: number
 	const getReturnIdx = secondError.indexOf("Code.getReturn");
 	const iffIdx = secondError.indexOf("↔");
 	const cumulativeTransformer = secondError.slice(getReturnIdx, iffIdx);
+
+	if (stateTransformer.trim() === "") {
+		throw "Failed to extract state transformer from lake error message. There is likely an unexpected error";
+	}
+	if (cumulativeTransformer.trim() === "") {
+		throw "Failed to extract cumulative transformer from lake error message. There is likely an unexpected error";
+	}
 	return [stateTransformer, cumulativeTransformer];
 }
 

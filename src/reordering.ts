@@ -162,26 +162,25 @@ export function swapForwards(currIdx: number, target: number, ir: IR.Statement[]
 	let line = "    rewrite[";
 	let comma = false;
 	const current = ir[currIdx];
-	let first;
 	
 	for (let i = currIdx; i < target; ++i) {
 		// console.log(`curr: ${i} stmt: ${current.toString()} next: ${ir[i+1].toString()}`)
 		const next = ir[i+1];
-		line = `${line}${comma?",":""}${getSwapLemmaNamePart(current)}_past_${getSwapLemmaNamePart(next)}`;
+		
+		if (next.nondet && ir[i+2].nondet) {
+			line = `${line}${comma?",":""}opt_swap_nondet_seq (`
+		} else if (next.nondet) {
+			line = `${line}${comma?",":""}opt_swap_nondet_single (`
+		} else {
+			line = `${line}${comma?",":""}opt_swap (`
+		}
+
+		line = `${line}${getSwapLemmaNamePart(current)}_past_${getSwapLemmaNamePart(next)}`;
 		line = `${line}${bufferOpSwapSuffix(current, next)}`;
-		if (next.nondet) {
-			line = `${line}_nondet`;
-			if (!ir[i+2].nondet) {
-				line = `${line}_single`;
-			}
-		}
-		line = `${line} ${getHypotheses(current, next)}`;
-		if (i < target - 1) {
-			line = `${line},MLIR.run_seq_def`
-		}
-		comma ||= true;
+		line = `${line} ${getHypotheses(current, next)})`;
+		comma = true;
 	}
-	return `${line}]`;
+	return `${line}]\n    simp only [←MLIR.run_nondet]\n    rewrite [←MLIR.run_seq_def]`;
 }
 
 export function getSwapLemmaNamePart(stmt: IR.Statement): string {
@@ -219,18 +218,19 @@ export function getHypotheses(stmt1: IR.Statement, stmt2: IR.Statement): string 
 	const ids = `${stmt1.id()} ${stmt2.id()}`;
 	// console.log(ids);
 	let count = null;
+	if (ids === "assign/const assign/andEqz") count = 1;
+	if (ids === "assign/const assign/binop") count = 3;
 	if (ids === "assign/const assign/const") count = 1;
 	if (ids === "assign/const assign/get") count = 1;
-	if (ids === "assign/const assign/binop") count = 3;
 	if (ids === "assign/const set") count = 1;
+	if (ids === "assign/const assign/true") count = 1;
+	if (ids === "assign/get assign/andEqz") count = 3;
 	if (ids === "assign/get assign/binop") count = 3;
 	if (ids === "assign/get assign/const") count = 1;
 	if (ids === "assign/get assign/get") count = 2;
 	if (ids === "assign/get set") count = 2;
 	if (count === null) {
-		console.log(ids);
-		console.log("TODO hyp");
-		return "";
+		throw `unknown number of hypotheses for ${ids}`;
 	} else {
 		return " (by trivial)".repeat(count).trim();
 	}

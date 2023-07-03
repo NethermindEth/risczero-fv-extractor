@@ -3,31 +3,46 @@ import fs from 'fs';
 import { addToImportFile } from './util';
 import { IR, irLinesToLean, irLinesToParts, parts } from './IR';
 import { delayConstsAndGets, getDelayProof, getStepwiseOptimisations } from './reordering';
-import { createWitnessCodeWithDropsLean, createWitnessDropsLean } from './drops';
-import { createWitnessPartsLean } from './code_parts';
+import { createWitnessCodeWithDropsLean, createCodeDropsLean } from './drops';
+import { createCodePartsLean } from './code_parts';
 
 const skipUnOpt = false;
 const skipOpt = false;
 
-export function createCodeFiles(leanPath: string, linesPerPart: number, callback: (funcName: string, constraintsParts: number, witnessReorderedIR: IR.Statement[], witnessPartDrops: IR.DropFelt[][]) => void) {
+export function createCodeFiles(
+	leanPath: string,
+	linesPerPart: number,
+	callback: (funcName: string, constraintsReorderedIR: IR.Statement[], constraintsPartDrops: IR.DropFelt[][], witnessReorderedIR: IR.Statement[], witnessPartDrops: IR.DropFelt[][]) => void
+) {
 	console.log(`Creating code files ${skipUnOpt ? "unopt skipped" : ""} ${skipOpt ? "opt skipped" : ""}`);
 	const witness = loadWitnessMLIR();
 	const constraints = loadConstraintsMLIR();
 	const [funcName, args, argIdToName] = parseFuncLine(witness[1]);
 
 	const witnessCodeLean = createWitnessCodeLean(funcName, witness, argIdToName, linesPerPart);
+	const constraintsCodeLean = createConstraintsCodeLean(funcName, constraints, argIdToName, linesPerPart);
+
 	const [witnessReorderedIR, witnessReorderedLean] = createWitnessCodeReorderedLean(funcName, witness, argIdToName, linesPerPart);
-	const witnessPartsLean = createWitnessPartsLean(funcName, witnessReorderedIR, linesPerPart);
-	const [witnessDropsLean, witnessPartDrops] = createWitnessDropsLean(funcName, witnessReorderedIR, linesPerPart);
-	const [constraintsCodeLean, constraintsPartCount] = createConstraintsCodeLean(funcName, constraints, argIdToName, linesPerPart);
+	const [constraintsReorderedIR, constraintsReorderedLean] = createConstraintsCodeReorderedLean(funcName, constraints, argIdToName, linesPerPart);
+
+	const witnessPartsLean = createCodePartsLean(funcName, witnessReorderedIR, linesPerPart, "Witness");
+	const constraintsPartsLean = createCodePartsLean(funcName, constraintsReorderedIR, linesPerPart, "Constraints");
+
+	const [witnessDropsLean, witnessPartDrops] = createCodeDropsLean(funcName, witnessReorderedIR, linesPerPart, "Witness");
+	const [constraintsDropsLean, constraintsPartDrops] = createCodeDropsLean(funcName, constraintsReorderedIR, linesPerPart, "Constraints");
+
 	if (!skipUnOpt) {
 		outputCodeFiles(leanPath, funcName, witnessCodeLean, constraintsCodeLean);
 	}
 	if (!skipOpt) {
-		outputOptCodeFiles(leanPath, funcName, witnessReorderedLean, witnessPartsLean, witnessDropsLean);
+		outputOptCodeFiles(
+			leanPath, funcName,
+			witnessReorderedLean, witnessPartsLean, witnessDropsLean,
+			constraintsReorderedLean, constraintsPartsLean, constraintsDropsLean
+		);
 	}
 	if (skipUnOpt && skipOpt) {
-		callback(funcName, constraintsPartCount, witnessReorderedIR, witnessPartDrops);
+		callback(funcName, constraintsReorderedIR, constraintsPartDrops, witnessReorderedIR, witnessPartDrops);
 	} else {
 		exec(`cd ${leanPath}; lake build`, (error, stdout, stderr) => {
 			if (stdout !== "") {
@@ -42,7 +57,7 @@ export function createCodeFiles(leanPath: string, linesPerPart: number, callback
 				console.log("---error---:\n\n");
 				console.log(error);
 			} else {
-				callback(funcName, constraintsPartCount, witnessReorderedIR, witnessPartDrops);
+				callback(funcName, constraintsReorderedIR, constraintsPartDrops, witnessReorderedIR, witnessPartDrops);
 			}
 		}).stdout?.pipe(process.stdout);
 	}
@@ -260,6 +275,62 @@ function createWitnessCodeLean(funcName: string, witness: string[], argIdToName:
 	].join("\n");
 }
 
+function createConstraintsCodeLean(funcName: string, constraints: string[], argIdToName: Map<string, string>, linesPerPart: number): string {
+	const constraintsFullLines = parseIRLines(constraints, argIdToName);
+	return [
+		"import Risc0.Basic",
+		"import Risc0.Lemmas",
+		"",
+		`namespace Risc0.${funcName}.Constraints.Code`,
+		"",
+		"open MLIRNotation",
+		"",
+		"def full : MLIRProgram :=",
+		irLinesToLean(constraintsFullLines),
+		getConstraintsReturn(constraints),
+		"def run (st: State) : Prop :=",
+		"  getReturn (full.runProgram st)",
+		"",
+		"end Code",
+		"",
+		// TODO generalize start state
+		`def start_state (input data : BufferAtTime) : State :=`,
+		`  { buffers := Map.fromList [(⟨"in"⟩, [input]), (⟨"data"⟩, [data])]`,
+		`  , bufferWidths := Map.fromList [(⟨"in"⟩, 4), (⟨"data"⟩, 18)] --input width 128?`,
+		`  , constraints := []`,
+		`  , cycle := 0`,
+		`  , felts := Map.empty`,
+		`  , props := Map.empty`,
+		`  , vars := [⟨"in"⟩, ⟨"data"⟩]`,
+		`  , isFailed := false`,
+		`  }`,
+		"",
+		`end Risc0.${funcName}.Constraints`,
+		""
+	].join("\n");
+}
+
+function createConstraintsCodeReorderedLean(funcName: string, witness: string[], argIdToName: Map<string, string>, linesPerPart: number): [ir: IR.Statement[], lean: string] {
+	const IR = parseIRLines(witness, argIdToName);
+	const [reorderedIR, reorderedLean] = getStepwiseOptimisations(IR, linesPerPart);
+	IR.forEach(x => console.log(x.toString()));
+	return [
+		reorderedIR,
+		[
+			"import Risc0.Map",
+			"import Risc0.MlirTactics",
+			"import Risc0.Optimisation",
+			`import Risc0.Gadgets.${funcName}.Constraints.Code`,
+			"",
+			`namespace Risc0.${funcName}.Constraints.Code`,
+			"",
+			"open MLIRNotation",
+			reorderedLean,
+			"end Risc0.ComputeDecode.Constraints.Code",
+		].join("\n")
+	];
+}
+
 function createWitnessCodeReorderedLean(funcName: string, witness: string[], argIdToName: Map<string, string>, linesPerPart: number): [ir: IR.Statement[], lean: string] {
 	const IR = parseIRLines(witness, argIdToName);
 	const [reorderedIR, reorderedLean] = getStepwiseOptimisations(IR, linesPerPart);
@@ -281,36 +352,6 @@ function createWitnessCodeReorderedLean(funcName: string, witness: string[], arg
 	];
 }
 
-function createConstraintsCodeLean(funcName: string, constraints: string[], argIdToName: Map<string, string>, linesPerPart: number): [string, number] {
-	const constraintsFullLines = parseIRLines(constraints, argIdToName);
-	return [[
-		"import Risc0.Basic",
-		"import Risc0.Lemmas",
-		"",
-		`namespace Risc0.${funcName}.Constraints.Code`,
-		"",
-		"open MLIRNotation",
-		"",
-		"def full : MLIRProgram :=",
-		irLinesToLean(constraintsFullLines),
-		getConstraintsReturn(constraints),
-		"def run (st: State) : Prop :=",
-		"  getReturn (full.runProgram st)",
-		irLinesToParts(constraintsFullLines, linesPerPart).join("\n"),
-		"",
-		"abbrev parts_combined : MLIRProgram :=",
-		`  ${parts(constraintsFullLines.length, linesPerPart).join("; ")}`,
-		"lemma parts_combine {st: State} :",
-		"  Γ st ⟦parts_combined⟧ =",
-		"  Γ st ⟦full⟧ := by",
-		"  unfold full parts_combined",
-		`    ${parts(constraintsFullLines.length, linesPerPart).join(" ")}`,
-		"  simp [MLIR.seq_assoc, MLIR.run_seq_def]",
-		"",
-		`end Risc0.${funcName}.Constraints.Code`,
-		""
-	].join("\n"), Math.ceil(constraintsFullLines.length / linesPerPart)];
-}
 
 function outputCodeFiles(prefix: string, funcName: string, witnessCodeLean: string, constraintsCodeLean: string) {
 	mkDirIfNeeded(`${prefix}/Risc0/Gadgets/${funcName}`);
@@ -319,25 +360,31 @@ function outputCodeFiles(prefix: string, funcName: string, witnessCodeLean: stri
 	fs.writeFileSync(`${prefix}/Risc0/Gadgets/${funcName}/Witness/Code.lean`, witnessCodeLean);
 	fs.writeFileSync(`${prefix}/Risc0/Gadgets/${funcName}/Constraints/Code.lean`, constraintsCodeLean);
 
-	addToImportFile(prefix, `${funcName}.Witness.Code`); // TODO add opt
+	addToImportFile(prefix, `${funcName}.Witness.Code`);
 	addToImportFile(prefix, `${funcName}.Constraints.Code`);
 }
 
-function outputOptCodeFiles(prefix: string, funcName: string, reordered: string, parts: string, optimised: string) {
+function outputOptCodeFiles(
+	prefix: string, funcName: string,
+	witnessReordered: string, witnessParts: string, witnessOptimised: string,
+	constraintsReordered: string, constraintsParts: string, constraintsOptimised: string
+) {
 	mkDirIfNeeded(`${prefix}/Risc0/Gadgets/${funcName}`);
 	mkDirIfNeeded(`${prefix}/Risc0/Gadgets/${funcName}/Witness`);
 	mkDirIfNeeded(`${prefix}/Risc0/Gadgets/${funcName}/Constraints`);
-	fs.writeFileSync(`${prefix}/Risc0/Gadgets/${funcName}/Witness/CodeReordered.lean`, reordered);
-	fs.writeFileSync(`${prefix}/Risc0/Gadgets/${funcName}/Witness/CodeParts.lean`, parts);
-	fs.writeFileSync(`${prefix}/Risc0/Gadgets/${funcName}/Witness/CodeDrops.lean`, optimised);
+	fs.writeFileSync(`${prefix}/Risc0/Gadgets/${funcName}/Witness/CodeReordered.lean`, witnessReordered);
+	fs.writeFileSync(`${prefix}/Risc0/Gadgets/${funcName}/Constraints/CodeReordered.lean`, constraintsReordered);
+	fs.writeFileSync(`${prefix}/Risc0/Gadgets/${funcName}/Witness/CodeParts.lean`, witnessParts);
+	fs.writeFileSync(`${prefix}/Risc0/Gadgets/${funcName}/Constraints/CodeParts.lean`, constraintsParts);
+	fs.writeFileSync(`${prefix}/Risc0/Gadgets/${funcName}/Witness/CodeDrops.lean`, witnessOptimised);
+	fs.writeFileSync(`${prefix}/Risc0/Gadgets/${funcName}/Constraints/CodeDrops.lean`, constraintsOptimised);
 
+	addToImportFile(prefix, `${funcName}.Constraints.CodeReordered`);
 	addToImportFile(prefix, `${funcName}.Witness.CodeReordered`);
+	addToImportFile(prefix, `${funcName}.Constraints.CodeParts`);
 	addToImportFile(prefix, `${funcName}.Witness.CodeParts`);
+	addToImportFile(prefix, `${funcName}.Constraints.CodeDrops`);
 	addToImportFile(prefix, `${funcName}.Witness.CodeDrops`);
-	// fs.writeFileSync(`${prefix}/Risc0/Gadgets/${funcName}/Constraints/Code.lean`, constraintsCodeLean);
-
-	// addToImportFile(prefix, `${funcName}.Witness.Code`); // TODO add opt
-	// addToImportFile(prefix, `${funcName}.Constraints.Code`);
 }
 
 function mkDirIfNeeded(path: string) {

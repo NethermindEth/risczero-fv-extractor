@@ -1,18 +1,18 @@
 import { DataLocEq, IR, irLinesToLean, irLinesToParts, parts, partsCombine } from "./IR";
 import { getSwapLemmaNamePart } from "./reordering";
 
-export function createWitnessDropsLean(funcName: string, ir: IR.Statement[], linesPerPart: number): [lean: string, part_drops: IR.DropFelt[][]] {
+export function createCodeDropsLean(funcName: string, ir: IR.Statement[], linesPerPart: number, witnessOrConstraints: "Witness" | "Constraints"): [lean: string, part_drops: IR.DropFelt[][]] {
 	const part_drops = getPartDrops(ir, linesPerPart);
 	return [[
-		`import Risc0.Gadgets.${funcName}.Witness.CodeParts`,
+		`import Risc0.Gadgets.${funcName}.${witnessOrConstraints}.CodeParts`,
 		"",
-		`namespace Risc0.${funcName}.Witness.Code`,
+		`namespace Risc0.${funcName}.${witnessOrConstraints}.Code`,
 		"",
 		"open MLIRNotation",
 		"",
 		parts_defs(ir, part_drops, linesPerPart),
 		"",
-		"end Risc0.ComputeDecode.Witness.Code",
+		`end Risc0.ComputeDecode.${witnessOrConstraints}.Code`,
 	].join("\n"), part_drops];
 }
 
@@ -118,7 +118,7 @@ function getDropsBehaviourProofs(parts_drops: IR.DropFelt[][], ir: IR.Statement[
 		"lemma getReturn_ignores_drops :",
 		`  getReturn (${rhs}) =`,
 		`  getReturn (Γ st ⟦${partsInSequence}⟧) := by`,
-		`    simp [getReturn, MLIR.run_seq_def, MLIR.run_dropFelts_get_buffers]`,
+		`    simp [getReturn, MLIR.run_seq_def, State.constraintsInVar, MLIR.run_dropfelt, State.dropFelts_buffers, State.dropFelts_props]`,
 	].join("\n");
 	return lean;
 }
@@ -139,9 +139,9 @@ function getDropPastPart(ir: IR.Statement[], parts_statements: string[], partNum
 	const sequencing_lemma = `drop_sequencing_${statements.map(s => s.nondet ? "n" : "d").join("")}`;
 	dropPastPart.push(`    rewrite [${sequencing_lemma}]`);
 	dropPastPart.push(moveDropThrough(statements));
-	for (let j = 0; j < statements.filter(s => s.nondet).length; ++j) {
-		dropPastPart.push(`    rewrite [MLIR.run_nondet]`);
-	}
+	// for (let j = 0; j < statements.filter(s => s.nondet).length; ++j) {
+	// 	dropPastPart.push(`    rewrite [MLIR.run_nondet]`);
+	// }
 	dropPastPart.push(`    rewrite [←${sequencing_lemma}]`);
 	dropPastPart.push("    rewrite [h_rhs]");
 	dropPastPart.push(`    unfold part${partNum}`);
@@ -157,13 +157,13 @@ function moveDropThrough(ir: IR.Statement[]): string {
 	for (let i = 0; i < ir.length; ++i) {
 		console.log(`curr: ${i} next: ${ir[i].toString()}`);
 		const next = ir[i];
-		line = `${line}${comma?",":""}←drop_sequencing_d${ir[i].nondet ? "n" : "d"}`;
-		line = `${line},drop_past_${getSwapLemmaNamePart(next)}`;
-		if (next.nondet) {
-			line = `${line}_nondet`;
-		}
+		// line = `${line}${comma?",":""}←drop_sequencing_d${ir[i].nondet ? "n" : "d"}`;
+		line = `${line}${comma?",":""}drop_past_${getSwapLemmaNamePart(next)}`;
+		// if (next.nondet) {
+		// 	line = `${line}_nondet`;
+		// }
 		line = `${line}${getHypotheses(next)}`;
-		line = `${line},MLIR.run_seq_def`
+		// line = `${line},MLIR.run_seq_def`
 		comma = true;
 	}
 	return `${line}]`;
