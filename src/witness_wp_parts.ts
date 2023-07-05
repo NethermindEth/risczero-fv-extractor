@@ -238,6 +238,7 @@ function cumulative_wp_proof(part: number, ir: IR.Statement[], linesPerPart: num
 			? `    unfold part${part-1}_state_update`
 			: `    rewrite [part${part}_updates_opaque]`,
 		`    unfold part${part-1}_state`,
+    `    try simplify_get_hack`,
 		`    MLIR_states_updates`,
 		`    -- ${eqzCount} withEqZero${eqzCount === 1 ? "" : "s"}`,
 		Array(Math.max(1,eqzCount)).fill([
