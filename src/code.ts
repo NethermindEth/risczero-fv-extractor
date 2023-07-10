@@ -12,16 +12,15 @@ const skipOpt = false;
 export function createCodeFiles(
 	leanPath: string,
 	linesPerPart: number,
-	buferConfig: BufferConfig,
-	callback: (funcName: string, constraintsReorderedIR: IR.Statement[], constraintsPartDrops: IR.DropFelt[][], witnessReorderedIR: IR.Statement[], witnessPartDrops: IR.DropFelt[][]) => void
+	callback: (funcName: string, bufferConfig: BufferConfig, constraintsReorderedIR: IR.Statement[], constraintsPartDrops: IR.DropFelt[][], witnessReorderedIR: IR.Statement[], witnessPartDrops: IR.DropFelt[][]) => void
 ) {
 	console.log(`Creating code files ${skipUnOpt ? "unopt skipped" : ""} ${skipOpt ? "opt skipped" : ""}`);
 	const witness = loadWitnessMLIR();
 	const constraints = loadConstraintsMLIR();
-	const [funcName, args, argIdToName] = parseFuncLine(witness[1]);
+	const [funcName, args, argIdToName, bufferConfig] = parseFuncLine(witness[1]);
 
-	const witnessCodeLean = createWitnessCodeLean(funcName, witness, argIdToName, linesPerPart, buferConfig);
-	const constraintsCodeLean = createConstraintsCodeLean(funcName, constraints, argIdToName, linesPerPart, buferConfig);
+	const witnessCodeLean = createWitnessCodeLean(funcName, witness, argIdToName, linesPerPart, bufferConfig);
+	const constraintsCodeLean = createConstraintsCodeLean(funcName, constraints, argIdToName, linesPerPart, bufferConfig);
 
 	const [witnessReorderedIR, witnessReorderedLean] = createWitnessCodeReorderedLean(funcName, witness, argIdToName, linesPerPart);
 	const [constraintsReorderedIR, constraintsReorderedLean] = createConstraintsCodeReorderedLean(funcName, constraints, argIdToName, linesPerPart);
@@ -43,7 +42,7 @@ export function createCodeFiles(
 		);
 	}
 	if (skipUnOpt && skipOpt) {
-		callback(funcName, constraintsReorderedIR, constraintsPartDrops, witnessReorderedIR, witnessPartDrops);
+		callback(funcName, bufferConfig, constraintsReorderedIR, constraintsPartDrops, witnessReorderedIR, witnessPartDrops);
 	} else {
 		exec(`cd ${leanPath}; lake build`, (error, stdout, stderr) => {
 			if (stdout !== "") {
@@ -58,7 +57,7 @@ export function createCodeFiles(
 				console.log("---error---:\n\n");
 				console.log(error);
 			} else {
-				callback(funcName, constraintsReorderedIR, constraintsPartDrops, witnessReorderedIR, witnessPartDrops);
+				callback(funcName, bufferConfig, constraintsReorderedIR, constraintsPartDrops, witnessReorderedIR, witnessPartDrops);
 			}
 		}).stdout?.pipe(process.stdout);
 	}
@@ -82,8 +81,9 @@ type Arg = {
 	id: string;
 	width: number;
 	name: string;
+	mutability: string;
 };
-function parseFuncLine(funcLine: string): [string, Arg[], Map<string, string>] {
+function parseFuncLine(funcLine: string): [string, Arg[], Map<string, string>, BufferConfig] {
 	//Get name
 	const funcNameEnd = funcLine.indexOf("(");
 	const funcName = funcLine.slice("func.func @".length, funcNameEnd);
@@ -100,17 +100,48 @@ function parseFuncLine(funcLine: string): [string, Arg[], Map<string, string>] {
 		const widthStart = argsLine.indexOf("<", index) + 1;
 		const widthEnd = argsLine.indexOf(",", index);
 		const width = argsLine.slice(widthStart, widthEnd);
+		const mutabilityStart = widthEnd+2;
+		const mutabilityEnd = argsLine.indexOf(">", mutabilityStart);
+		const mutability = argsLine.slice(mutabilityStart, mutabilityEnd);
 		const nameStart = argsLine.indexOf("\"", index) + 1;
 		const nameEnd = argsLine.indexOf("\"", nameStart);
 		const name = argsLine.slice(nameStart, nameEnd);
 		index = nameEnd + "\"}, ".length;
-		args.push({ id: argName, width: parseInt(width), name });
+		args.push({ id: argName, width: parseInt(width), name, mutability });
 		argIdToName.set(argName, name);
 	}
-	return [funcName, args, argIdToName];
-}
 
-function parseIRLines(irLines: string[], argIdToName: Map<string, string>): IR.Statement[] {
+	let inputName: string|null = null;
+	let inputWidth: number|null = null;
+	let outputName: string|null = null;
+	let outputWidth: number|null = null;
+	for (let i = 0; i < args.length; ++i) {
+		if (args[i].mutability === "constant") {
+			if (inputName === null) {
+				inputName = args[i].name;
+				inputWidth = args[i].width;
+			} else {
+				throw "Unable to determine input buffer, multiple constant buffers found";
+			}
+		}
+		if (args[i].mutability === "mutable") {
+			if (outputName === null) {
+				outputName = args[i].name;
+				outputWidth = args[i].width;
+			} else {
+				throw "Unable to determine output buffer, multiple mutable buffers found";
+			}
+		}
+	}
+	if (inputName === null || inputWidth === null) {
+		throw "Unable to determine input buffer, no constant buffers found";
+	}
+	if (outputName === null || outputWidth === null) {
+		throw "Unable to determine output buffer, no mutable buffers found";
+	}
+
+	return [funcName, args, argIdToName, {inputName, inputWidth, outputName, outputWidth}];
+}
 	let instructions: IR.Statement[] = [];
 	let nondet = false;
 	for (let lineIndex = 2; lineIndex < irLines.length; ++lineIndex) {
