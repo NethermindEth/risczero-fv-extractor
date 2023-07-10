@@ -1,4 +1,4 @@
-import { DataLocEq, IR, irLinesToLean, irLinesToParts } from "./IR";
+import * as IR from "./IR";
 import { getSwapLemmaNamePart } from "./reordering";
 
 export function createCodeDropsLean(funcName: string, ir: IR.Statement[], linesPerPart: number, witnessOrConstraints: "Witness" | "Constraints"): [lean: string, part_drops: IR.DropFelt[][]] {
@@ -17,10 +17,10 @@ export function createCodeDropsLean(funcName: string, ir: IR.Statement[], linesP
 }
 
 function parts_defs(ir: IR.Statement[], part_drops: IR.DropFelt[][], linesPerPart: number): string {
-	const parts_statements = irLinesToParts(ir, linesPerPart);
+	const parts_statements = IR.irLinesToParts(ir, linesPerPart);
 	console.log(part_drops);
 	console.log(part_drops.length);
-	let res: string[] = [];
+	const res: string[] = [];
 
 	for (let i = 1; i < parts_statements.length; ++i) {
 		console.log(`---${i}---`);
@@ -67,7 +67,7 @@ function getDropsAfterCodeFull(parts_drops: IR.DropFelt[][], part: number): stri
 }
 
 function getUsedFelts(ir: IR.Statement[]): string[] {
-	let res: string[] = [];
+	const res: string[] = [];
 	const uses = ir.flatMap(stmt => [...stmt.uses(), ...stmt.creates()]).filter(u => u.kind === "felt").map(x => x.idx);
 	for (const u of uses) {
 		if (!res.includes(u)) {
@@ -79,7 +79,7 @@ function getUsedFelts(ir: IR.Statement[]): string[] {
 
 function getDropsBehaviourProofs(parts_drops: IR.DropFelt[][], ir: IR.Statement[], linesPerPart: number): string {
 	const dropChunkSize = 10;
-	let lean: string = "";
+	let lean = "";
 	for (let part = parts_drops.length-1; part >= 0; --part) {
 		const dropCount = accumulateDropsBeforePart(parts_drops, part).length;
 		const partStatements = ir.slice((part)*linesPerPart,(part+1)*linesPerPart);
@@ -218,7 +218,7 @@ function getDropsBehaviourProofs(parts_drops: IR.DropFelt[][], ir: IR.Statement[
 function getDropPastPart(ir: IR.Statement[], parts_statements: string[], partNum: number, linesPerPart: number): string {
 	const statements = ir.slice(partNum*linesPerPart, Math.min(parts_statements.length*linesPerPart, (partNum+1)*linesPerPart));
 	const hyps = getUsedFelts(statements).map((name, idx) => `(h${idx}: ⟨"${name}"⟩ ≠ x)`);
-	let dropPastPart = [
+	const dropPastPart = [
 		`lemma drop_past_part${partNum} ${hyps.join(" ")}:`,
 		`  (Γ st ⟦dropfelt x; part${partNum}; rest⟧) =`,
 		`  (Γ st ⟦part${partNum}; dropfelt x; rest⟧) := by`,
@@ -278,14 +278,14 @@ export function createWitnessCodeWithDropsLean(funcName: string, ir: IR.Statemen
 		"",
 		"open MLIRNotation",
 		"def full_opt : MLIRProgram :=",
-		irLinesToLean(irWithDrops),
+		IR.irLinesToLean(irWithDrops),
 		"end Risc0.${funcName}.Witness.Code",
 	].join("\n");
 }
 
 export function getPartDrops(ir: IR.Statement[], linesPerPart: number): IR.DropFelt[][] {
 	const dropLocations = calculateDropPoints(ir);
-	let res: IR.DropFelt[][] = [];
+	const res: IR.DropFelt[][] = [];
 	for (let i = 0; i < Math.ceil(ir.length / linesPerPart); ++i) {
 		res.push([]);
 	}
@@ -299,34 +299,33 @@ export function getPartDrops(ir: IR.Statement[], linesPerPart: number): IR.DropF
 
 function insertDrops(ir: IR.Statement[], linesPerPart: number): IR.Statement[] {
 	let retIR = ir.slice(0);
-	const dropLocations = calculateDropPoints(ir);
-	console.log (`${ir.length} ${dropLocations.size} ${[...dropLocations.values()].length}`);
-	const locs = [...dropLocations.values()].sort((a, b) => a - b).reverse();
-	locs.forEach(loc => {
-		const [feltToDrop, _] = [...dropLocations.entries()].find(([val, pos]) => pos === loc)!;
-		let insertLoc = Math.ceil(loc/linesPerPart)*linesPerPart;
-		let instr = new IR.DropFelt(feltToDrop, false);
-		if (insertLoc > retIR.length) {
-			retIR.push(instr);
-		} else {
-			retIR = [
-				...retIR.slice(0, insertLoc),
-				instr,
-				...retIR.slice(insertLoc)
-			];
-		}
-	})
+	// A map of felts to the location at which to drop them, sorted by latest location first
+	[...calculateDropPoints(ir).entries()]
+		.sort((a, b) => b[1] - a[1])
+		.forEach(([feltToDrop, loc]) => {
+			const insertLoc = Math.ceil(loc/linesPerPart)*linesPerPart;
+			const instr = new IR.DropFelt(feltToDrop, false);
+			if (insertLoc > retIR.length) {
+				retIR.push(instr);
+			} else {
+				retIR = [
+					...retIR.slice(0, insertLoc),
+					instr,
+					...retIR.slice(insertLoc)
+				];
+			}
+		});
 	return retIR;
 }
 
 function calculateDropPoints(ir: IR.Statement[]): Map<string, number> {
-	let dropPoints: Map<string, number> = new Map();
+	const dropPoints: Map<string, number> = new Map();
 	for (let i = 0; i < ir.length; ++i) {
 		const statement = ir[i];
 		statement.creates().filter(c => c.kind === "felt").map(created => {
 			// Reverse a list of the statements after this one so we can use findIndex
 			const laterStatements = ir.slice(i).reverse();
-			const lastUseRevIdx = laterStatements.findIndex(stmt => stmt.uses().some(u => DataLocEq(u, created)));
+			const lastUseRevIdx = laterStatements.findIndex(stmt => stmt.uses().some(u => IR.DataLocEq(u, created)));
 			const dropIdx = ir.length - lastUseRevIdx;
 			if (dropPoints.has(created.idx)) {
 				console.log(`DUP ${created.idx}`);

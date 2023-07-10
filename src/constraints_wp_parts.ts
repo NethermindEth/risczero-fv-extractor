@@ -1,7 +1,7 @@
 import { exec } from 'child_process';
 import fs from 'fs';
 import { BufferConfig, addToImportFile } from './util';
-import { IR } from './IR';
+import * as IR from './IR';
 
 const skipFirst = false;
 const skipMid = false;
@@ -27,7 +27,7 @@ export function constraintsWeakestPreFiles(leanPath: string, funcName: string, i
 			const part0 = constraintsWeakestPrePart0(funcName, partDrops, bufferConfig, stateTransformer, cumulativeTransformer);
 			console.log("  0 - corrected");
 			fs.writeFileSync(`${leanPath}/Risc0/Gadgets/${funcName}/Constraints/WeakestPresPart0.lean`, part0);
-			exec(`cd ${leanPath}; lake build`, (error, stdout, stderr) => {
+			exec(`cd ${leanPath}; lake build`, () => {
 				if (skipToMid === null) {
 					recurseThroughMidFiles(leanPath, funcName, 1, ir , linesPerPart, partDrops, bufferConfig, callback);
 				} else {

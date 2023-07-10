@@ -10,134 +10,132 @@ export function DataLocEq (a: DataLoc, b: DataLoc): boolean {
 	}
 }
 
-export namespace IR {
-	export class Const {
-		kind: "const" = "const";
-		constructor (public val: string) {}
-		toString(): string {
-			return `.Const ${this.val}`;
-		}
-		uses(): DataLoc[] { return [] }
+export class Const {
+	kind = "const" as const;
+	constructor (public val: string) {}
+	toString(): string {
+		return `.Const ${this.val}`;
 	}
-	
-	export class True {
-		kind: "true" = "true";
-		toString(): string {
-			return "⊤";
-		}
-		uses(): DataLoc[] { return [] }
-	}
-	
-	export class Get {
-		kind: "get" = "get";
-		constructor (public bufferId: string, public back: string, public offset: string) {}
-		toString(): string {
-			return `.Get ⟨"${this.bufferId}"⟩ ${this.back} ${this.offset}`;
-		}
-		uses(): DataLoc[] { return [ {kind: "buffer", idx: this.bufferId, back: this.back, offset: this.offset}] }
-	}
-	
-	export class BinOp {
-		kind: "binop" = "binop";
-		constructor (public op: string, public lhs: string, public rhs: string) {}
-		toString(): string {
-			return `.${this.op} ⟨"${this.lhs}"⟩ ⟨"${this.rhs}"⟩`;
-		}
-		uses(): DataLoc[] { return [ {kind: "felt", idx: this.lhs}, {kind: "felt", idx: this.rhs}]}
-	}
-	
-	export class IsZ {
-		kind: "isz" = "isz";
-		constructor (public op: string) {}
-		toString(): string {
-			return `??₀⟨"${this.op}"⟩`;
-		}
-		uses(): DataLoc[] { return [ {kind: "felt", idx: this.op}]}
-	}
-	
-	export class AndEqz {
-		kind: "andEqz" = "andEqz";
-		constructor (public cond: string, public val: string) {}
-		toString(): string {
-			return `⟨"${this.cond}"⟩ &₀ ⟨"${this.val}"⟩`;
-		}
-		uses(): DataLoc[] { return [ {kind: "felt", idx: this.val}, {kind: "prop", idx: this.cond}]}
-	}
-
-	export class Inv {
-		kind: "inv" = "inv";
-		constructor (public op: string) {}
-		toString(): string {
-			return `Inv⟨"${this.op}"⟩`;
-		}
-		uses(): DataLoc[] { return [ {kind: "felt", idx: this.op}]}
-	}
-
-	export type Val = Const | True | Get | BinOp | IsZ | AndEqz | Inv;
-
-	export class Assign {
-		kind: "assign" = "assign";
-		constructor (public target: string, public val: Val, public nondet: boolean) {}
-		toString() : string {
-			return `"${this.target}" ←ₐ ${this.val.toString()}`;
-		}
-		uses(): DataLoc[] { return this.val.uses() }
-		creates(): DataLoc[] { return [{kind: "felt", idx: this.target}] }
-		id(): string { return `${this.kind}/${this.val.kind}`}
-	}
-	
-	// Can't be called "set" because of name clashes
-	export class SetInstr {
-		kind: "set" = "set";
-		constructor (public bufferId: string, public index: string, public val: string, public nondet: boolean) {}
-		toString(): string {
-			return `⟨"${this.bufferId}"⟩[${this.index}] ←ᵢ ⟨"${this.val}"⟩`;
-		}
-		uses(): DataLoc[] { return [ {kind: "felt", idx: this.val}]}
-		creates(): DataLoc[] { return [{kind: "buffer", idx: this.bufferId, back: "0", offset: this.index}] }
-		id(): string { return `${this.kind}`}
-	}
-	
-	export class Eqz {
-		kind: "eqz" = "eqz";
-		constructor (public val: string, public nondet: boolean) {}
-		toString(): string {
-			return `?₀ ⟨"${this.val}"⟩`;
-		}
-		uses(): DataLoc[] { return [ {kind: "felt", idx: this.val}]}
-		creates(): DataLoc[] { return [] }
-		id(): string { return `${this.kind}`}
-	}
-
-	export class DropFelt {
-		kind: "dropFelt" = "dropFelt";
-		constructor(public val: string, public nondet: boolean) {}
-		toString(): string {
-			return `dropfelt ⟨"${this.val}"⟩`;
-		}
-		uses(): DataLoc[] { return [ {kind: "felt", idx: this.val}]}
-		creates(): DataLoc[] { return [] }
-		id(): string { return `${this.kind}`}
-	}
-
-	export class If {
-		kind: "if" = "if";
-		constructor(public cond: string, public body: IR.Statement[]) {}
-		toString(): string {
-			return `guard ⟨"${this.cond}"⟩ then ${this.body.map(s => s.toString()).join("; ")}`;
-		}
-		uses(): DataLoc[] { return this.body.map(s => s.uses()).reduce((acc, curr) => [
-			...acc,
-			...curr.filter(x => !acc.some(y => DataLocEq(x, y)))
-		], [{kind: "felt", idx: this.cond}])}
-		creates(): DataLoc[] { return this.body.flatMap(x => x.creates()) }
-		id(): string { return `${this.kind}`} //TODO
-	}
-
-	export type Statement = Assign | SetInstr | Eqz | DropFelt;
+	uses(): DataLoc[] { return [] }
 }
 
-export function irLinesToLean(ir: IR.Statement[]): string {
+export class True {
+	kind = "true" as const;
+	toString(): string {
+		return "⊤";
+	}
+	uses(): DataLoc[] { return [] }
+}
+
+export class Get {
+	kind = "get" as const;
+	constructor (public bufferId: string, public back: string, public offset: string) {}
+	toString(): string {
+		return `.Get ⟨"${this.bufferId}"⟩ ${this.back} ${this.offset}`;
+	}
+	uses(): DataLoc[] { return [ {kind: "buffer", idx: this.bufferId, back: this.back, offset: this.offset}] }
+}
+
+export class BinOp {
+	kind = "binop" as const;
+	constructor (public op: string, public lhs: string, public rhs: string) {}
+	toString(): string {
+		return `.${this.op} ⟨"${this.lhs}"⟩ ⟨"${this.rhs}"⟩`;
+	}
+	uses(): DataLoc[] { return [ {kind: "felt", idx: this.lhs}, {kind: "felt", idx: this.rhs}]}
+}
+
+export class IsZ {
+	kind = "isz" as const;
+	constructor (public op: string) {}
+	toString(): string {
+		return `??₀⟨"${this.op}"⟩`;
+	}
+	uses(): DataLoc[] { return [ {kind: "felt", idx: this.op}]}
+}
+
+export class AndEqz {
+	kind = "andEqz" as const;
+	constructor (public cond: string, public val: string) {}
+	toString(): string {
+		return `⟨"${this.cond}"⟩ &₀ ⟨"${this.val}"⟩`;
+	}
+	uses(): DataLoc[] { return [ {kind: "felt", idx: this.val}, {kind: "prop", idx: this.cond}]}
+}
+
+export class Inv {
+	kind = "inv" as const;
+	constructor (public op: string) {}
+	toString(): string {
+		return `Inv⟨"${this.op}"⟩`;
+	}
+	uses(): DataLoc[] { return [ {kind: "felt", idx: this.op}]}
+}
+
+export type Val = Const | True | Get | BinOp | IsZ | AndEqz | Inv;
+
+export class Assign {
+	kind = "assign" as const;
+	constructor (public target: string, public val: Val, public nondet: boolean) {}
+	toString() : string {
+		return `"${this.target}" ←ₐ ${this.val.toString()}`;
+	}
+	uses(): DataLoc[] { return this.val.uses() }
+	creates(): DataLoc[] { return [{kind: "felt", idx: this.target}] }
+	id(): string { return `${this.kind}/${this.val.kind}`}
+}
+
+// Can't be called "set" because of name clashes
+export class SetInstr {
+	kind = "set" as const;
+	constructor (public bufferId: string, public index: string, public val: string, public nondet: boolean) {}
+	toString(): string {
+		return `⟨"${this.bufferId}"⟩[${this.index}] ←ᵢ ⟨"${this.val}"⟩`;
+	}
+	uses(): DataLoc[] { return [ {kind: "felt", idx: this.val}]}
+	creates(): DataLoc[] { return [{kind: "buffer", idx: this.bufferId, back: "0", offset: this.index}] }
+	id(): string { return `${this.kind}`}
+}
+
+export class Eqz {
+	kind = "eqz" as const;
+	constructor (public val: string, public nondet: boolean) {}
+	toString(): string {
+		return `?₀ ⟨"${this.val}"⟩`;
+	}
+	uses(): DataLoc[] { return [ {kind: "felt", idx: this.val}]}
+	creates(): DataLoc[] { return [] }
+	id(): string { return `${this.kind}`}
+}
+
+export class DropFelt {
+	kind = "dropFelt" as const;
+	constructor(public val: string, public nondet: boolean) {}
+	toString(): string {
+		return `dropfelt ⟨"${this.val}"⟩`;
+	}
+	uses(): DataLoc[] { return [ {kind: "felt", idx: this.val}]}
+	creates(): DataLoc[] { return [] }
+	id(): string { return `${this.kind}`}
+}
+
+export class If {
+	kind = "if" as const;
+	constructor(public cond: string, public body: Statement[]) {}
+	toString(): string {
+		return `guard ⟨"${this.cond}"⟩ then ${this.body.map(s => s.toString()).join("; ")}`;
+	}
+	uses(): DataLoc[] { return this.body.map(s => s.uses()).reduce((acc, curr) => [
+		...acc,
+		...curr.filter(x => !acc.some(y => DataLocEq(x, y)))
+	], [{kind: "felt", idx: this.cond}])}
+	creates(): DataLoc[] { return this.body.flatMap(x => x.creates()) }
+	id(): string { return `${this.kind}`} //TODO
+}
+
+export type Statement = Assign | SetInstr | Eqz | DropFelt;
+
+export function irLinesToLean(ir: Statement[]): string {
 	let nondet = false;
 	let res = "";
 	for (let i = 0; i < ir.length; ++i) {
@@ -171,23 +169,17 @@ export function irLinesToLean(ir: IR.Statement[]): string {
 }
 
 export function flattenLeanIR(leanIR: string): string {
-	while (true) {
-		const old = leanIR;
+	while (leanIR.includes("\n    ")) {
 		leanIR = leanIR.replace("\n    ", " ");
-		if (old === leanIR) break;
 	}
-
-	while (true) {
-		const old = leanIR;
+	while (leanIR.includes("\n  ")) {
 		leanIR = leanIR.replace("\n  ", " ");
-		if (old === leanIR) break;
 	}
-
 	return leanIR;
 }
 
-export function irLinesToParts(lines: IR.Statement[], linesPerPart: number): string[] {
-	let output: string[] = [];
+export function irLinesToParts(lines: Statement[], linesPerPart: number): string[] {
+	const output: string[] = [];
 	for (let i = 0; i * linesPerPart < lines.length; ++i) {
 		output.push(`def part${
 			i
@@ -200,7 +192,7 @@ export function irLinesToParts(lines: IR.Statement[], linesPerPart: number): str
 
 export function parts(length: number, linesPerPart: number): string[] {
 	const numParts = Math.ceil(length / linesPerPart);
-	let output = [];
+	const output = [];
 	for (let i = 0; i < numParts; ++i) output.push(i);
 	return output.map(i => `part${i}`);
 }

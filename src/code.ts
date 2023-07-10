@@ -1,9 +1,9 @@
 import { exec } from 'child_process';
 import fs from 'fs';
 import { BufferConfig, addToImportFile } from './util';
-import { IR, irLinesToLean, irLinesToParts, parts } from './IR';
-import { delayConstsAndGets, getDelayProof, getStepwiseOptimisations } from './reordering';
-import { createWitnessCodeWithDropsLean, createCodeDropsLean } from './drops';
+import * as IR from './IR';
+import { getStepwiseOptimisations } from './reordering';
+import { createCodeDropsLean } from './drops';
 import { createCodePartsLean } from './code_parts';
 
 const skipUnOpt = false;
@@ -17,13 +17,13 @@ export function createCodeFiles(
 	console.log(`Creating code files ${skipUnOpt ? "unopt skipped" : ""} ${skipOpt ? "opt skipped" : ""}`);
 	const witness = loadWitnessMLIR();
 	const constraints = loadConstraintsMLIR();
-	const [funcName, args, argIdToName, bufferConfig] = parseFuncLine(witness[1]);
+	const [funcName, argIdToName, bufferConfig] = parseFuncLine(witness[1]);
 
 	const witnessCodeLean = createWitnessCodeLean(funcName, witness, argIdToName, linesPerPart, bufferConfig);
 	const constraintsCodeLean = createConstraintsCodeLean(funcName, constraints, argIdToName, linesPerPart, bufferConfig);
 
-	const [witnessReorderedIR, witnessReorderedLean] = createWitnessCodeReorderedLean(funcName, witness, argIdToName, linesPerPart);
-	const [constraintsReorderedIR, constraintsReorderedLean] = createConstraintsCodeReorderedLean(funcName, constraints, argIdToName, linesPerPart);
+	const [witnessReorderedIR, witnessReorderedLean] = createWitnessCodeReorderedLean(funcName, witness, argIdToName);
+	const [constraintsReorderedIR, constraintsReorderedLean] = createConstraintsCodeReorderedLean(funcName, constraints, argIdToName);
 
 	const witnessPartsLean = createCodePartsLean(funcName, witnessReorderedIR, linesPerPart, "Witness");
 	const constraintsPartsLean = createCodePartsLean(funcName, constraintsReorderedIR, linesPerPart, "Constraints");
@@ -83,7 +83,7 @@ type Arg = {
 	name: string;
 	mutability: string;
 };
-function parseFuncLine(funcLine: string): [string, Arg[], Map<string, string>, BufferConfig] {
+function parseFuncLine(funcLine: string): [string, Map<string, string>, BufferConfig] {
 	//Get name
 	const funcNameEnd = funcLine.indexOf("(");
 	const funcName = funcLine.slice("func.func @".length, funcNameEnd);
@@ -92,8 +92,8 @@ function parseFuncLine(funcLine: string): [string, Arg[], Map<string, string>, B
 
 	const argsLine = funcLine.slice(funcLine.indexOf("(") + 1, funcLine.lastIndexOf(")"));
 	let index = 0;
-	let args: Arg[] = [];
-	let argIdToName = new Map<string, string>();
+	const args: Arg[] = [];
+	const argIdToName = new Map<string, string>();
 	while (index < argsLine.length) {
 		const argNameEnd = argsLine.indexOf(":", index);
 		const argName = argsLine.slice(index, argNameEnd);
@@ -140,11 +140,11 @@ function parseFuncLine(funcLine: string): [string, Arg[], Map<string, string>, B
 		throw "Unable to determine output buffer, no mutable buffers found";
 	}
 
-	return [funcName, args, argIdToName, {inputName, inputWidth, outputName, outputWidth}];
+	return [funcName, argIdToName, {inputName, inputWidth, outputName, outputWidth}];
 }
 
 function parseIRLines(irLines: string[], argIdToName: Map<string, string>): IR.Statement[] {
-	let instructions: IR.Statement[] = [];
+	const instructions: IR.Statement[] = [];
 	let nondet = false;
 	for (let lineIndex = 2; lineIndex < irLines.length; ++lineIndex) {
 		const line = irLines[lineIndex];
@@ -275,8 +275,7 @@ function getConstraintsReturn(constraintsCode: string[]): string {
 				return "";
 			}
 		})
-		.filter(line => line !== "")
-	[0];
+		.filter(line => line !== "")[0];
 }
 
 function createWitnessCodeLean(funcName: string, witness: string[], argIdToName: Map<string, string>, linesPerPart: number, bufferConfig: BufferConfig): string {
@@ -290,7 +289,7 @@ function createWitnessCodeLean(funcName: string, witness: string[], argIdToName:
 		"open MLIRNotation",
 		"",
 		"def full : MLIRProgram :=",
-		irLinesToLean(witnessFullLines),
+		IR.irLinesToLean(witnessFullLines),
 		getWitnessReturn(witness, bufferConfig),
 		"def run (st: State) : BufferAtTime :=",
 		"  getReturn (full.runProgram st)",
@@ -325,7 +324,7 @@ function createConstraintsCodeLean(funcName: string, constraints: string[], argI
 		"open MLIRNotation",
 		"",
 		"def full : MLIRProgram :=",
-		irLinesToLean(constraintsFullLines),
+		IR.irLinesToLean(constraintsFullLines),
 		getConstraintsReturn(constraints),
 		"def run (st: State) : Prop :=",
 		"  getReturn (full.runProgram st)",
@@ -349,9 +348,9 @@ function createConstraintsCodeLean(funcName: string, constraints: string[], argI
 	].join("\n");
 }
 
-function createConstraintsCodeReorderedLean(funcName: string, witness: string[], argIdToName: Map<string, string>, linesPerPart: number): [ir: IR.Statement[], lean: string] {
+function createConstraintsCodeReorderedLean(funcName: string, witness: string[], argIdToName: Map<string, string>): [ir: IR.Statement[], lean: string] {
 	const IR = parseIRLines(witness, argIdToName);
-	const [reorderedIR, reorderedLean] = getStepwiseOptimisations(IR, linesPerPart);
+	const [reorderedIR, reorderedLean] = getStepwiseOptimisations(IR);
 	IR.forEach(x => console.log(x.toString()));
 	return [
 		reorderedIR,
@@ -370,9 +369,9 @@ function createConstraintsCodeReorderedLean(funcName: string, witness: string[],
 	];
 }
 
-function createWitnessCodeReorderedLean(funcName: string, witness: string[], argIdToName: Map<string, string>, linesPerPart: number): [ir: IR.Statement[], lean: string] {
+function createWitnessCodeReorderedLean(funcName: string, witness: string[], argIdToName: Map<string, string>): [ir: IR.Statement[], lean: string] {
 	const IR = parseIRLines(witness, argIdToName);
-	const [reorderedIR, reorderedLean] = getStepwiseOptimisations(IR, linesPerPart);
+	const [reorderedIR, reorderedLean] = getStepwiseOptimisations(IR);
 	IR.forEach(x => console.log(x.toString()));
 	return [
 		reorderedIR,

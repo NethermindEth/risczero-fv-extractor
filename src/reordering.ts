@@ -1,30 +1,31 @@
-import { DataLocEq, IR, flattenLeanIR, irLinesToLean } from "./IR";
+import * as IR from "./IR";
 
-export function getStepwiseOptimisations(ir: IR.Statement[], linesPerPart: number): [ir: IR.Statement[], lean: string] {
+export function getStepwiseOptimisations(ir: IR.Statement[]): [ir: IR.Statement[], lean: string] {
 	let lean = "";
-	let visited: Set<string> = new Set();
-	let oldCode = ir;
+	const visited: Set<string> = new Set();
+	let code = ir;
 	let i = 0;
-	while (true) {
-		const [newCode, moved, done] = delayConstsAndGets(oldCode, visited);
+	let moved: Set<string> = new Set();
+	let done = false;
+	while (!done) {
+		const oldCode = code.slice();
+		[code, moved, done] = delayConstsAndGets(code, visited);
 		if (done) break;
 		moved.forEach((x) => visited.add(x));
 		const leanPart = [
 			`def opt${i+1} : MLIRProgram :=`,
-			flattenLeanIR(irLinesToLean(newCode)),
-			getDelayProof(oldCode, newCode, moved, i),
+			IR.flattenLeanIR(IR.irLinesToLean(code)),
+			getDelayProof(oldCode, code, moved, i),
 			"",
 		]
 		lean = `${lean}\n${leanPart.join("\n")}`;
-		oldCode = newCode;
 		++i;
 	}
-	const reorderedCode = oldCode;
 	lean = [
 		lean,
 		optimisedBehaviourFull(i),
 	].join("\n");
-	return [reorderedCode, lean];
+	return [code, lean];
 }
 
 function optimisedBehaviourFull(count: number): string {
@@ -42,7 +43,7 @@ function optimisedBehaviourFull(count: number): string {
 export function delayConstsAndGets(ir: IR.Statement[], visited: Set<string>): [code: IR.Statement[], moved: Set<string>, done: boolean] {
 	let optIR = ir.slice(0);
 	let i = 0;
-	let moved: Set<string> = new Set();
+	const moved: Set<string> = new Set();
 	while (i < optIR.length && moved.size < 1) {
 		const statement = optIR[i];
 		if (statement.kind !== "assign" || visited.has(statement.target) || !["get", "const"].includes(statement.val.kind)) {
@@ -51,7 +52,7 @@ export function delayConstsAndGets(ir: IR.Statement[], visited: Set<string>): [c
 		}
 
 		visited.add(statement.target);
-		const useIdx = optIR.findIndex(other => statement.creates().some(x => other.uses().some(y => DataLocEq(x, y))));
+		const useIdx = optIR.findIndex(other => statement.creates().some(x => other.uses().some(y => IR.DataLocEq(x, y))));
 		console.log(`moved ${statement.toString()} ${useIdx - 1 - i}`);
 		if (useIdx === i + 1) {
 			++i;
@@ -76,7 +77,7 @@ export function getDelayProof(original: IR.Statement[], optimised: IR.Statement[
 	const oldCodeName = proofId === 0 ? "full" : `opt${proofId}`
 	const movedInOrder = optimised.filter(st => st.kind === "assign" && moved.has(st.target)).reverse();
 	let ir = original.slice(0);
-	let proofLines = [
+	const proofLines = [
 		`lemma optimised_behaviour${proofId+1} :`,
 		`  getReturn (full.runProgram st) =`,
 		`  getReturn (opt${proofId+1}.runProgram st) := by`,

@@ -1,4 +1,4 @@
-import { IR, flattenLeanIR, irLinesToLean, irLinesToParts, parts } from "./IR";
+import * as IR from "./IR";
 
 export function createCodePartsLean(funcName: string, ir: IR.Statement[], linesPerPart: number, witnessOrConstraints: "Witness" | "Constraints"): string {
 	const cumulativeParts = getCumulativeParts(ir, linesPerPart);
@@ -9,12 +9,12 @@ export function createCodePartsLean(funcName: string, ir: IR.Statement[], linesP
 		"",
 		"open MLIRNotation",
 		"",
-		...irLinesToParts(ir, linesPerPart),
+		...IR.irLinesToParts(ir, linesPerPart),
 		"",
 		getCumulativePartDefs(cumulativeParts),
 		"",
 		"abbrev parts_combined : MLIRProgram :=",
-		`  ${parts(ir.length, linesPerPart).join("; ")}`,
+		`  ${IR.parts(ir.length, linesPerPart).join("; ")}`,
 		partsCombine(ir, "opt_full", linesPerPart),
 		`end Risc0.${funcName}.${witnessOrConstraints}.Code`,
 	].join("\n");
@@ -65,12 +65,12 @@ function partsCombine(fullLines: IR.Statement[], fullName: string, linesPerPart:
 
 function getCumulativePartDefs(parts: IR.Statement[][]): string {
 	return parts
-		.map((statements, idx) => `def part${idx}_to_end : MLIRProgram := ${flattenLeanIR(irLinesToLean(statements))}`)
+		.map((statements, idx) => `def part${idx}_to_end : MLIRProgram := ${IR.flattenLeanIR(IR.irLinesToLean(statements))}`)
 		.join("\n");
 }
 
 function getCumulativeParts(ir: IR.Statement[], linesPerPart: number): IR.Statement[][] {
-	let res: IR.Statement[][] = [];
+	const res: IR.Statement[][] = [];
 	for (let start = Math.floor((ir.length-1)/linesPerPart)*linesPerPart; start >= 0; start -= linesPerPart) {
 		res.unshift(ir.slice(start));
 	}
