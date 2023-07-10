@@ -5,7 +5,7 @@ import { IR } from './IR';
 
 const skipFirst = false;
 const skipMid = false;
-const skipToMid: number | null = 20; // set to null to turn off
+const skipToMid: number | null = null; // set to null to turn off
 
 export function constraintsWeakestPreFiles(leanPath: string, funcName: string, ir: IR.Statement[], linesPerPart: number, partDrops: IR.DropFelt[][], bufferWidth: number, callback: ()=>void) {
 	console.log("Creating constraints weakest pre files");
