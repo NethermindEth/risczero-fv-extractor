@@ -9,3 +9,10 @@ export function addToImportFile(prefix: string, pathToImport: string) {
 	}
 	fs.writeFileSync(`${prefix}/Risc0.lean`, importFile, { encoding: "utf8" });
 }
+
+export type BufferConfig = {
+	inputName: string,
+	inputWidth: number,
+	outputName: string,
+	outputWidth: number,
+};
