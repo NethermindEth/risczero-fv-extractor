@@ -146,7 +146,7 @@ function witnessWeakestPrePart0(funcName: string, partDrops: IR.DropFelt[][], bu
 			]
 		),
 		``,
-		`lemma part0_cumulative_wp :`,
+		`lemma part0_cumulative_wp {${variableList("x"," ",1)}: Felt} :`,
 		`  Code.run (start_state [${variableList("x",",",1)}]) = [${variableList("y",",",bufferWidth)}] ↔`,
 		`  ${cumulativeTransformer ?? "sorry"} := by`,
 		`    unfold Code.run start_state`,
@@ -238,6 +238,7 @@ function cumulative_wp_proof(part: number, ir: IR.Statement[], linesPerPart: num
 			? `    unfold part${part-1}_state_update`
 			: `    rewrite [part${part}_updates_opaque]`,
 		`    unfold part${part-1}_state`,
+    `    try simplify_get_hack`,
 		`    MLIR_states_updates`,
 		`    -- ${eqzCount} withEqZero${eqzCount === 1 ? "" : "s"}`,
 		Array(Math.max(1,eqzCount)).fill([
