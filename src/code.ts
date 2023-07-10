@@ -142,6 +142,8 @@ function parseFuncLine(funcLine: string): [string, Arg[], Map<string, string>, B
 
 	return [funcName, args, argIdToName, {inputName, inputWidth, outputName, outputWidth}];
 }
+
+function parseIRLines(irLines: string[], argIdToName: Map<string, string>): IR.Statement[] {
 	let instructions: IR.Statement[] = [];
 	let nondet = false;
 	for (let lineIndex = 2; lineIndex < irLines.length; ++lineIndex) {
