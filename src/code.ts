@@ -264,8 +264,8 @@ function createWitnessCodeLean(funcName: string, witness: string[], argIdToName:
 		"end Code",
 		"",
 		// TODO generalize start state
-		`def start_state (input data : BufferAtTime) : State :=`,
-		`  { buffers := Map.fromList [(⟨"in"⟩, [input]), (⟨"data"⟩, [data])]`,
+		`def start_state (input : BufferAtTime) : State :=`,
+		`  { buffers := Map.fromList [(⟨"in"⟩, [input]), (⟨"data"⟩, [[none, none, none, none, none, none, none, none, none, none, none, none, none, none, none, none, none, none]])]`,
 		`  , bufferWidths := Map.fromList [(⟨"in"⟩, 128), (⟨"data"⟩, 18)]`,
 		`  , constraints := []`,
 		`  , cycle := 0`,

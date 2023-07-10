@@ -146,8 +146,8 @@ function witnessWeakestPrePart0(funcName: string, partDrops: IR.DropFelt[][], bu
 			]
 		),
 		``,
-		`lemma part0_cumulative_wp :`,
-		`  Code.run (start_state [${variableList("x",",",1)}]) = [${variableList("y",",",bufferWidth)}] ↔`,
+		`lemma part0_cumulative_wp {${variableList("x"," ",4)}: Felt} :`,
+		`  Code.run (start_state [${variableList("x",",",4)}]) = [${variableList("y",",",bufferWidth)}] ↔`,
 		`  ${cumulativeTransformer ?? "sorry"} := by`,
 		`    unfold Code.run start_state`,
 		`    rewrite [Code.optimised_behaviour_full]`,
@@ -218,8 +218,8 @@ function witnessWeakestPreMid(
 		`  simp [part${part-1}_state_update, part${part}_wp]`,
 		``,
 		// TODO extract input width constant
-		`lemma part${part}_cumulative_wp {${variableList("x"," ",1)}: Felt} :`,
-		`  Code.run (start_state [${variableList("x",",",1)}]) = [${variableList("y",",",bufferWidth)}] ↔`,
+		`lemma part${part}_cumulative_wp {${variableList("x"," ",4)}: Felt} :`,
+		`  Code.run (start_state [${variableList("x",",",4)}]) = [${variableList("y",",",bufferWidth)}] ↔`,
 		`  ${cumulativeTransformer ?? "sorry"} := by`,
 		cumulative_wp_proof(part, ir, linesPerPart, partDrops, cumulativeTransformer === undefined),
 		``,
@@ -314,16 +314,16 @@ function witnessWeakestPreLast(
 		`  simp [part${part-1}_state_update, part${part}_wp]`,
 		``,
 		// TODO extract input width constant
-		`lemma part${part}_cumulative_wp {${variableList("x"," ",1)}: Felt} :`,
-		`  Code.run (start_state [${variableList("x",",",1)}]) = [${variableList("y",",",bufferWidth)}] ↔`,
+		`lemma part${part}_cumulative_wp {${variableList("x"," ",4)}: Felt} :`,
+		`  Code.run (start_state [${variableList("x",",",4)}]) = [${variableList("y",",",bufferWidth)}] ↔`,
 		`  ${cumulativeTransformer ?? "sorry"} := by`,
 		cumulative_wp_proof(part, ir, linesPerPart, partDrops, cumulativeTransformer === undefined),
 		``,
 		...(cumulativeTransformer === undefined
 			? []
 			: [
-				`lemma closed_form {${variableList("x"," ",1)}: Felt} :`,
-				`  Code.run (start_state [${variableList("x",",",1)}]) = [${variableList("y",",",bufferWidth)}] ↔`,
+				`lemma closed_form {${variableList("x"," ",4)}: Felt} :`,
+				`  Code.run (start_state [${variableList("x",",",4)}]) = [${variableList("y",",",bufferWidth)}] ↔`,
 				`  ${closedForm ?? "sorry"} := by`,
 				cumulative_wp_proof(part+1, ir, linesPerPart, partDrops, false),
 				`    unfold Code.getReturn`,
