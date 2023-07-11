@@ -176,12 +176,16 @@ export function swapForwards(currIdx: number, target: number, ir: IR.Statement[]
 			line = `${line}${comma?",":""}opt_swap (`
 		}
 
-		line = `${line}${getSwapLemmaNamePart(current)}_past_${getSwapLemmaNamePart(next)}`;
+		line = `${line}${getSwapLemma(current, next)}`;
 		line = `${line}${bufferOpSwapSuffix(current, next)}`;
 		line = `${line} ${getHypotheses(current, next)})`;
 		comma = true;
 	}
 	return `${line}]\n    simp only [←MLIR.run_nondet]\n    rewrite [←MLIR.run_seq_def]`;
+}
+
+function getSwapLemma(current: IR.Statement, next: IR.Statement): string {
+	return `${getSwapLemmaNamePart(current)}_past_${getSwapLemmaNamePart(next)}`;
 }
 
 export function getSwapLemmaNamePart(stmt: IR.Statement): string {
@@ -219,10 +223,12 @@ export function getHypotheses(stmt1: IR.Statement, stmt2: IR.Statement): string 
 	const ids = `${stmt1.id()} ${stmt2.id()}`;
 	// console.log(ids);
 	let count = null;
+	if (ids === "assign/const assign/andCond") count = 1;
 	if (ids === "assign/const assign/andEqz") count = 1;
 	if (ids === "assign/const assign/binop") count = 3;
 	if (ids === "assign/const assign/const") count = 1;
 	if (ids === "assign/const assign/get") count = 1;
+	if (ids === "assign/const assign/inv") count = 2;
 	if (ids === "assign/const assign/isz") count = 2;
 	if (ids === "assign/const eqz") count = 1;
 	if (ids === "assign/const set") count = 1;
@@ -232,6 +238,21 @@ export function getHypotheses(stmt1: IR.Statement, stmt2: IR.Statement): string 
 	if (ids === "assign/get assign/const") count = 1;
 	if (ids === "assign/get assign/get") count = 2;
 	if (ids === "assign/get set") count = 2;
+	if (ids === "assign/const if") {
+		// return ` (by trivial) (${getSwapLemma(stmt1, stmt2)}${})`;
+		if (stmt2.kind !== "if") throw "if id error";
+		return [
+			" (by trivial)",
+			stmt2.body.reduceRight((acc: string, bodyStmt) => {
+				const lemma = ` (${getSwapLemma(stmt1, bodyStmt)} ${getHypotheses(stmt1, bodyStmt)})`;
+				if (acc === "") {
+					return lemma;
+				} else {
+					return ` (opt_seq${lemma}${acc})`;
+				}
+			}, "")
+		].join("");
+	}
 	if (count === null) {
 		throw `unknown number of hypotheses for ${ids}`;
 	} else {

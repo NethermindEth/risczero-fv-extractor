@@ -72,7 +72,20 @@ export class Inv {
 	uses(): DataLoc[] { return [ {kind: "felt", idx: this.op}]}
 }
 
-export type Val = Const | True | Get | BinOp | IsZ | AndEqz | Inv;
+export class AndCond {
+	kind = "andCond" as const;
+	constructor (public outerConstraint: string, public condition: string, public innerConstraint: string) {}
+	toString(): string {
+		return `guard ⟨"${this.condition}"⟩ & ⟨"${this.outerConstraint}"⟩ with ⟨"${this.innerConstraint}"⟩`;
+	}
+	uses(): DataLoc[] { return [
+		{kind: "prop", idx: this.outerConstraint},
+		{kind: "felt", idx: this.condition},
+		{kind: "prop", idx: this.innerConstraint},
+	]}
+}
+
+export type Val = Const | True | Get | BinOp | IsZ | AndEqz | Inv | AndCond;
 
 export class Assign {
 	kind = "assign" as const;
@@ -81,7 +94,12 @@ export class Assign {
 		return `"${this.target}" ←ₐ ${this.val.toString()}`;
 	}
 	uses(): DataLoc[] { return this.val.uses() }
-	creates(): DataLoc[] { return [{kind: "felt", idx: this.target}] }
+	creates(): DataLoc[] { if (this.val.kind === "true" || this.val.kind === "andEqz" || this.val.kind === "andCond") {
+			return [{kind: "prop", idx: this.target}]
+		} else {
+			return [{kind: "felt", idx: this.target}]
+		}
+	}
 	id(): string { return `${this.kind}/${this.val.kind}`}
 }
 
@@ -121,9 +139,9 @@ export class DropFelt {
 
 export class If {
 	kind = "if" as const;
-	constructor(public cond: string, public body: Statement[]) {}
+	constructor(public cond: string, public body: Statement[], public nondet: boolean) {}
 	toString(): string {
-		return `guard ⟨"${this.cond}"⟩ then ${this.body.map(s => s.toString()).join("; ")}`;
+		return `guard ⟨"${this.cond}"⟩ then (${this.body.map(s => s.toString()).join("; ")})`;
 	}
 	uses(): DataLoc[] { return this.body.map(s => s.uses()).reduce((acc, curr) => [
 		...acc,
@@ -133,7 +151,17 @@ export class If {
 	id(): string { return `${this.kind}`} //TODO
 }
 
-export type Statement = Assign | SetInstr | Eqz | DropFelt;
+export type Statement = Assign | SetInstr | Eqz | DropFelt | If;
+
+export function getAllStatements(statements: Statement[]): Statement[] {
+	return statements.flatMap(stmt => {
+		if (stmt.kind === "if") {
+			return [stmt, ...stmt.body]
+		} else {
+			return [stmt]
+		}
+	});
+}
 
 export function irLinesToLean(ir: Statement[]): string {
 	let nondet = false;

@@ -230,8 +230,10 @@ function constraintsWeakestPreMid(
 function cumulative_wp_proof(part: number, ir: IR.Statement[], linesPerPart: number, partDrops: IR.DropFelt[][], firstPass: boolean): string {
 	const dropCount = partDrops[part-1].length;
 	const previousPart = ir.slice((part-1)*linesPerPart, part*linesPerPart);
-	const setCount = previousPart.filter(stmt => stmt.kind === "set").length;
-	const eqzCount = previousPart.filter(stmt => stmt.kind === "eqz").length;
+	const previousPartAllStatements = IR.getAllStatements(previousPart);
+	const setCount = previousPartAllStatements.filter(stmt => stmt.kind === "set").length;
+	const eqzCount = previousPartAllStatements.filter(stmt => stmt.kind === "eqz").length;
+	const statementsAfterIf = previousPart.slice(0, -1).find(stmt => stmt.kind === "if") !== undefined || (part+1)*linesPerPart >= ir.length;
 	return [
 		`    rewrite [part${part-1}_cumulative_wp]`,
 		part === partDrops.length
@@ -253,7 +255,9 @@ function cumulative_wp_proof(part: number, ir: IR.Statement[], linesPerPart: num
 		`    -- ${setCount} set${setCount === 1 ? "" : "s"}`,
 		`    ${setCount === 0 ? "-- " : ""}rewrite [Map.drop_of_updates]`,
 		`    ${setCount === 0 ? "-- " : ""}simp only [Map.drop_base, ne_eq, Map.update_drop_swap, Map.update_drop]`,
-		...(firstPass || (dropCount + setCount + eqzCount === 0) ? [`    rfl`] : []),
+		`    -- there are ${statementsAfterIf ? "" : "not any "}statements after an if`,
+		`    ${statementsAfterIf ? "" : "-- "}try simp [State.buffers_if_eq_if_buffers,State.bufferWidths_if_eq_if_bufferWidths,State.constraints_if_eq_if_constraints,State.cycle_if_eq_if_cycle,State.felts_if_eq_if_felts,State.isFailed_if_eq_if_isFailed,State.props_if_eq_if_props,State.vars_if_eq_if_vars]`,
+		...(firstPass || (dropCount + setCount + eqzCount === 0 && !statementsAfterIf) ? [`    rfl`] : []),
 	].join("\n");
 }
 

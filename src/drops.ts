@@ -262,10 +262,26 @@ function moveDropThrough(ir: IR.Statement[]): string {
 }
 
 function getHypotheses(stmt: IR.Statement): string {
-	const felts = [...stmt.creates(), ...stmt.uses()].map(d => { if (d.kind !== "felt") { return null; } else { return d.idx; }});
-	const start: string[] = [];
-	const uniqueFeltCount = felts.reduce((acc, curr) => { if (curr === null || acc.includes(curr)) { return acc; } else { return [...acc, curr]; }}, start).length;
-	return " (by trivial)".repeat(uniqueFeltCount);
+	if (stmt.kind === "if") {
+		return [
+			" (by trivial)",
+			stmt.body.reduceRight((acc: string, bodyStmt) => {
+				const lemma = ` (drop_past_${getSwapLemmaNamePart(bodyStmt)} ${getHypotheses(bodyStmt)})`;
+				if (acc === "") {
+					return lemma;
+				} else {
+					return ` (opt_seq${lemma}${acc})`;
+				}
+			}, "")
+		].join("");
+	} else {
+		const felts = [...stmt.creates(), ...stmt.uses()].map(d => { if (d.kind !== "felt") { return null; } else { return d.idx; }});
+		const start: string[] = [];
+		const uniqueFeltCount = felts.reduce((acc, curr) => { if (curr === null || acc.includes(curr)) { return acc; } else { console.log(curr); return [...acc, curr]; }}, start).length;
+		console.log(`Moving drop past ${stmt.id()} requires ${uniqueFeltCount} hypotheses`);
+		return " (by trivial)".repeat(uniqueFeltCount);
+	}
+
 }
 
 export function createWitnessCodeWithDropsLean(funcName: string, ir: IR.Statement[], linesPerPart: number): string {

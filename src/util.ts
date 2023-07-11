@@ -10,6 +10,22 @@ export function addToImportFile(prefix: string, pathToImport: string) {
 	fs.writeFileSync(`${prefix}/Risc0.lean`, importFile, { encoding: "utf8" });
 }
 
+export function commentInImportFile(prefix: string, predicate: (line: string) => boolean): string[] {
+	const importFileBefore = fs.readFileSync(`${prefix}/Risc0.lean`, { encoding: "utf8" }).split("\n");
+	const importFileAfter = importFileBefore.map(line => !line.trim().startsWith("--") && predicate(line) ? `-- ${line}` : line);
+	const changedLines = importFileAfter.filter(line => !importFileBefore.includes(line));
+	fs.writeFileSync(`${prefix}/Risc0.lean`, importFileAfter.join("\n"), { encoding: "utf8" });
+	return changedLines
+}
+
+export function uncommentInImportFile(prefix: string, predicate: (line: string) => boolean): string[] {
+	const importFileBefore = fs.readFileSync(`${prefix}/Risc0.lean`, { encoding: "utf8" }).split("\n");
+	const importFileAfter = importFileBefore.map(line => line.trim().startsWith("--") && predicate(line) ? line.trim().slice(2).trim() : line);
+	const changedLines = importFileAfter.filter(line => !importFileBefore.includes(line));
+	fs.writeFileSync(`${prefix}/Risc0.lean`, importFileAfter.join("\n"), { encoding: "utf8" });
+	return changedLines
+}
+
 export type BufferConfig = {
 	inputName: string,
 	inputWidth: number,

@@ -7,13 +7,13 @@ const skipFirst = false;
 const skipMid = false;
 const skipToMid: number | null = null; // set to null to turn off
 
-export function witnessWeakestPreFiles(leanPath: string, funcName: string, ir: IR.Statement[], linesPerPart: number, partDrops: IR.DropFelt[][], bufferConfig: BufferConfig) {
+export function witnessWeakestPreFiles(leanPath: string, funcName: string, ir: IR.Statement[], linesPerPart: number, partDrops: IR.DropFelt[][], bufferConfig: BufferConfig, callback: () => void) {
 	console.log("Creating witness weakest pre files");
 	if (skipFirst) {
 		if (skipToMid === null) {
-			recurseThroughMidFiles(leanPath, funcName, 1, ir , linesPerPart, partDrops, bufferConfig);
+			recurseThroughMidFiles(leanPath, funcName, 1, ir , linesPerPart, partDrops, bufferConfig, callback);
 		} else {
-			recurseThroughMidFiles(leanPath, funcName, skipToMid, ir, linesPerPart, partDrops, bufferConfig);
+			recurseThroughMidFiles(leanPath, funcName, skipToMid, ir, linesPerPart, partDrops, bufferConfig, callback);
 		}
 	} else {
 		const part0 = witnessWeakestPrePart0(funcName, partDrops, bufferConfig, undefined, undefined);
@@ -29,18 +29,18 @@ export function witnessWeakestPreFiles(leanPath: string, funcName: string, ir: I
 			fs.writeFileSync(`${leanPath}/Risc0/Gadgets/${funcName}/Witness/WeakestPresPart0.lean`, part0);
 			exec(`cd ${leanPath}; lake build`, () => {
 				if (skipToMid === null) {
-					recurseThroughMidFiles(leanPath, funcName, 1, ir , linesPerPart, partDrops, bufferConfig);
+					recurseThroughMidFiles(leanPath, funcName, 1, ir , linesPerPart, partDrops, bufferConfig, callback);
 				} else {
-					recurseThroughMidFiles(leanPath, funcName, skipToMid, ir, linesPerPart, partDrops, bufferConfig);
+					recurseThroughMidFiles(leanPath, funcName, skipToMid, ir, linesPerPart, partDrops, bufferConfig, callback);
 				}
 			});
 		}).stdout?.pipe(process.stdout);
 	}
 }
 
-function recurseThroughMidFiles(leanPath: string, funcName: string, part: number, ir: IR.Statement[], linesPerPart: number, partDrops: IR.DropFelt[][], bufferConfig: BufferConfig) {
+function recurseThroughMidFiles(leanPath: string, funcName: string, part: number, ir: IR.Statement[], linesPerPart: number, partDrops: IR.DropFelt[][], bufferConfig: BufferConfig, callback: () => void) {
 	if (skipMid) {
-		lastFile(leanPath, funcName, ir, linesPerPart, partDrops, bufferConfig);
+		lastFile(leanPath, funcName, ir, linesPerPart, partDrops, bufferConfig, callback);
 	} else {
 		console.log(`Part ${part} of ${partDrops.length}`);
 		const mid = witnessWeakestPreMid(funcName, part, ir, linesPerPart, partDrops, bufferConfig, undefined, undefined);
@@ -60,16 +60,16 @@ function recurseThroughMidFiles(leanPath: string, funcName: string, part: number
 					fs.writeFileSync(`${leanPath}/Risc0/Gadgets/${funcName}/Witness/WeakestPresPart${part}.lean`, fixed);
 				}
 				if (part+1 < partDrops.length - 1) {
-					recurseThroughMidFiles(leanPath, funcName, part+1, ir, linesPerPart, partDrops, bufferConfig);
+					recurseThroughMidFiles(leanPath, funcName, part+1, ir, linesPerPart, partDrops, bufferConfig, callback);
 				} else {
-					lastFile(leanPath, funcName, ir, linesPerPart, partDrops, bufferConfig);
+					lastFile(leanPath, funcName, ir, linesPerPart, partDrops, bufferConfig, callback);
 				}
 			}).stdout?.pipe(process.stdout);
 		}).stdout?.pipe(process.stdout);
 	}
 }
 
-function lastFile(leanPath: string, funcName: string, ir: IR.Statement[], linesPerPart: number, partDrops: IR.DropFelt[][], bufferConfig: BufferConfig) {
+function lastFile(leanPath: string, funcName: string, ir: IR.Statement[], linesPerPart: number, partDrops: IR.DropFelt[][], bufferConfig: BufferConfig, callback: () => void) {
 	const part = partDrops.length-1;
 	const last = witnessWeakestPreLast(funcName, ir, linesPerPart, partDrops, bufferConfig, undefined, undefined, undefined);
 	fs.writeFileSync(`${leanPath}/Risc0/Gadgets/${funcName}/Witness/WeakestPresPart${part}.lean`, last);
@@ -88,20 +88,8 @@ function lastFile(leanPath: string, funcName: string, ir: IR.Statement[], linesP
 			const last = witnessWeakestPreLast(funcName, ir, linesPerPart, partDrops, bufferConfig, stateTransformer, cumulativeTransformer, closedForm);
 			console.log(`  closed form`);
 			fs.writeFileSync(`${leanPath}/Risc0/Gadgets/${funcName}/Witness/WeakestPresPart${part}.lean`, last);
-			exec(`cd ${leanPath}; lake build`, (error, stdout, stderr) => {
-				if (stdout !== "") {
-					console.log("---stdout---:\n\n");
-					console.log(stdout);
-				}
-				if (stderr !== "") {
-					console.log("---stderr:\n\n");
-					console.log(stderr);
-				}
-				if (error !== null) {
-					console.log("---error---:\n\n");
-					console.log(error);
-				}
-				console.log("Done")
+			exec(`cd ${leanPath}; lake build`, () => {
+				callback();
 			}).stdout?.pipe(process.stdout);
 		}).stdout?.pipe(process.stdout);
 	}).stdout?.pipe(process.stdout);
@@ -229,8 +217,10 @@ function witnessWeakestPreMid(
 function cumulative_wp_proof(part: number, ir: IR.Statement[], linesPerPart: number, partDrops: IR.DropFelt[][], firstPass: boolean): string {
 	const dropCount = partDrops[part-1].length;
 	const previousPart = ir.slice((part-1)*linesPerPart, part*linesPerPart);
-	const setCount = previousPart.filter(stmt => stmt.kind === "set").length;
-	const eqzCount = previousPart.filter(stmt => stmt.kind === "eqz").length;
+	const previousPartAllStatements = IR.getAllStatements(previousPart);
+	const setCount = previousPartAllStatements.filter(stmt => stmt.kind === "set").length;
+	const eqzCount = previousPartAllStatements.filter(stmt => stmt.kind === "eqz").length;
+	const statementsAfterIf = previousPart.slice(0, -1).find(stmt => stmt.kind === "if") !== undefined || (part+1)*linesPerPart >= ir.length;
 	return [
 		`    rewrite [part${part-1}_cumulative_wp]`,
 		part === partDrops.length
@@ -253,7 +243,9 @@ function cumulative_wp_proof(part: number, ir: IR.Statement[], linesPerPart: num
 		`    -- ${setCount} set${setCount === 1 ? "" : "s"}`,
 		`    ${setCount === 0 ? "-- " : ""}rewrite [Map.drop_of_updates]`,
 		`    ${setCount === 0 ? "-- " : ""}simp only [Map.drop_base, ne_eq, Map.update_drop_swap, Map.update_drop]`,
-		...(firstPass || (dropCount + setCount + eqzCount === 0) ? [`    rfl`] : []),
+		`    -- there are ${statementsAfterIf ? "" : "not any "}statements after an if`,
+		`    ${statementsAfterIf ? "" : "-- "}try simp [State.buffers_if_eq_if_buffers,State.bufferWidths_if_eq_if_bufferWidths,State.constraints_if_eq_if_constraints,State.cycle_if_eq_if_cycle,State.felts_if_eq_if_felts,State.isFailed_if_eq_if_isFailed,State.props_if_eq_if_props,State.vars_if_eq_if_vars]`,
+		...(firstPass || (dropCount + setCount + eqzCount === 0 && !statementsAfterIf) ? [`    rfl`] : []),
 	].join("\n");
 }
 

@@ -1,10 +1,11 @@
 import { exec } from 'child_process';
 import fs from 'fs';
-import { BufferConfig, addToImportFile } from './util';
+import { BufferConfig, addToImportFile, commentInImportFile } from './util';
 import * as IR from './IR';
 import { getStepwiseOptimisations } from './reordering';
 import { createCodeDropsLean } from './drops';
 import { createCodePartsLean } from './code_parts';
+import { parseBody } from './parser';
 
 const skipUnOpt = false;
 const skipOpt = false;
@@ -12,7 +13,8 @@ const skipOpt = false;
 export function createCodeFiles(
 	leanPath: string,
 	linesPerPart: number,
-	callback: (funcName: string, bufferConfig: BufferConfig, constraintsReorderedIR: IR.Statement[], constraintsPartDrops: IR.DropFelt[][], witnessReorderedIR: IR.Statement[], witnessPartDrops: IR.DropFelt[][]) => void
+	autoExcludeFiles: boolean,
+	callback: (funcName: string, bufferConfig: BufferConfig, constraintsReorderedIR: IR.Statement[], constraintsPartDrops: IR.DropFelt[][], witnessReorderedIR: IR.Statement[], witnessPartDrops: IR.DropFelt[][], proofFiles: string[]) => void
 ) {
 	console.log(`Creating code files ${skipUnOpt ? "unopt skipped" : ""} ${skipOpt ? "opt skipped" : ""}`);
 	const witness = loadWitnessMLIR();
@@ -31,6 +33,13 @@ export function createCodeFiles(
 	const [witnessDropsLean, witnessPartDrops] = createCodeDropsLean(funcName, witnessReorderedIR, linesPerPart, "Witness");
 	const [constraintsDropsLean, constraintsPartDrops] = createCodeDropsLean(funcName, constraintsReorderedIR, linesPerPart, "Constraints");
 
+	let proofFiles: string[];
+	if (autoExcludeFiles) {
+		proofFiles = excludeFiles(leanPath, funcName);
+	} else {
+		proofFiles = [];
+	}
+
 	if (!skipUnOpt) {
 		outputCodeFiles(leanPath, funcName, witnessCodeLean, constraintsCodeLean);
 	}
@@ -42,7 +51,7 @@ export function createCodeFiles(
 		);
 	}
 	if (skipUnOpt && skipOpt) {
-		callback(funcName, bufferConfig, constraintsReorderedIR, constraintsPartDrops, witnessReorderedIR, witnessPartDrops);
+		callback(funcName, bufferConfig, constraintsReorderedIR, constraintsPartDrops, witnessReorderedIR, witnessPartDrops, proofFiles);
 	} else {
 		exec(`cd ${leanPath}; lake build`, (error, stdout, stderr) => {
 			if (stdout !== "") {
@@ -57,7 +66,7 @@ export function createCodeFiles(
 				console.log("---error---:\n\n");
 				console.log(error);
 			} else {
-				callback(funcName, bufferConfig, constraintsReorderedIR, constraintsPartDrops, witnessReorderedIR, witnessPartDrops);
+				callback(funcName, bufferConfig, constraintsReorderedIR, constraintsPartDrops, witnessReorderedIR, witnessPartDrops, proofFiles);
 			}
 		}).stdout?.pipe(process.stdout);
 	}
@@ -143,115 +152,6 @@ function parseFuncLine(funcLine: string): [string, Map<string, string>, BufferCo
 	return [funcName, argIdToName, {inputName, inputWidth, outputName, outputWidth}];
 }
 
-function parseIRLines(irLines: string[], argIdToName: Map<string, string>): IR.Statement[] {
-	const instructions: IR.Statement[] = [];
-	let nondet = false;
-	for (let lineIndex = 2; lineIndex < irLines.length; ++lineIndex) {
-		const line = irLines[lineIndex];
-		if (line.startsWith("%")) {
-			const nameEnd = line.indexOf(" ");
-			const name = line.slice(0, nameEnd);
-			const rhsStart = nameEnd + " = ".length;
-			const rhs = line.slice(rhsStart);
-			let rhsVal: IR.Val | undefined;
-			if (rhs.startsWith("cirgen.const ")) {
-				const val = line.slice(rhsStart + "cirgen.const ".length);
-				rhsVal = new IR.Const(val);
-			} else if (rhs.startsWith("cirgen.true")) {
-				rhsVal = new IR.True();
-			} else if (rhs.startsWith("cirgen.get ")) {
-				const bufferArg = rhs.slice("cirgen.get ".length, rhs.indexOf("["));
-				const offset = rhs.slice(rhs.indexOf("[") + 1, rhs.indexOf("]"));
-				const backStart = rhs.indexOf("back ") + "back ".length;
-				const backEnd = rhs.indexOf(" ", backStart);
-				const back = rhs.slice(backStart, backEnd);
-				rhsVal = new IR.Get(`${argIdToName.get(bufferArg)}`, back, offset);
-			} else if (rhs.startsWith("cirgen.mul ")) {
-				const op1Start = "cirgen.mul ".length;
-				const op1End = rhs.indexOf(" ", op1Start);
-				const op2Start = rhs.indexOf("%", op1End);
-				const op2End = rhs.indexOf(" ", op2Start);
-				const op1 = rhs.slice(op1Start, op1End);
-				const op2 = rhs.slice(op2Start, op2End);
-				rhsVal = new IR.BinOp("Mul", op1, op2);
-			} else if (rhs.startsWith("cirgen.add ")) {
-				const op1Start = "cirgen.add ".length;
-				const op1End = rhs.indexOf(" ", op1Start);
-				const op2Start = rhs.indexOf("%", op1End);
-				const op2End = rhs.indexOf(" ", op2Start);
-				const op1 = rhs.slice(op1Start, op1End);
-				const op2 = rhs.slice(op2Start, op2End);
-				rhsVal = new IR.BinOp("Add", op1, op2);
-			} else if (rhs.startsWith("cirgen.sub ")) {
-				const op1Start = "cirgen.sub ".length;
-				const op1End = rhs.indexOf(" ", op1Start);
-				const op2Start = rhs.indexOf("%", op1End);
-				const op2End = rhs.indexOf(" ", op2Start);
-				const op1 = rhs.slice(op1Start, op1End);
-				const op2 = rhs.slice(op2Start, op2End);
-				rhsVal = new IR.BinOp("Sub", op1, op2);
-			} else if (rhs.startsWith("cirgen.inv ")) {
-				const opStart = rhs.indexOf("%");
-				const opEnd = rhs.indexOf(" ", opStart);
-				const op = rhs.slice(opStart, opEnd);
-				rhsVal = new IR.Inv(op);
-			} else if (rhs.startsWith("cirgen.isz ")) {
-				const opStart = rhs.indexOf("%");
-				const opEnd = rhs.indexOf(" ", opStart);
-				const op = rhs.slice(opStart, opEnd);
-				rhsVal = new IR.IsZ(op);
-			} else if (rhs.startsWith("cirgen.and_eqz ")) {
-				const op1Start = rhs.indexOf("%");
-				const op1End = rhs.indexOf(",", op1Start);
-				const op2Start = rhs.indexOf("%", op1End);
-				const op2End = rhs.indexOf(" ", op2Start);
-				const op1 = rhs.slice(op1Start, op1End);
-				const op2 = rhs.slice(op2Start, op2End);
-				rhsVal = new IR.AndEqz(op1, op2);
-			} else if (rhs.startsWith("cirgen.bitAnd ")) {
-				const op1Start = rhs.indexOf("%");
-				const op1End = rhs.indexOf(" ", op1Start);
-				const op2Start = rhs.indexOf("%", op1End);
-				const op2End = rhs.indexOf(" ", op2Start);
-				const op1 = rhs.slice(op1Start, op1End);
-				const op2 = rhs.slice(op2Start, op2End);
-				rhsVal = new IR.BinOp("BitAnd", op1, op2);
-			} else {
-				throw `Unhandled line ${line}`;
-			}
-			instructions.push(new IR.Assign(name, rhsVal, nondet));
-		} else if (line.startsWith("cirgen.nondet ")) {
-			nondet = true;
-		} else if (line.startsWith("cirgen.set ")) {
-			const bufferStart = line.indexOf("%");
-			const bufferEnd = line.indexOf(" ", bufferStart);
-			const indexStart = line.indexOf("[") + 1;
-			const indexEnd = line.indexOf("]");
-			const valStart = line.indexOf("%", indexEnd);
-			const valEnd = line.indexOf(" ", valStart);
-			const buffer = line.slice(bufferStart, bufferEnd);
-			const index = line.slice(indexStart, indexEnd);
-			const val = line.slice(valStart, valEnd);
-			const bufferName = `${argIdToName.get(buffer)}`;
-			instructions.push(new IR.SetInstr(bufferName, index, val, nondet));
-		} else if (line.startsWith("cirgen.eqz ")) {
-			const valStart = line.indexOf("%");
-			const valEnd = line.indexOf(" ", valStart);
-			const val = line.slice(valStart, valEnd);
-			instructions.push(new IR.Eqz(val, nondet));
-		} else if (line.startsWith("}") && nondet == true) {
-			nondet = false;
-		} else if (line.startsWith("cirgen.barrier ")) {
-			// skip barrier
-		} else if (line == "return" || line.startsWith("return ")) {
-			break;
-		} else {
-			throw `Unhandled line ${line}`;
-		}
-	}
-	return instructions;
-}
-
 function getWitnessReturn(witnessCode: string[], bufferConfig: BufferConfig): string {
 	return [
 		"def getReturn (st: State) : BufferAtTime :=",
@@ -279,7 +179,7 @@ function getConstraintsReturn(constraintsCode: string[]): string {
 }
 
 function createWitnessCodeLean(funcName: string, witness: string[], argIdToName: Map<string, string>, linesPerPart: number, bufferConfig: BufferConfig): string {
-	const witnessFullLines = parseIRLines(witness, argIdToName);
+	const witnessFullLines = parseBody(witness, argIdToName);
 	return [
 		"import Risc0.Basic",
 		"import Risc0.Lemmas",
@@ -314,7 +214,7 @@ function createWitnessCodeLean(funcName: string, witness: string[], argIdToName:
 }
 
 function createConstraintsCodeLean(funcName: string, constraints: string[], argIdToName: Map<string, string>, linesPerPart: number, bufferConfig: BufferConfig): string {
-	const constraintsFullLines = parseIRLines(constraints, argIdToName);
+	const constraintsFullLines = parseBody(constraints, argIdToName);
 	return [
 		"import Risc0.Basic",
 		"import Risc0.Lemmas",
@@ -349,9 +249,10 @@ function createConstraintsCodeLean(funcName: string, constraints: string[], argI
 }
 
 function createConstraintsCodeReorderedLean(funcName: string, witness: string[], argIdToName: Map<string, string>): [ir: IR.Statement[], lean: string] {
-	const IR = parseIRLines(witness, argIdToName);
+	const IR = parseBody(witness, argIdToName);
 	const [reorderedIR, reorderedLean] = getStepwiseOptimisations(IR);
-	IR.forEach(x => console.log(x.toString()));
+	console.log(`Reordered constraints code:`);
+	reorderedIR.forEach(x => console.log(x.toString()));
 	return [
 		reorderedIR,
 		[
@@ -370,9 +271,10 @@ function createConstraintsCodeReorderedLean(funcName: string, witness: string[],
 }
 
 function createWitnessCodeReorderedLean(funcName: string, witness: string[], argIdToName: Map<string, string>): [ir: IR.Statement[], lean: string] {
-	const IR = parseIRLines(witness, argIdToName);
+	const IR = parseBody(witness, argIdToName);
 	const [reorderedIR, reorderedLean] = getStepwiseOptimisations(IR);
-	IR.forEach(x => console.log(x.toString()));
+	console.log(`Reordered witness code:`);
+	reorderedIR.forEach(x => console.log(x.toString()));
 	return [
 		reorderedIR,
 		[
@@ -429,4 +331,8 @@ function mkDirIfNeeded(path: string) {
 	if (!fs.existsSync(path)) {
 		fs.mkdirSync(path);
 	}
+}
+
+function excludeFiles(prefix: string, funcName: string): string[] {
+	return commentInImportFile(prefix, (x) => x.includes(`.${funcName}.`));
 }

@@ -1,5 +1,5 @@
 module {
-  func.func @ComputeIsZero(%arg0: !cirgen.buffer<1, constant> {cirgen.argName = "in"}, %arg1: !cirgen.buffer<2, mutable> {cirgen.argName = "data"}) {
+  func.func @IsZero(%arg0: !cirgen.buffer<1, constant> {cirgen.argName = "in"}, %arg1: !cirgen.buffer<2, mutable> {cirgen.argName = "data"}) {
     %0 = cirgen.const 1
     %1 = cirgen.get %arg0[0] back 0 : <1, constant>
     cirgen.nondet {
