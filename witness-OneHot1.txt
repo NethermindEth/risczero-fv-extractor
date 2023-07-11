@@ -1,0 +1,21 @@
+module {
+  func.func @OneHot1(%arg0: !cirgen.buffer<1, constant> {cirgen.argName = "code"}, %arg1: !cirgen.buffer<1, mutable> {cirgen.argName = "data"}) {
+    %0 = cirgen.const 1
+    %1 = cirgen.const 0
+    %2 = cirgen.get %arg0[0] back 0 : <1, constant>
+    cirgen.nondet {
+      %8 = cirgen.isz %2 : <default>
+      cirgen.set %arg1 : <1, mutable>[0] = %8 : <default>
+    }
+    %3 = cirgen.sub %1 : <default>, %2 : <default>
+    cirgen.eqz %3 : <default>
+    %4 = cirgen.get %arg1[0] back 0 : <1, mutable>
+    %5 = cirgen.sub %0 : <default>, %4 : <default>
+    %6 = cirgen.mul %4 : <default>, %5 : <default>
+    cirgen.eqz %6 : <default>
+    %7 = cirgen.sub %4 : <default>, %0 : <default>
+    cirgen.eqz %7 : <default>
+    cirgen.barrier %1 : <default>
+    return
+  }
+}
