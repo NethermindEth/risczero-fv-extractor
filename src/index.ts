@@ -4,7 +4,7 @@ import { constraintsWeakestPreFiles } from './constraints_wp_parts';
 import { witnessWeakestPreFiles } from './witness_wp_parts';
 import { uncommentInImportFile } from './util';
 
-const leanPath = "../is0"
+const leanPath = "../lean4dir/risczero-fv"
 const linesPerPart = 4;
 const autoExcludeFiles = true; // Comment out files in Risc0.lean before execution
 

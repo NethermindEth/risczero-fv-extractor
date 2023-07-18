@@ -97,7 +97,8 @@ function lastFile(leanPath: string, funcName: string, ir: IR.Statement[], linesP
 
 function witnessWeakestPrePart0(funcName: string, partDrops: IR.DropFelt[][], bufferConfig: BufferConfig, stateTransformer: string | undefined, cumulativeTransformer: string | undefined): string {
 	return [
-		`import Risc0.Basic`,
+		`import Risc0.State`,
+		`import Risc0.Cirgen`,
 		`import Risc0.MlirTactics`,
 		`import Risc0.Gadgets.${funcName}.Witness.CodeDrops`,
 		``,
@@ -133,6 +134,7 @@ function witnessWeakestPrePart0(funcName: string, partDrops: IR.DropFelt[][], bu
 			]
 		),
 		``,
+    `set_option maxRecDepth 10000000 in`,
 		`lemma part0_cumulative_wp {${variableList("x"," ",bufferConfig.inputWidth)}: Felt} :`,
 		`  Code.run (start_state [${variableList("x",",",bufferConfig.inputWidth)}]) = [${variableList("y",",",bufferConfig.outputWidth)}] ↔`,
 		`  ${cumulativeTransformer ?? "sorry"} := by`,
@@ -161,7 +163,8 @@ function witnessWeakestPreMid(
 	cumulativeTransformer: string | undefined
 ): string {
 	return [
-		`import Risc0.Basic`,
+		`import Risc0.State`,
+		`import Risc0.Cirgen`,
 		`import Risc0.MlirTactics`,
 		`import Risc0.Gadgets.${funcName}.Witness.Code`,
 		`import Risc0.Gadgets.${funcName}.Witness.WeakestPresPart${part-1}`,
@@ -205,6 +208,7 @@ function witnessWeakestPreMid(
 		`  simp [part${part-1}_state_update, part${part}_wp]`,
 		``,
 		// TODO extract input width constant
+    `set_option maxRecDepth 10000000 in`,
 		`lemma part${part}_cumulative_wp {${variableList("x"," ",bufferConfig.inputWidth)}: Felt} :`,
 		`  Code.run (start_state [${variableList("x",",",bufferConfig.inputWidth)}]) = [${variableList("y",",",bufferConfig.outputWidth)}] ↔`,
 		`  ${cumulativeTransformer ?? "sorry"} := by`,
@@ -261,7 +265,8 @@ function witnessWeakestPreLast(
 ): string {
 	const part = partDrops.length-1;
 	return [
-		`import Risc0.Basic`,
+		`import Risc0.State`,
+		`import Risc0.Cirgen`,
 		`import Risc0.MlirTactics`,
 		`import Risc0.Gadgets.${funcName}.Witness.Code`,
 		`import Risc0.Gadgets.${funcName}.Witness.WeakestPresPart${part-1}`,
@@ -305,6 +310,7 @@ function witnessWeakestPreLast(
 		`  simp [part${part-1}_state_update, part${part}_wp]`,
 		``,
 		// TODO extract input width constant
+    `set_option maxRecDepth 10000000 in`,
 		`lemma part${part}_cumulative_wp {${variableList("x"," ",bufferConfig.inputWidth)}: Felt} :`,
 		`  Code.run (start_state [${variableList("x",",",bufferConfig.inputWidth)}]) = [${variableList("y",",",bufferConfig.outputWidth)}] ↔`,
 		`  ${cumulativeTransformer ?? "sorry"} := by`,

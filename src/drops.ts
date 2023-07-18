@@ -94,7 +94,7 @@ function getDropsBehaviourProofs(parts_drops: IR.DropFelt[][], ir: IR.Statement[
 				`    rewrite [${
 					part<parts_drops.length-1?`behaviour_with_drops${part+1}, `:""
 				}←MLIR.run_seq_def]`,
-				`    rfl`
+				`    simp only [MLIR.run_seq_def]; try rfl`
 			].join("\n")
 		} else if (dropCount <= dropChunkSize) {
 			lean = [
@@ -113,7 +113,7 @@ function getDropsBehaviourProofs(parts_drops: IR.DropFelt[][], ir: IR.Statement[
 				`    rewrite [${
 					part<parts_drops.length-1?`behaviour_with_drops${part+1}, `:""
 				}←MLIR.run_seq_def]`,
-				`    rfl`
+				`    simp only [MLIR.run_seq_def]; try rfl`
 			].join("\n")
 		} else {
 			lean = [
@@ -154,7 +154,7 @@ function getDropsBehaviourProofs(parts_drops: IR.DropFelt[][], ir: IR.Statement[
 				`    rewrite [${
 					part<parts_drops.length-1?`behaviour_with_drops${part+1}, `:""
 				}←MLIR.run_seq_def]`,
-				`    rfl`
+				`    simp only [MLIR.run_seq_def]; try rfl`
 			].join("\n")
 		}
 
@@ -237,7 +237,7 @@ function getDropPastPart(ir: IR.Statement[], parts_statements: string[], partNum
 	dropPastPart.push(`    rewrite [←${sequencing_lemma}]`);
 	dropPastPart.push("    rewrite [h_rhs]");
 	dropPastPart.push(`    unfold part${partNum}`);
-	dropPastPart.push(`    rfl`);
+	dropPastPart.push(`    simp only [MLIR.run_seq_def]; try rfl`);
 
 	return dropPastPart.join("\n");
 }

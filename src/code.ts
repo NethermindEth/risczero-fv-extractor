@@ -181,7 +181,6 @@ function getConstraintsReturn(constraintsCode: string[]): string {
 function createWitnessCodeLean(funcName: string, witness: string[], argIdToName: Map<string, string>, linesPerPart: number, bufferConfig: BufferConfig): string {
 	const witnessFullLines = parseBody(witness, argIdToName);
 	return [
-		"import Risc0.Basic",
 		"import Risc0.Lemmas",
 		"",
 		`namespace Risc0.${funcName}.Witness.Code`,
@@ -216,7 +215,6 @@ function createWitnessCodeLean(funcName: string, witness: string[], argIdToName:
 function createConstraintsCodeLean(funcName: string, constraints: string[], argIdToName: Map<string, string>, linesPerPart: number, bufferConfig: BufferConfig): string {
 	const constraintsFullLines = parseBody(constraints, argIdToName);
 	return [
-		"import Risc0.Basic",
 		"import Risc0.Lemmas",
 		"",
 		`namespace Risc0.${funcName}.Constraints.Code`,
@@ -250,7 +248,7 @@ function createConstraintsCodeLean(funcName: string, constraints: string[], argI
 
 function createConstraintsCodeReorderedLean(funcName: string, witness: string[], argIdToName: Map<string, string>): [ir: IR.Statement[], lean: string] {
 	const IR = parseBody(witness, argIdToName);
-	const [reorderedIR, reorderedLean] = getStepwiseOptimisations(IR);
+	const [reorderedIR, reorderedLean] = getStepwiseOptimisations(IR, false);
 	console.log(`Reordered constraints code:`);
 	reorderedIR.forEach(x => console.log(x.toString()));
 	return [
@@ -272,7 +270,7 @@ function createConstraintsCodeReorderedLean(funcName: string, witness: string[],
 
 function createWitnessCodeReorderedLean(funcName: string, witness: string[], argIdToName: Map<string, string>): [ir: IR.Statement[], lean: string] {
 	const IR = parseBody(witness, argIdToName);
-	const [reorderedIR, reorderedLean] = getStepwiseOptimisations(IR);
+	const [reorderedIR, reorderedLean] = getStepwiseOptimisations(IR, true);
 	console.log(`Reordered witness code:`);
 	reorderedIR.forEach(x => console.log(x.toString()));
 	return [

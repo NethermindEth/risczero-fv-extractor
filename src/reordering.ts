@@ -1,6 +1,6 @@
 import * as IR from "./IR";
 
-export function getStepwiseOptimisations(ir: IR.Statement[]): [ir: IR.Statement[], lean: string] {
+export function getStepwiseOptimisations(ir: IR.Statement[], isWitness: boolean): [ir: IR.Statement[], lean: string] {
 	let lean = "";
 	const visited: Set<string> = new Set();
 	let code = ir;
@@ -15,7 +15,7 @@ export function getStepwiseOptimisations(ir: IR.Statement[]): [ir: IR.Statement[
 		const leanPart = [
 			`def opt${i+1} : MLIRProgram :=`,
 			IR.flattenLeanIR(IR.irLinesToLean(code)),
-			getDelayProof(oldCode, code, moved, i),
+			getDelayProof(oldCode, code, moved, i, isWitness),
 			"",
 		]
 		lean = `${lean}\n${leanPart.join("\n")}`;
@@ -72,7 +72,7 @@ export function delayConstsAndGets(ir: IR.Statement[], visited: Set<string>): [c
 	return [optIR, moved, i === optIR.length];
 }
 
-export function getDelayProof(original: IR.Statement[], optimised: IR.Statement[], moved: Set<string>, proofId: number): string {
+export function getDelayProof(original: IR.Statement[], optimised: IR.Statement[], moved: Set<string>, proofId: number, isWitness: boolean): string {
 	console.log(`Proved optimised_behaviour${proofId+1}`);
 	const oldCodeName = proofId === 0 ? "full" : `opt${proofId}`
 	const movedInOrder = optimised.filter(st => st.kind === "assign" && moved.has(st.target)).reverse();
@@ -120,10 +120,11 @@ export function getDelayProof(original: IR.Statement[], optimised: IR.Statement[
 		proofLines.push(retreat(currIdx, 0, ir));
 		currIdx = 0;
 	}
-
+  
 	proofLines.push(...[
+    isWitness ? `    apply optim_rfl_hic_sunt_dracones` : ``,
 		`    unfold opt${proofId+1}`,
-		"    simp only"
+		"    with_reducible rfl"
 	]);
 
 	return proofLines.join("\n");

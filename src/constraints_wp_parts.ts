@@ -110,7 +110,8 @@ function lastFile(leanPath: string, funcName: string, ir: IR.Statement[], linesP
 
 function constraintsWeakestPrePart0(funcName: string, partDrops: IR.DropFelt[][], bufferConfig: BufferConfig, stateTransformer: string | undefined, cumulativeTransformer: string | undefined): string {
 	return [
-		`import Risc0.Basic`,
+		`import Risc0.State`,
+		`import Risc0.Cirgen`,
 		`import Risc0.MlirTactics`,
 		`import Risc0.Gadgets.${funcName}.Constraints.CodeDrops`,
 		``,
@@ -146,6 +147,7 @@ function constraintsWeakestPrePart0(funcName: string, partDrops: IR.DropFelt[][]
 			]
 		),
 		``,
+    `set_option maxRecDepth 10000000 in`,
 		`lemma part0_cumulative_wp {${variableList("x"," ",bufferConfig.inputWidth)} ${variableList("y"," ",bufferConfig.outputWidth)}: Felt}:`,
 		`  Code.run (start_state [${variableList("x",",",bufferConfig.inputWidth)}] ([${variableList("y",",",bufferConfig.outputWidth)}])) ↔`,
 		`  ${cumulativeTransformer ?? "sorry"} := by`,
@@ -174,7 +176,8 @@ function constraintsWeakestPreMid(
 	cumulativeTransformer: string | undefined
 ): string {
 	return [
-		`import Risc0.Basic`,
+		`import Risc0.State`,
+		`import Risc0.Cirgen`,
 		`import Risc0.MlirTactics`,
 		`import Risc0.Gadgets.${funcName}.Constraints.Code`,
 		`import Risc0.Gadgets.${funcName}.Constraints.WeakestPresPart${part-1}`,
@@ -218,6 +221,7 @@ function constraintsWeakestPreMid(
 		`  simp [part${part-1}_state_update, part${part}_wp]`,
 		``,
 		// TODO extract input width constant
+    `set_option maxRecDepth 10000000 in`,
 		`lemma part${part}_cumulative_wp {${variableList("x"," ",bufferConfig.inputWidth)} ${variableList("y"," ",bufferConfig.outputWidth)}: Felt} :`,
 		`  Code.run (start_state [${variableList("x",",",bufferConfig.inputWidth)}] ([${variableList("y",",",bufferConfig.outputWidth)}])) ↔`,
 		`  ${cumulativeTransformer ?? "sorry"} := by`,
@@ -273,7 +277,8 @@ function constraintsWeakestPreLast(
 ): string {
 	const part = partDrops.length-1;
 	return [
-		`import Risc0.Basic`,
+		`import Risc0.State`,
+		`import Risc0.Cirgen`,
 		`import Risc0.MlirTactics`,
 		`import Risc0.Gadgets.${funcName}.Constraints.Code`,
 		`import Risc0.Gadgets.${funcName}.Constraints.WeakestPresPart${part-1}`,
@@ -317,6 +322,7 @@ function constraintsWeakestPreLast(
 		`  simp [part${part-1}_state_update, part${part}_wp]`,
 		``,
 		// TODO extract input width constant
+    `set_option maxRecDepth 10000000 in`,
 		`lemma part${part}_cumulative_wp {${variableList("x"," ",bufferConfig.inputWidth)} ${variableList("y"," ",bufferConfig.outputWidth)}: Felt} :`,
 		`  Code.run (start_state [${variableList("x",",",bufferConfig.inputWidth)}] ([${variableList("y",",",bufferConfig.outputWidth)}])) ↔`,
 		`  ${cumulativeTransformer ?? "sorry"} := by`,
