@@ -181,7 +181,6 @@ function getConstraintsReturn(constraintsCode: string[]): string {
 function createWitnessCodeLean(funcName: string, witness: string[], argIdToName: Map<string, string>, linesPerPart: number, bufferConfig: BufferConfig): string {
 	const witnessFullLines = parseBody(witness, argIdToName);
 	return [
-		"import Risc0.Basic",
 		"import Risc0.Lemmas",
 		"",
 		`namespace Risc0.${funcName}.Witness.Code`,
@@ -216,7 +215,6 @@ function createWitnessCodeLean(funcName: string, witness: string[], argIdToName:
 function createConstraintsCodeLean(funcName: string, constraints: string[], argIdToName: Map<string, string>, linesPerPart: number, bufferConfig: BufferConfig): string {
 	const constraintsFullLines = parseBody(constraints, argIdToName);
 	return [
-		"import Risc0.Basic",
 		"import Risc0.Lemmas",
 		"",
 		`namespace Risc0.${funcName}.Constraints.Code`,

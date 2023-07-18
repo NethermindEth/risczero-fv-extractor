@@ -97,7 +97,8 @@ function lastFile(leanPath: string, funcName: string, ir: IR.Statement[], linesP
 
 function witnessWeakestPrePart0(funcName: string, partDrops: IR.DropFelt[][], bufferConfig: BufferConfig, stateTransformer: string | undefined, cumulativeTransformer: string | undefined): string {
 	return [
-		`import Risc0.Basic`,
+		`import Risc0.State`,
+		`import Risc0.Cirgen`,
 		`import Risc0.MlirTactics`,
 		`import Risc0.Gadgets.${funcName}.Witness.CodeDrops`,
 		``,
@@ -161,7 +162,8 @@ function witnessWeakestPreMid(
 	cumulativeTransformer: string | undefined
 ): string {
 	return [
-		`import Risc0.Basic`,
+		`import Risc0.State`,
+		`import Risc0.Cirgen`,
 		`import Risc0.MlirTactics`,
 		`import Risc0.Gadgets.${funcName}.Witness.Code`,
 		`import Risc0.Gadgets.${funcName}.Witness.WeakestPresPart${part-1}`,
@@ -261,7 +263,8 @@ function witnessWeakestPreLast(
 ): string {
 	const part = partDrops.length-1;
 	return [
-		`import Risc0.Basic`,
+		`import Risc0.State`,
+		`import Risc0.Cirgen`,
 		`import Risc0.MlirTactics`,
 		`import Risc0.Gadgets.${funcName}.Witness.Code`,
 		`import Risc0.Gadgets.${funcName}.Witness.WeakestPresPart${part-1}`,
