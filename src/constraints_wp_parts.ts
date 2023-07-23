@@ -2,6 +2,7 @@ import { exec } from 'child_process';
 import fs from 'fs';
 import { BufferConfig, addToImportFile } from './util';
 import * as IR from './IR';
+import { generateUpdates } from './transformer';
 
 const skipFirst = false;
 const skipMid = false;
@@ -16,7 +17,7 @@ export function constraintsWeakestPreFiles(leanPath: string, funcName: string, i
 			recurseThroughMidFiles(leanPath, funcName, skipToMid, ir, linesPerPart, partDrops, bufferConfig, callback);
 		}
 	} else {
-		const part0 = constraintsWeakestPrePart0(funcName, partDrops, bufferConfig, undefined, undefined);
+		const part0 = constraintsWeakestPrePart0(funcName, ir.slice(0, 4), partDrops, bufferConfig, undefined, undefined);
 		fs.writeFileSync(`${leanPath}/Risc0/Gadgets/${funcName}/Constraints/WeakestPresPart0.lean`, part0);
 		addToImportFile(leanPath, `${funcName}.Constraints.WeakestPresPart0`)
 		console.log("  0 - sorry");
@@ -24,7 +25,7 @@ export function constraintsWeakestPreFiles(leanPath: string, funcName: string, i
 			const [stateTransformer, cumulativeTransformer] = extractStateTransformers(stderr, funcName, 0);
 			console.log(`State transformer: "${stateTransformer}"`);
 			console.log(`Cumulative transformer: "${cumulativeTransformer}"`);
-			const part0 = constraintsWeakestPrePart0(funcName, partDrops, bufferConfig, stateTransformer, cumulativeTransformer);
+			const part0 = constraintsWeakestPrePart0(funcName, ir.slice(0, 4), partDrops, bufferConfig, stateTransformer, cumulativeTransformer);
 			console.log("  0 - corrected");
 			fs.writeFileSync(`${leanPath}/Risc0/Gadgets/${funcName}/Constraints/WeakestPresPart0.lean`, part0);
 			exec(`cd ${leanPath}; lake build`, () => {
@@ -108,7 +109,10 @@ function lastFile(leanPath: string, funcName: string, ir: IR.Statement[], linesP
 	}).stdout?.pipe(process.stdout);
 }
 
-function constraintsWeakestPrePart0(funcName: string, partDrops: IR.DropFelt[][], bufferConfig: BufferConfig, stateTransformer: string | undefined, cumulativeTransformer: string | undefined): string {
+function constraintsWeakestPrePart0(funcName: string, ir: IR.Statement[], partDrops: IR.DropFelt[][], bufferConfig: BufferConfig, stateTransformer: string | undefined, cumulativeTransformer: string | undefined): string {
+	const updates = generateUpdates(ir, partDrops[0]);
+	const transformer = updates.reduce((acc, curr) => `(${acc}\n${curr})`, "st");
+
 	return [
 		`import Risc0.State`,
 		`import Risc0.Cirgen`,
@@ -121,7 +125,7 @@ function constraintsWeakestPrePart0(funcName: string, partDrops: IR.DropFelt[][]
 		``,
 		`-- The state obtained by running Code.part0 on st`,
 		`def part0_state (st: State) : State :=`,
-		`  ${stateTransformer ?? "sorry"}`,
+		`  ${transformer}`,
 		``,
 		`def part0_drops (st: State) : State :=`,
 		`  ${getPartDropsDef(partDrops[0])}`,
@@ -136,19 +140,16 @@ function constraintsWeakestPrePart0(funcName: string, partDrops: IR.DropFelt[][]
 		`  Code.getReturn (part0_state_update st) := by`,
 		`  generalize eq : (${codePartsRange(0, partDrops, false)}) = prog`,
 		`  unfold Code.part0`,
-		`  MLIR`,
-		...(stateTransformer === undefined
-			? []
-			: [
-				`  rewrite [←eq]`,
-				`  ${getDropEvaluationRewrites(partDrops, 0)}`,
-				`  unfold part0_state_update part0_drops part0_state`,
-				`  rfl`,
-			]
-		),
+		`  MLIR_evaluate_code`,
+		`  MLIR_fold`,
+		`  MLIR_simplify_feltRead`,
+		`  MLIR_simplify_propRead`,
+		`  MLIR_simplify_getImpl`,
+		`  MLIR_fold_getOrRead`,
+		`  simp [←eq, part0_state_update, part0_drops, part0_state]`,
 		``,
-		`lemma part0_cumulative_wp {${variableList("x"," ",bufferConfig.inputWidth)} ${variableList("y"," ",bufferConfig.outputWidth)}: Felt}:`,
-		`  Code.run (start_state [${variableList("x",",",bufferConfig.inputWidth)}] ([${variableList("y",",",bufferConfig.outputWidth)}])) ↔`,
+		`lemma part0_cumulative_wp {${[...bufferConfig.inputs, ...bufferConfig.outputs].map(([name, width]) => variableList(name," ",width)).join(" ")}: Felt}:`,
+		`  Code.run (start_state ${[...bufferConfig.inputs, ...bufferConfig.outputs].map(([name, width]) => `([${variableList(name,", ",width)}])`).join(" ")}) ↔`,
 		`  ${cumulativeTransformer ?? "sorry"} := by`,
 		`    unfold Code.run start_state`,
 		`    rewrite [Code.optimised_behaviour_full]`,
@@ -219,9 +220,8 @@ function constraintsWeakestPreMid(
 		`  Code.getReturn (part${part}_state_update (part${part-1}_drops (part${part-1}_state st))) := by`,
 		`  simp [part${part-1}_state_update, part${part}_wp]`,
 		``,
-		// TODO extract input width constant
-		`lemma part${part}_cumulative_wp {${variableList("x"," ",bufferConfig.inputWidth)} ${variableList("y"," ",bufferConfig.outputWidth)}: Felt} :`,
-		`  Code.run (start_state [${variableList("x",",",bufferConfig.inputWidth)}] ([${variableList("y",",",bufferConfig.outputWidth)}])) ↔`,
+		`lemma part${part}_cumulative_wp {${[...bufferConfig.inputs, ...bufferConfig.outputs].map(([name, width]) => variableList(name," ",width)).join(" ")}: Felt} :`,
+		`  Code.run (start_state ${[...bufferConfig.inputs, ...bufferConfig.outputs].map(([name, width]) => `([${variableList(name,", ",width)}])`).join(" ")}) ↔`,
 		`  ${cumulativeTransformer ?? "sorry"} := by`,
 		cumulative_wp_proof(part, ir, linesPerPart, partDrops, cumulativeTransformer === undefined),
 		``,
@@ -319,17 +319,16 @@ function constraintsWeakestPreLast(
 		`  Code.getReturn (part${part}_state_update (part${part-1}_drops (part${part-1}_state st))) := by`,
 		`  simp [part${part-1}_state_update, part${part}_wp]`,
 		``,
-		// TODO extract input width constant
-		`lemma part${part}_cumulative_wp {${variableList("x"," ",bufferConfig.inputWidth)} ${variableList("y"," ",bufferConfig.outputWidth)}: Felt} :`,
-		`  Code.run (start_state [${variableList("x",",",bufferConfig.inputWidth)}] ([${variableList("y",",",bufferConfig.outputWidth)}])) ↔`,
+		`lemma part${part}_cumulative_wp {${[...bufferConfig.inputs, ...bufferConfig.outputs].map(([name, width]) => variableList(name," ",width)).join(" ")}: Felt} :`,
+		`  Code.run (start_state ${[...bufferConfig.inputs, ...bufferConfig.outputs].map(([name, width]) => `([${variableList(name,", ",width)}])`).join(" ")}) ↔`,
 		`  ${cumulativeTransformer ?? "sorry"} := by`,
 		cumulative_wp_proof(part, ir, linesPerPart, partDrops, cumulativeTransformer === undefined),
 		``,
 		...(cumulativeTransformer === undefined
 			? []
 			: [
-				`lemma closed_form {${variableList("x"," ",bufferConfig.inputWidth)} ${variableList("y"," ",bufferConfig.outputWidth)}: Felt} :`,
-				`  Code.run (start_state [${variableList("x",",",bufferConfig.inputWidth)}] ([${variableList("y",",",bufferConfig.outputWidth)}])) ↔`,
+				`lemma closed_form {${[...bufferConfig.inputs, ...bufferConfig.outputs].map(([name, width]) => variableList(name," ",width)).join(" ")}: Felt} :`,
+				`  Code.run (start_state ${[...bufferConfig.inputs, ...bufferConfig.outputs].map(([name, width]) => `([${variableList(name,", ",width)}])`).join(" ")}) ↔`,
 				`  ${closedForm ?? "sorry"} := by`,
 				cumulative_wp_proof(part+1, ir, linesPerPart, partDrops, false),
 				`    unfold Code.getReturn`,

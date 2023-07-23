@@ -118,9 +118,9 @@ function witnessWeakestPrePart0(funcName: string, partDrops: IR.DropFelt[][], bu
 		`  Γ (part0_drops (part0_state st)) ⟦${codePartsRange(1, partDrops, true)}⟧`,
 		``,
 		`-- Prove that substituting part0_state for Code.part0 produces the same result`,
-		`lemma part0_wp {st : State} {${variableList("y", " ", bufferConfig.outputWidth)} : Option Felt} :`,
-		`  Code.getReturn (Γ st ⟦${codePartsRange(0, partDrops, true)}⟧) = [${variableList("y", ", ", bufferConfig.outputWidth)}] ↔`,
-		`  Code.getReturn (part0_state_update st) = [${variableList("y", ", ", bufferConfig.outputWidth)}] := by`,
+		`lemma part0_wp {st : State} {${bufferConfig.outputs.map(([name, width]) => variableList(name, " ", width)).join(" ")} : Option Felt} :`,
+		`  Code.getReturn (Γ st ⟦${codePartsRange(0, partDrops, true)}⟧) ${bufferConfig.outputs.map(([name, width]) => `([${variableList(name,", ",width)}])`)} ↔`,
+		`  Code.getReturn (part0_state_update st) ${bufferConfig.outputs.map(([name, width]) => `([${variableList(name,", ",width)}])`)} := by`,
 		`  generalize eq : (${codePartsRange(0, partDrops, false)}) = prog`,
 		`  unfold Code.part0`,
 		`  MLIR`,
@@ -134,8 +134,8 @@ function witnessWeakestPrePart0(funcName: string, partDrops: IR.DropFelt[][], bu
 			]
 		),
 		``,
-		`lemma part0_cumulative_wp {${variableList("x"," ",bufferConfig.inputWidth)}: Felt} :`,
-		`  Code.run (start_state [${variableList("x",",",bufferConfig.inputWidth)}]) = [${variableList("y",",",bufferConfig.outputWidth)}] ↔`,
+		`lemma part0_cumulative_wp {${bufferConfig.inputs.map(([name, width]) => variableList(name," ",width))}: Felt} {${bufferConfig.outputs.map(([name, width]) => variableList(name," ",width))}: Option Felt} :`,
+		`  Code.run (start_state ${bufferConfig.inputs.map(([name, width]) => `([${variableList(name,", ",width)}])`)}) ${bufferConfig.outputs.map(([name, width]) => `([${variableList(name,", ",width)}])`)} ↔`,
 		`  ${cumulativeTransformer ?? "sorry"} := by`,
 		`    unfold Code.run start_state`,
 		`    rewrite [Code.optimised_behaviour_full]`,
@@ -184,9 +184,9 @@ function witnessWeakestPreMid(
 		`  Γ (part${part}_drops (part${part}_state st)) ⟦${codePartsRange(part+1, partDrops, true)}⟧`,
 		``,
 		`-- Prove that substituting part${part}_state for Code.part${part} produces the same result`,
-		`lemma part${part}_wp {st : State} {${variableList("y", " ", bufferConfig.outputWidth)} : Option Felt} :`,
-		`  Code.getReturn (MLIR.runProgram (${codePartsRange(part, partDrops, true)}) st) = [${variableList("y", ", ", bufferConfig.outputWidth)}] ↔`,
-		`  Code.getReturn (part${part}_state_update st) = [${variableList("y", ", ", bufferConfig.outputWidth)}] := by`,
+		`lemma part${part}_wp {st : State} {${bufferConfig.outputs.map(([name, width]) => variableList(name, " ", width)).join(" ")} : Option Felt} :`,
+		`  Code.getReturn (MLIR.runProgram (${codePartsRange(part, partDrops, true)}) st) ${bufferConfig.outputs.map(([name, width]) => `([${variableList(name,", ",width)}])`)} ↔`,
+		`  Code.getReturn (part${part}_state_update st) ${bufferConfig.outputs.map(([name, width]) => `([${variableList(name,", ",width)}])`)} := by`,
 		`  unfold MLIR.runProgram; simp only`,
 		`  generalize eq : (${codePartsRange(part, partDrops, false)}) = prog`,
 		`  unfold Code.part${part}`,
@@ -202,13 +202,13 @@ function witnessWeakestPreMid(
 		),
 		``,
 		`lemma part${part}_updates_opaque {st : State} : `,
-		`  Code.getReturn (part${part-1}_state_update st) = [${variableList("y", ", ", bufferConfig.outputWidth)}] ↔`,
-		`  Code.getReturn (part${part}_state_update (part${part-1}_drops (part${part-1}_state st))) = [${variableList("y", ", ", bufferConfig.outputWidth)}] := by`,
+		`  Code.getReturn (part${part-1}_state_update st) ${bufferConfig.outputs.map(([name, width]) => `([${variableList(name, ", ", width)}])`).join(" ")} ↔`,
+		`  Code.getReturn (part${part}_state_update (part${part-1}_drops (part${part-1}_state st))) ${bufferConfig.outputs.map(([name, width]) => `([${variableList(name, ", ", width)}])`).join(" ")} := by`,
 		`  simp [part${part-1}_state_update, part${part}_wp]`,
 		``,
 		// TODO extract input width constant
-		`lemma part${part}_cumulative_wp {${variableList("x"," ",bufferConfig.inputWidth)}: Felt} :`,
-		`  Code.run (start_state [${variableList("x",",",bufferConfig.inputWidth)}]) = [${variableList("y",",",bufferConfig.outputWidth)}] ↔`,
+		`lemma part${part}_cumulative_wp {${bufferConfig.inputs.map(([name, width]) => variableList(name," ",width))}: Felt} {${bufferConfig.outputs.map(([name, width]) => variableList(name," ",width))}: Option Felt} :`,
+		`  Code.run (start_state ${bufferConfig.inputs.map(([name, width]) => `([${variableList(name,", ",width)}])`)}) ${bufferConfig.outputs.map(([name, width]) => `([${variableList(name,", ",width)}])`)} ↔`,
 		`  ${cumulativeTransformer ?? "sorry"} := by`,
 		cumulative_wp_proof(part, ir, linesPerPart, partDrops, cumulativeTransformer === undefined),
 		``,
@@ -285,9 +285,9 @@ function witnessWeakestPreLast(
 		`  part${part}_drops (part${part}_state st)`,
 		``,
 		`-- Prove that substituting part${part}_state for Code.part${part} produces the same result`,
-		`lemma part${part}_wp {st : State} {${variableList("y", " ", bufferConfig.outputWidth)} : Option Felt} :`,
-		`  Code.getReturn (MLIR.runProgram (${codePartsRange(part, partDrops, true)}) st) = [${variableList("y", ", ", bufferConfig.outputWidth)}] ↔`,
-		`  Code.getReturn (part${part}_state_update st) = [${variableList("y", ", ", bufferConfig.outputWidth)}] := by`,
+		`lemma part${part}_wp {st : State} {${bufferConfig.outputs.map(([name, width]) => variableList(name, " ", width)).join(" ")} : Option Felt} :`,
+		`  Code.getReturn (MLIR.runProgram (${codePartsRange(part, partDrops, true)}) st) ${bufferConfig.outputs.map(([name, width]) => `([${variableList(name,", ",width)}])`)} ↔`,
+		`  Code.getReturn (part${part}_state_update st) ${bufferConfig.outputs.map(([name, width]) => `([${variableList(name,", ",width)}])`)} := by`,
 		`  unfold MLIR.runProgram; simp only`,
 		`  generalize eq : (${codePartsRange(part, partDrops, false)}) = prog`,
 		`  unfold Code.part${part}`,
@@ -303,21 +303,21 @@ function witnessWeakestPreLast(
 		),
 		``,
 		`lemma part${part}_updates_opaque {st : State} : `,
-		`  Code.getReturn (part${part-1}_state_update st) = [${variableList("y", ", ", bufferConfig.outputWidth)}] ↔`,
-		`  Code.getReturn (part${part}_state_update (part${part-1}_drops (part${part-1}_state st))) = [${variableList("y", ", ", bufferConfig.outputWidth)}] := by`,
+		`  Code.getReturn (part${part-1}_state_update st) ${bufferConfig.outputs.map(([name, width]) => `([${variableList(name, ", ", width)}])`).join(" ")} ↔`,
+		`  Code.getReturn (part${part}_state_update (part${part-1}_drops (part${part-1}_state st))) ${bufferConfig.outputs.map(([name, width]) => `([${variableList(name, ", ", width)}])`).join(" ")} := by`,
 		`  simp [part${part-1}_state_update, part${part}_wp]`,
 		``,
 		// TODO extract input width constant
-		`lemma part${part}_cumulative_wp {${variableList("x"," ",bufferConfig.inputWidth)}: Felt} :`,
-		`  Code.run (start_state [${variableList("x",",",bufferConfig.inputWidth)}]) = [${variableList("y",",",bufferConfig.outputWidth)}] ↔`,
+		`lemma part${part}_cumulative_wp {${bufferConfig.inputs.map(([name, width]) => variableList(name," ",width))}: Felt} {${bufferConfig.outputs.map(([name, width]) => variableList(name," ",width))}: Option Felt} :`,
+		`  Code.run (start_state ${bufferConfig.inputs.map(([name, width]) => `([${variableList(name,", ",width)}])`)}) ${bufferConfig.outputs.map(([name, width]) => `([${variableList(name,", ",width)}])`)} ↔`,
 		`  ${cumulativeTransformer ?? "sorry"} := by`,
 		cumulative_wp_proof(part, ir, linesPerPart, partDrops, cumulativeTransformer === undefined),
 		``,
 		...(cumulativeTransformer === undefined
 			? []
 			: [
-				`lemma closed_form {${variableList("x"," ",bufferConfig.inputWidth)}: Felt} :`,
-				`  Code.run (start_state [${variableList("x",",",bufferConfig.inputWidth)}]) = [${variableList("y",",",bufferConfig.outputWidth)}] ↔`,
+				`lemma closed_form {${bufferConfig.inputs.map(([name, width]) => variableList(name," ",width)).join(" ")}: Felt} :`,
+				`  Code.run (start_state ${bufferConfig.inputs.map(([name, width]) => `[${variableList(name,",",width)}]`).join(" ")}) ${bufferConfig.outputs.map(([name, width]) => `([${variableList(name,",",width)}])`).join(" ")} ↔`,
 				`  ${closedForm ?? "sorry"} := by`,
 				cumulative_wp_proof(part+1, ir, linesPerPart, partDrops, false),
 				`    unfold Code.getReturn`,
@@ -372,7 +372,7 @@ function extractStateTransformers(stderr: string, funcName: string, part: number
 
 	const getReturnIdx = secondError.indexOf("Code.getReturn");
 	const iffIdx = secondError.indexOf("↔");
-	const cumulativeTransformer = secondError.slice(getReturnIdx, iffIdx);
+	const cumulativeTransformer = fixCumulativeTransformerListBrackets(secondError.slice(getReturnIdx, iffIdx));
 
 	if (stateTransformer.trim() === "") {
 		throw "Failed to extract state transformer from lake error message. There is likely an unexpected error";
@@ -387,6 +387,21 @@ function extractClosedForm(stderr: string): string {
 	const startIdx = stderr.indexOf("⊢") + 1;
 	const endIdx = stderr.indexOf("↔")
 	return stderr.slice(startIdx, endIdx);
+}
+
+function fixCumulativeTransformerListBrackets(transformer: string): string {
+	const idx = transformer.lastIndexOf(")");
+	let res = transformer.slice(0);
+	while (res.slice(idx).includes(" [") || res.slice(idx).includes("] ")) {
+		const openingIdx = res.lastIndexOf(" [");
+		const closingIdx = res.lastIndexOf("] ");
+		if (openingIdx > closingIdx) {
+			res = `${res.slice(0, openingIdx)}${res.slice(openingIdx).replace(" [", " ([")}`;
+		} else {
+			res = `${res.slice(0, closingIdx)}${res.slice(closingIdx).replace("] ", "]) ")}`;
+		}
+	}
+	return res;
 }
 
 export function variableList(name: string, separator: string, count: number): string {

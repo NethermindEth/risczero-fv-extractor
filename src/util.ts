@@ -27,8 +27,6 @@ export function uncommentInImportFile(prefix: string, predicate: (line: string) 
 }
 
 export type BufferConfig = {
-	inputName: string,
-	inputWidth: number,
-	outputName: string,
-	outputWidth: number,
+	inputs: [string, number][],
+	outputs: [string, number][],
 };
