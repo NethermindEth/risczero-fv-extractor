@@ -2,7 +2,6 @@ import { exec } from 'child_process';
 import fs from 'fs';
 import { BufferConfig, addToImportFile } from './util';
 import * as IR from './IR';
-import { generateUpdates } from './transformer';
 
 const skipFirst = false;
 const skipMid = false;
@@ -17,7 +16,7 @@ export function constraintsWeakestPreFiles(leanPath: string, funcName: string, i
 			recurseThroughMidFiles(leanPath, funcName, skipToMid, ir, linesPerPart, partDrops, bufferConfig, callback);
 		}
 	} else {
-		const part0 = constraintsWeakestPrePart0(funcName, ir.slice(0, 4), partDrops, bufferConfig, undefined, undefined);
+		const part0 = constraintsWeakestPrePart0(funcName, partDrops, bufferConfig, undefined, undefined);
 		fs.writeFileSync(`${leanPath}/Risc0/Gadgets/${funcName}/Constraints/WeakestPresPart0.lean`, part0);
 		addToImportFile(leanPath, `${funcName}.Constraints.WeakestPresPart0`)
 		console.log("  0 - sorry");
@@ -25,7 +24,7 @@ export function constraintsWeakestPreFiles(leanPath: string, funcName: string, i
 			const [stateTransformer, cumulativeTransformer] = extractStateTransformers(stderr, funcName, 0);
 			console.log(`State transformer: "${stateTransformer}"`);
 			console.log(`Cumulative transformer: "${cumulativeTransformer}"`);
-			const part0 = constraintsWeakestPrePart0(funcName, ir.slice(0, 4), partDrops, bufferConfig, stateTransformer, cumulativeTransformer);
+			const part0 = constraintsWeakestPrePart0(funcName, partDrops, bufferConfig, stateTransformer, cumulativeTransformer);
 			console.log("  0 - corrected");
 			fs.writeFileSync(`${leanPath}/Risc0/Gadgets/${funcName}/Constraints/WeakestPresPart0.lean`, part0);
 			exec(`cd ${leanPath}; lake build`, () => {
@@ -109,10 +108,7 @@ function lastFile(leanPath: string, funcName: string, ir: IR.Statement[], linesP
 	}).stdout?.pipe(process.stdout);
 }
 
-function constraintsWeakestPrePart0(funcName: string, ir: IR.Statement[], partDrops: IR.DropFelt[][], bufferConfig: BufferConfig, stateTransformer: string | undefined, cumulativeTransformer: string | undefined): string {
-	const updates = generateUpdates(ir, partDrops[0]);
-	const transformer = updates.reduce((acc, curr) => `(${acc}\n${curr})`, "st");
-
+function constraintsWeakestPrePart0(funcName: string, partDrops: IR.DropFelt[][], bufferConfig: BufferConfig, stateTransformer: string | undefined, cumulativeTransformer: string | undefined): string {
 	return [
 		`import Risc0.State`,
 		`import Risc0.Cirgen`,
@@ -125,7 +121,7 @@ function constraintsWeakestPrePart0(funcName: string, ir: IR.Statement[], partDr
 		``,
 		`-- The state obtained by running Code.part0 on st`,
 		`def part0_state (st: State) : State :=`,
-		`  ${transformer}`,
+		`  ${stateTransformer ?? "sorry"}`,
 		``,
 		`def part0_drops (st: State) : State :=`,
 		`  ${getPartDropsDef(partDrops[0])}`,
@@ -140,14 +136,16 @@ function constraintsWeakestPrePart0(funcName: string, ir: IR.Statement[], partDr
 		`  Code.getReturn (part0_state_update st) := by`,
 		`  generalize eq : (${codePartsRange(0, partDrops, false)}) = prog`,
 		`  unfold Code.part0`,
-		`  MLIR_evaluate_code`,
-		`  MLIR_fold`,
-		`  MLIR_simplify_feltRead`,
-		`  MLIR_simplify_propRead`,
-		`  MLIR_simplify_getImpl`,
-		`  MLIR_fold_getOrRead`,
-		`  simp [←eq, part0_state_update, part0_drops, part0_state]`,
-		``,
+		`  MLIR`,
+		...(stateTransformer === undefined
+			? []
+			: [
+				`  rewrite [←eq]`,
+				`  ${getDropEvaluationRewrites(partDrops, 0)}`,
+				`  unfold part0_state_update part0_drops part0_state`,
+				`  rfl`,
+			]
+		),
 		`lemma part0_cumulative_wp {${[...bufferConfig.inputs, ...bufferConfig.outputs].map(([name, width]) => variableList(name," ",width)).join(" ")}: Felt}:`,
 		`  Code.run (start_state ${[...bufferConfig.inputs, ...bufferConfig.outputs].map(([name, width]) => `([${variableList(name,", ",width)}])`).join(" ")}) ↔`,
 		`  ${cumulativeTransformer ?? "sorry"} := by`,
