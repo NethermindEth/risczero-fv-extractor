@@ -31,8 +31,8 @@ export function createCodeFiles(
 	const witnessPartsLean = createCodePartsLean(funcName, witnessReorderedIR, linesPerPart, "Witness");
 	const constraintsPartsLean = createCodePartsLean(funcName, constraintsReorderedIR, linesPerPart, "Constraints");
 
-	const [witnessDropsLean, witnessPartDrops] = createCodeDropsLean(funcName, witnessReorderedIR, linesPerPart, "Witness");
-	const [constraintsDropsLean, constraintsPartDrops] = createCodeDropsLean(funcName, constraintsReorderedIR, linesPerPart, "Constraints");
+	const [witnessDropsLean, witnessPartDrops] = createCodeDropsLean(funcName, witnessReorderedIR, linesPerPart, "Witness", bufferConfig);
+	const [constraintsDropsLean, constraintsPartDrops] = createCodeDropsLean(funcName, constraintsReorderedIR, linesPerPart, "Constraints", bufferConfig);
 
 	let proofFiles: string[];
 	if (autoExcludeFiles) {

@@ -240,13 +240,13 @@ function cumulative_wp_proof(part: number, ir: IR.Statement[], linesPerPart: num
 		`    -- ${dropCount} drop${dropCount === 1 ? "" : "s"}`,
 		`    ${dropCount === 0 ? "-- " : ""}simp only [State.drop_update_swap, State.drop_update_same]`,
 		`    ${dropCount === 0 ? "-- " : ""}rewrite [State.dropFelts]`,
-		`    ${dropCount === 0 ? "-- " : ""}simp only [State.dropFelts_buffers, State.dropFelts_bufferWidths, State.dropFelts_constraints, State.dropFelts_cycle, State.dropFelts_felts, State.dropFelts_isFailed, State.dropFelts_props, State.dropFelts_vars]`,
+		`    ${dropCount === 0 ? "-- " : ""}simp only [State.dropFelts_buffers, State.dropFelts_bufferWidths, State.dropFelts_cycle, State.dropFelts_felts, State.dropFelts_isFailed, State.dropFelts_props, State.dropFelts_vars]`,
 		`    ${dropCount === 0 ? "-- " : ""}simp only [Map.drop_base, ne_eq, Map.update_drop_swap, Map.update_drop]`,
 		`    -- ${setCount} set${setCount === 1 ? "" : "s"}`,
 		`    ${setCount === 0 ? "-- " : ""}rewrite [Map.drop_of_updates]`,
 		`    ${setCount === 0 ? "-- " : ""}simp only [Map.drop_base, ne_eq, Map.update_drop_swap, Map.update_drop]`,
 		`    -- there are ${statementsAfterIf ? "" : "not any "}statements after an if`,
-		`    ${statementsAfterIf ? "" : "-- "}try simp [State.buffers_if_eq_if_buffers,State.bufferWidths_if_eq_if_bufferWidths,State.constraints_if_eq_if_constraints,State.cycle_if_eq_if_cycle,State.felts_if_eq_if_felts,State.isFailed_if_eq_if_isFailed,State.props_if_eq_if_props,State.vars_if_eq_if_vars]`,
+		`    ${statementsAfterIf ? "" : "-- "}try simp [State.buffers_if_eq_if_buffers,State.bufferWidths_if_eq_if_bufferWidths,State.cycle_if_eq_if_cycle,State.felts_if_eq_if_felts,State.isFailed_if_eq_if_isFailed,State.props_if_eq_if_props,State.vars_if_eq_if_vars]`,
 		...(firstPass || (dropCount + setCount + eqzCount === 0 && !statementsAfterIf) ? [`    rfl`] : []),
 	].join("\n");
 }
