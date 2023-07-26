@@ -1,7 +1,8 @@
 import * as IR from "./IR";
 import { getSwapLemmaNamePart } from "./reordering";
+import { BufferConfig } from "./util";
 
-export function createCodeDropsLean(funcName: string, ir: IR.Statement[], linesPerPart: number, witnessOrConstraints: "Witness" | "Constraints"): [lean: string, part_drops: IR.DropFelt[][]] {
+export function createCodeDropsLean(funcName: string, ir: IR.Statement[], linesPerPart: number, witnessOrConstraints: "Witness" | "Constraints", bufferConfig: BufferConfig): [lean: string, part_drops: IR.DropFelt[][]] {
 	const part_drops = getPartDrops(ir, linesPerPart);
 	return [[
 		`import Risc0.Gadgets.${funcName}.${witnessOrConstraints}.CodeParts`,
@@ -10,13 +11,13 @@ export function createCodeDropsLean(funcName: string, ir: IR.Statement[], linesP
 		"",
 		"open MLIRNotation",
 		"",
-		parts_defs(ir, part_drops, linesPerPart),
+		parts_defs(ir, part_drops, linesPerPart, witnessOrConstraints, bufferConfig),
 		"",
 		`end Risc0.${funcName}.${witnessOrConstraints}.Code`,
 	].join("\n"), part_drops];
 }
 
-function parts_defs(ir: IR.Statement[], part_drops: IR.DropFelt[][], linesPerPart: number): string {
+function parts_defs(ir: IR.Statement[], part_drops: IR.DropFelt[][], linesPerPart: number, witnessOrConstraints: "Witness" | "Constraints", bufferConfig: BufferConfig): string {
 	const parts_statements = IR.irLinesToParts(ir, linesPerPart);
 	console.log(part_drops);
 	console.log(part_drops.length);
@@ -27,7 +28,7 @@ function parts_defs(ir: IR.Statement[], part_drops: IR.DropFelt[][], linesPerPar
 		res.push(getDropPastPart(ir, parts_statements, i, linesPerPart));
 	}
 
-	res.push(getDropsBehaviourProofs(part_drops, ir, linesPerPart));
+	res.push(getDropsBehaviourProofs(part_drops, ir, linesPerPart, witnessOrConstraints, bufferConfig));
 
 	return res.join("\n");
 }
@@ -77,7 +78,7 @@ function getUsedFelts(ir: IR.Statement[]): string[] {
 	return res;
 }
 
-function getDropsBehaviourProofs(parts_drops: IR.DropFelt[][], ir: IR.Statement[], linesPerPart: number): string {
+function getDropsBehaviourProofs(parts_drops: IR.DropFelt[][], ir: IR.Statement[], linesPerPart: number, witnessOrConstraints: "Witness" | "Constraints", bufferConfig: BufferConfig): string {
 	const dropChunkSize = 10;
 	let lean = "";
 	for (let part = parts_drops.length-1; part >= 0; --part) {
@@ -208,9 +209,9 @@ function getDropsBehaviourProofs(parts_drops: IR.DropFelt[][], ir: IR.Statement[
 	lean = [
 		lean,
 		"lemma getReturn_ignores_drops :",
-		`  getReturn (${rhs}) =`,
-		`  getReturn (Γ st ⟦${partsInSequence}⟧) := by`,
-		`    simp [getReturn, MLIR.run_seq_def, State.constraintsInVar, MLIR.run_dropfelt, State.dropFelts_buffers, State.dropFelts_props]`,
+		`  getReturn (${rhs}) ${witnessOrConstraints === "Witness" ? bufferConfig.outputs.map((_, idx) => `res${idx}`).join(" ") : ""} =`,
+		`  getReturn (Γ st ⟦${partsInSequence}⟧) ${witnessOrConstraints === "Witness" ? bufferConfig.outputs.map((_, idx) => `res${idx}`).join(" ") : ""} := by`,
+		`    simp [getReturn, MLIR.run_seq_def, State.constraintsInVar, MLIR.run_dropfelt, State.dropFelts_buffers, State.dropFelts_isFailed, State.dropFelts_props]`,
 	].join("\n");
 	return lean;
 }
