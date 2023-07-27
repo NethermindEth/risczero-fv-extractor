@@ -146,6 +146,7 @@ function getWitnessReturn(witnessCode: string[], bufferConfig: BufferConfig): st
 		`def getReturn (st: State) ${bufferConfig.outputs.map(([name, _]) => `(res_${name}: BufferAtTime)`).join(" ")} : Prop :=`,
 		// `  (st.buffers ⟨"${bufferConfig.outputName}"⟩ |>.get!.getLast!) = res`,
 		`${bufferConfig.outputs.map(([name, _]) => `  ((st.buffers ⟨"${name}"⟩ |>.get!.getLast!) = res_${name})`).join("∧\n")}`,
+                `∧ ¬ st.isFailed`
 		// TODO generalise to not just the single specific buffer
 	].join("\n");
 }
@@ -206,11 +207,9 @@ function createWitnessCodeLean(funcName: string, witness: string[], argIdToName:
 		`  , felts := Map.empty`,
 		`  , props := Map.empty`,
 		`  , isFailed := false`,
-		`  , info :=`,
-		`    { bufferWidths := Map.fromList [${startStateBufferWidths}]`,
-		`    , cycle := 0`,
-		`    , vars := [${startStateBufferVars}]`,
-		`    }`,
+		`  , bufferWidths := Map.fromList [${startStateBufferWidths}]`,
+		`  , cycle := 0`,
+		`  , vars := [${startStateBufferVars}]`,
 		`  }`,
 		"",
 		`end Risc0.${funcName}.Witness`,
@@ -257,11 +256,9 @@ function createConstraintsCodeLean(funcName: string, constraints: string[], argI
 		`  , felts := Map.empty`,
 		`  , props := Map.empty`,
 		`  , isFailed := false`,
-		`  , info :=`,
-		`    { bufferWidths := Map.fromList [${startStateBufferWidths}]`,
-		`    , cycle := 0`,
-		`    , vars := [${startStateBufferVars}]`,
-		`    }`,
+		`  , bufferWidths := Map.fromList [${startStateBufferWidths}]`,
+		`  , cycle := 0`,
+		`  , vars := [${startStateBufferVars}]`,
 		`  }`,
 		"",
 		`end Risc0.${funcName}.Constraints`,

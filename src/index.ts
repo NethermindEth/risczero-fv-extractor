@@ -14,9 +14,11 @@ const gadgets = [
 	"onehot-example1",
 	"onehot-example2",
 	"decode-example",
-	"onehot-example20",
+	"onehot-example20"
 ];
 const regenerateIR = true;
+const bazel = "bazelisk";
+// const bazel = "bazel";
 
 //--------------------------------------------
 if (regenerateIR) {
@@ -32,7 +34,7 @@ function generateIR(idx: number) {
 		processGadget(0);
 		return;
 	}
-	exec(`cd ${cPlusPlusPath}; bazel run //cirgen/${gadgets[idx]}`, (error, stdout, stderr) => {
+	exec(`cd ${cPlusPlusPath}; ${bazel} run //cirgen/${gadgets[idx]}`, (error, stdout, stderr) => {
 		fs.writeFileSync(`./witness-${gadgets[idx]}.txt`, extractWitnessCode(stderr, gadgets[idx]));
 		fs.writeFileSync(`./constraints-${gadgets[idx]}.txt`, extractConstraintsCode(stderr, gadgets[idx]));
 		console.log(`Extracted IR for ${gadgets[idx]}`);

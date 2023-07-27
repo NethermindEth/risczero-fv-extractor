@@ -346,7 +346,7 @@ function getDropEvaluationRewrites(drops: IR.DropFelt[][], part: number): string
 	if (drops[part].length === 0) {
 		return "";
 	} else {
-		return `rewrite [${drops[part].map((_,idx) => 
+		return `rewrite [${drops[part].map((_,idx) =>
 			part === drops.length - 1 && idx === drops[part].length - 1
 				? "MLIR.run_dropfelt"
 				: "MLIR.run_seq_def,MLIR.run_dropfelt"
