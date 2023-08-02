@@ -146,9 +146,8 @@ function constraintsWeakestPrePart0(funcName: string, partDrops: IR.DropFelt[][]
 				`  rfl`,
 			]
 		),
-		``,
-		`lemma part0_cumulative_wp {${variableList("x"," ",bufferConfig.inputWidth)} ${variableList("y"," ",bufferConfig.outputWidth)}: Felt}:`,
-		`  Code.run (start_state [${variableList("x",",",bufferConfig.inputWidth)}] ([${variableList("y",",",bufferConfig.outputWidth)}])) ↔`,
+		`lemma part0_cumulative_wp {${[...bufferConfig.inputs, ...bufferConfig.outputs].map(([name, width]) => variableList(name," ",width)).join(" ")}: Felt}:`,
+		`  Code.run (start_state ${[...bufferConfig.inputs, ...bufferConfig.outputs].map(([name, width]) => `([${variableList(name,", ",width)}])`).join(" ")}) ↔`,
 		`  ${cumulativeTransformer ?? "sorry"} := by`,
 		`    unfold Code.run start_state`,
 		`    rewrite [Code.optimised_behaviour_full]`,
@@ -219,9 +218,8 @@ function constraintsWeakestPreMid(
 		`  Code.getReturn (part${part}_state_update (part${part-1}_drops (part${part-1}_state st))) := by`,
 		`  simp [part${part-1}_state_update, part${part}_wp]`,
 		``,
-		// TODO extract input width constant
-		`lemma part${part}_cumulative_wp {${variableList("x"," ",bufferConfig.inputWidth)} ${variableList("y"," ",bufferConfig.outputWidth)}: Felt} :`,
-		`  Code.run (start_state [${variableList("x",",",bufferConfig.inputWidth)}] ([${variableList("y",",",bufferConfig.outputWidth)}])) ↔`,
+		`lemma part${part}_cumulative_wp {${[...bufferConfig.inputs, ...bufferConfig.outputs].map(([name, width]) => variableList(name," ",width)).join(" ")}: Felt} :`,
+		`  Code.run (start_state ${[...bufferConfig.inputs, ...bufferConfig.outputs].map(([name, width]) => `([${variableList(name,", ",width)}])`).join(" ")}) ↔`,
 		`  ${cumulativeTransformer ?? "sorry"} := by`,
 		cumulative_wp_proof(part, ir, linesPerPart, partDrops, cumulativeTransformer === undefined),
 		``,
@@ -252,13 +250,13 @@ function cumulative_wp_proof(part: number, ir: IR.Statement[], linesPerPart: num
 		`    -- ${dropCount} drop${dropCount === 1 ? "" : "s"}`,
 		`    ${dropCount === 0 ? "-- " : ""}simp only [State.drop_update_swap, State.drop_update_same, State.drop_updateProps_swap]`,
 		`    ${dropCount === 0 ? "-- " : ""}rewrite [State.dropFelts]`,
-		`    ${dropCount === 0 ? "-- " : ""}simp only [State.dropFelts_buffers, State.dropFelts_bufferWidths, State.dropFelts_constraints, State.dropFelts_cycle, State.dropFelts_felts, State.dropFelts_isFailed, State.dropFelts_props, State.dropFelts_vars]`,
+		`    ${dropCount === 0 ? "-- " : ""}simp only [State.dropFelts_buffers, State.dropFelts_bufferWidths, State.dropFelts_cycle, State.dropFelts_felts, State.dropFelts_isFailed, State.dropFelts_props, State.dropFelts_vars]`,
 		`    ${dropCount === 0 ? "-- " : ""}simp only [Map.drop_base, ne_eq, Map.update_drop_swap, Map.update_drop]`,
 		`    -- ${setCount} set${setCount === 1 ? "" : "s"}`,
 		`    ${setCount === 0 ? "-- " : ""}rewrite [Map.drop_of_updates]`,
 		`    ${setCount === 0 ? "-- " : ""}simp only [Map.drop_base, ne_eq, Map.update_drop_swap, Map.update_drop]`,
 		`    -- there are ${statementsAfterIf ? "" : "not any "}statements after an if`,
-		`    ${statementsAfterIf ? "" : "-- "}try simp [State.buffers_if_eq_if_buffers,State.bufferWidths_if_eq_if_bufferWidths,State.constraints_if_eq_if_constraints,State.cycle_if_eq_if_cycle,State.felts_if_eq_if_felts,State.isFailed_if_eq_if_isFailed,State.props_if_eq_if_props,State.vars_if_eq_if_vars]`,
+		`    ${statementsAfterIf ? "" : "-- "}try simp [State.buffers_if_eq_if_buffers,State.bufferWidths_if_eq_if_bufferWidths,State.cycle_if_eq_if_cycle,State.felts_if_eq_if_felts,State.isFailed_if_eq_if_isFailed,State.props_if_eq_if_props,State.vars_if_eq_if_vars]`,
 		...(firstPass || (dropCount + setCount + eqzCount === 0 && !statementsAfterIf) ? [`    rfl`] : []),
 	].join("\n");
 }
@@ -319,17 +317,16 @@ function constraintsWeakestPreLast(
 		`  Code.getReturn (part${part}_state_update (part${part-1}_drops (part${part-1}_state st))) := by`,
 		`  simp [part${part-1}_state_update, part${part}_wp]`,
 		``,
-		// TODO extract input width constant
-		`lemma part${part}_cumulative_wp {${variableList("x"," ",bufferConfig.inputWidth)} ${variableList("y"," ",bufferConfig.outputWidth)}: Felt} :`,
-		`  Code.run (start_state [${variableList("x",",",bufferConfig.inputWidth)}] ([${variableList("y",",",bufferConfig.outputWidth)}])) ↔`,
+		`lemma part${part}_cumulative_wp {${[...bufferConfig.inputs, ...bufferConfig.outputs].map(([name, width]) => variableList(name," ",width)).join(" ")}: Felt} :`,
+		`  Code.run (start_state ${[...bufferConfig.inputs, ...bufferConfig.outputs].map(([name, width]) => `([${variableList(name,", ",width)}])`).join(" ")}) ↔`,
 		`  ${cumulativeTransformer ?? "sorry"} := by`,
 		cumulative_wp_proof(part, ir, linesPerPart, partDrops, cumulativeTransformer === undefined),
 		``,
 		...(cumulativeTransformer === undefined
 			? []
 			: [
-				`lemma closed_form {${variableList("x"," ",bufferConfig.inputWidth)} ${variableList("y"," ",bufferConfig.outputWidth)}: Felt} :`,
-				`  Code.run (start_state [${variableList("x",",",bufferConfig.inputWidth)}] ([${variableList("y",",",bufferConfig.outputWidth)}])) ↔`,
+				`lemma closed_form {${[...bufferConfig.inputs, ...bufferConfig.outputs].map(([name, width]) => variableList(name," ",width)).join(" ")}: Felt} :`,
+				`  Code.run (start_state ${[...bufferConfig.inputs, ...bufferConfig.outputs].map(([name, width]) => `([${variableList(name,", ",width)}])`).join(" ")}) ↔`,
 				`  ${closedForm ?? "sorry"} := by`,
 				cumulative_wp_proof(part+1, ir, linesPerPart, partDrops, false),
 				`    unfold Code.getReturn`,
@@ -349,7 +346,7 @@ function getDropEvaluationRewrites(drops: IR.DropFelt[][], part: number): string
 	if (drops[part].length === 0) {
 		return "";
 	} else {
-		return `rewrite [${drops[part].map((_,idx) => 
+		return `rewrite [${drops[part].map((_,idx) =>
 			part === drops.length - 1 && idx === drops[part].length - 1
 				? "MLIR.run_dropfelt"
 				: "MLIR.run_seq_def,MLIR.run_dropfelt"

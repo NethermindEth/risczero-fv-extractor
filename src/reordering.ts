@@ -1,6 +1,6 @@
 import * as IR from "./IR";
 
-export function getStepwiseOptimisations(ir: IR.Statement[]): [ir: IR.Statement[], lean: string] {
+export function getStepwiseOptimisations(ir: IR.Statement[], returnBuffers: string[]): [ir: IR.Statement[], lean: string] {
 	let lean = "";
 	const visited: Set<string> = new Set();
 	let code = ir;
@@ -15,7 +15,7 @@ export function getStepwiseOptimisations(ir: IR.Statement[]): [ir: IR.Statement[
 		const leanPart = [
 			`def opt${i+1} : MLIRProgram :=`,
 			IR.flattenLeanIR(IR.irLinesToLean(code)),
-			getDelayProof(oldCode, code, moved, i),
+			getDelayProof(oldCode, code, moved, i, returnBuffers),
 			"",
 		]
 		lean = `${lean}\n${leanPart.join("\n")}`;
@@ -23,18 +23,18 @@ export function getStepwiseOptimisations(ir: IR.Statement[]): [ir: IR.Statement[
 	}
 	lean = [
 		lean,
-		optimisedBehaviourFull(i),
+		optimisedBehaviourFull(i, returnBuffers),
 	].join("\n");
 	return [code, lean];
 }
 
-function optimisedBehaviourFull(count: number): string {
+function optimisedBehaviourFull(count: number, returnBuffers: string[]): string {
 	return [
 		`def opt_full : MLIRProgram := opt${count}`,
 		`lemma opt_full_def : opt_full = opt${count} := rfl`,
 		`lemma optimised_behaviour_full :`,
-		`  getReturn (full.runProgram st) =`,
-		`  getReturn (opt_full.runProgram st) := by`,
+		`  getReturn (full.runProgram st) ${returnBuffers.join(" ")} =`,
+		`  getReturn (opt_full.runProgram st) ${returnBuffers.join(" ")} := by`,
 		`  rewrite [optimised_behaviour${count}]`,
 		`  rw [opt_full]`,
 	].join("\n");
@@ -72,15 +72,15 @@ export function delayConstsAndGets(ir: IR.Statement[], visited: Set<string>): [c
 	return [optIR, moved, i === optIR.length];
 }
 
-export function getDelayProof(original: IR.Statement[], optimised: IR.Statement[], moved: Set<string>, proofId: number): string {
+export function getDelayProof(original: IR.Statement[], optimised: IR.Statement[], moved: Set<string>, proofId: number, returnBuffers: string[]): string {
 	console.log(`Proved optimised_behaviour${proofId+1}`);
 	const oldCodeName = proofId === 0 ? "full" : `opt${proofId}`
 	const movedInOrder = optimised.filter(st => st.kind === "assign" && moved.has(st.target)).reverse();
 	let ir = original.slice(0);
 	const proofLines = [
 		`lemma optimised_behaviour${proofId+1} :`,
-		`  getReturn (full.runProgram st) =`,
-		`  getReturn (opt${proofId+1}.runProgram st) := by`,
+		`  getReturn (full.runProgram st) ${returnBuffers.join(" ")} =`,
+		`  getReturn (opt${proofId+1}.runProgram st) ${returnBuffers.join(" ")} := by`,
 		...(proofId === 0 ? [] : [`    rewrite [optimised_behaviour${proofId}]`]),
 		`    unfold getReturn MLIR.runProgram ${oldCodeName}`,
 	];

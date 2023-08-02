@@ -11,14 +11,15 @@ const skipUnOpt = false;
 const skipOpt = false;
 
 export function createCodeFiles(
+	gadgetName: string,
 	leanPath: string,
 	linesPerPart: number,
 	autoExcludeFiles: boolean,
 	callback: (funcName: string, bufferConfig: BufferConfig, constraintsReorderedIR: IR.Statement[], constraintsPartDrops: IR.DropFelt[][], witnessReorderedIR: IR.Statement[], witnessPartDrops: IR.DropFelt[][], proofFiles: string[]) => void
 ) {
 	console.log(`Creating code files ${skipUnOpt ? "unopt skipped" : ""} ${skipOpt ? "opt skipped" : ""}`);
-	const witness = loadWitnessMLIR();
-	const constraints = loadConstraintsMLIR();
+	const witness = loadWitnessMLIR(gadgetName);
+	const constraints = loadConstraintsMLIR(gadgetName);
 	const [funcName, argIdToName, bufferConfig] = parseFuncLine(witness[1]);
 
 	const witnessCodeLean = createWitnessCodeLean(funcName, witness, argIdToName, linesPerPart, bufferConfig);
@@ -30,8 +31,8 @@ export function createCodeFiles(
 	const witnessPartsLean = createCodePartsLean(funcName, witnessReorderedIR, linesPerPart, "Witness");
 	const constraintsPartsLean = createCodePartsLean(funcName, constraintsReorderedIR, linesPerPart, "Constraints");
 
-	const [witnessDropsLean, witnessPartDrops] = createCodeDropsLean(funcName, witnessReorderedIR, linesPerPart, "Witness");
-	const [constraintsDropsLean, constraintsPartDrops] = createCodeDropsLean(funcName, constraintsReorderedIR, linesPerPart, "Constraints");
+	const [witnessDropsLean, witnessPartDrops] = createCodeDropsLean(funcName, witnessReorderedIR, linesPerPart, "Witness", bufferConfig);
+	const [constraintsDropsLean, constraintsPartDrops] = createCodeDropsLean(funcName, constraintsReorderedIR, linesPerPart, "Constraints", bufferConfig);
 
 	let proofFiles: string[];
 	if (autoExcludeFiles) {
@@ -72,16 +73,16 @@ export function createCodeFiles(
 	}
 }
 
-function loadWitnessMLIR(): string[] {
+function loadWitnessMLIR(name: string): string[] {
 	// witness code as array of lines
-	return fs.readFileSync("./witness.txt", { encoding: "utf8" })
+	return fs.readFileSync(`./witness-${name}.txt`, { encoding: "utf8" })
 		.split("\n")
 		.map(line => line.trim());
 }
 
-function loadConstraintsMLIR(): string[] {
+function loadConstraintsMLIR(name: string): string[] {
 	// constraints code as array of lines
-	return fs.readFileSync("./constraints.txt", { encoding: "utf8" })
+	return fs.readFileSync(`./constraints-${name}.txt`, { encoding: "utf8" })
 		.split("\n")
 		.map(line => line.trim());
 }
@@ -120,42 +121,32 @@ function parseFuncLine(funcLine: string): [string, Map<string, string>, BufferCo
 		argIdToName.set(argName, name);
 	}
 
-	let inputName: string|null = null;
-	let inputWidth: number|null = null;
-	let outputName: string|null = null;
-	let outputWidth: number|null = null;
+	// let inputName: string|null = null;
+	// let inputWidth: number|null = null;
+	// let outputName: string|null = null;
+	// let outputWidth: number|null = null;
+	let inputBuffers: [string, number][] = [];
+	let outputBuffers: [string, number][] = [];
 	for (let i = 0; i < args.length; ++i) {
 		if (args[i].mutability === "constant") {
-			if (inputName === null) {
-				inputName = args[i].name;
-				inputWidth = args[i].width;
-			} else {
-				throw "Unable to determine input buffer, multiple constant buffers found";
-			}
+			inputBuffers.push([args[i].name, args[i].width]);
+		} else if (args[i].mutability === "mutable") {
+			outputBuffers.push([args[i].name, args[i].width]);
+		} else {
+			throw `Unhandled buffer kind ${args[i].mutability}`;
 		}
-		if (args[i].mutability === "mutable") {
-			if (outputName === null) {
-				outputName = args[i].name;
-				outputWidth = args[i].width;
-			} else {
-				throw "Unable to determine output buffer, multiple mutable buffers found";
-			}
-		}
-	}
-	if (inputName === null || inputWidth === null) {
-		throw "Unable to determine input buffer, no constant buffers found";
-	}
-	if (outputName === null || outputWidth === null) {
-		throw "Unable to determine output buffer, no mutable buffers found";
 	}
 
-	return [funcName, argIdToName, {inputName, inputWidth, outputName, outputWidth}];
+	return [funcName, argIdToName, {inputs: inputBuffers, outputs: outputBuffers}];
 }
 
 function getWitnessReturn(witnessCode: string[], bufferConfig: BufferConfig): string {
 	return [
-		"def getReturn (st: State) : BufferAtTime :=",
-		`  st.buffers ⟨"${bufferConfig.outputName}"⟩ |>.get!.getLast!`,
+		// "def getReturn (st: State) (res: BufferAtTime) :=",
+		`def getReturn (st: State) ${bufferConfig.outputs.map(([name, _]) => `(res_${name}: BufferAtTime)`).join(" ")} : Prop :=`,
+		// `  (st.buffers ⟨"${bufferConfig.outputName}"⟩ |>.get!.getLast!) = res`,
+		`${bufferConfig.outputs.map(([name, _]) => `  ((st.buffers ⟨"${name}"⟩ |>.get!.getLast!) = res_${name})`).join("∧\n")}`,
+                `∧ ¬ st.isFailed`
 		// TODO generalise to not just the single specific buffer
 	].join("\n");
 }
@@ -180,6 +171,21 @@ function getConstraintsReturn(constraintsCode: string[]): string {
 
 function createWitnessCodeLean(funcName: string, witness: string[], argIdToName: Map<string, string>, linesPerPart: number, bufferConfig: BufferConfig): string {
 	const witnessFullLines = parseBody(witness, argIdToName);
+	const startStateInputs = bufferConfig.inputs.map(([name, _]) => `(input_${name}: BufferAtTime)`).join(" ");
+	const startStateBuffers = [
+		...bufferConfig.inputs.map(([name, _]) => `(⟨"${name}"⟩, [input_${name}])`),
+		...bufferConfig.outputs.map(([name, width]) => `(⟨"${name}"⟩, [[${Array(width).fill(".none").join(", ")}]])`)
+	].join(", ");
+	const startStateBufferWidths = [
+		...bufferConfig.inputs.map(([name, width]) => `(⟨"${name}"⟩, ${width})`),
+		...bufferConfig.outputs.map(([name, width]) => `(⟨"${name}"⟩, ${width})`)
+	].join(", ");
+	const startStateBufferVars = [
+		...bufferConfig.inputs.map(([name, _]) => `⟨"${name}"⟩`),
+		...bufferConfig.outputs.map(([name, _]) => `⟨"${name}"⟩`)
+	].join(", ");
+	const runReturnParams = bufferConfig.outputs.map(([name, _]) => `(res_${name}: BufferAtTime)`).join(" ");
+	const runReturnUses = bufferConfig.outputs.map(([name, _]) => `res_${name}`).join(" ");
 	return [
 		"import Risc0.Lemmas",
 		"",
@@ -190,21 +196,20 @@ function createWitnessCodeLean(funcName: string, witness: string[], argIdToName:
 		"def full : MLIRProgram :=",
 		IR.irLinesToLean(witnessFullLines),
 		getWitnessReturn(witness, bufferConfig),
-		"def run (st: State) : BufferAtTime :=",
-		"  getReturn (full.runProgram st)",
+		`def run (st: State) ${runReturnParams}: Prop :=`,
+		`  getReturn (full.runProgram st) ${runReturnUses}`,
 		"",
 		"end Code",
 		"",
 		// TODO generalize start state
-		`def start_state (input : BufferAtTime) : State :=`,
-		`  { buffers := Map.fromList [(⟨"${bufferConfig.inputName}"⟩, [input]), (⟨"${bufferConfig.outputName}"⟩, [[${Array(bufferConfig.outputWidth).fill("none").join(", ")}]])]`,
-		`  , bufferWidths := Map.fromList [(⟨"${bufferConfig.inputName}"⟩, ${bufferConfig.inputWidth}), (⟨"${bufferConfig.outputName}"⟩, ${bufferConfig.outputWidth})]`,
-		`  , constraints := []`,
-		`  , cycle := 0`,
+		`def start_state ${startStateInputs} : State :=`,
+		`  { buffers := Map.fromList [${startStateBuffers}]`,
 		`  , felts := Map.empty`,
 		`  , props := Map.empty`,
-		`  , vars := [⟨"${bufferConfig.inputName}"⟩, ⟨"${bufferConfig.outputName}"⟩]`,
 		`  , isFailed := false`,
+		`  , bufferWidths := Map.fromList [${startStateBufferWidths}]`,
+		`  , cycle := 0`,
+		`  , vars := [${startStateBufferVars}]`,
 		`  }`,
 		"",
 		`end Risc0.${funcName}.Witness`,
@@ -214,6 +219,22 @@ function createWitnessCodeLean(funcName: string, witness: string[], argIdToName:
 
 function createConstraintsCodeLean(funcName: string, constraints: string[], argIdToName: Map<string, string>, linesPerPart: number, bufferConfig: BufferConfig): string {
 	const constraintsFullLines = parseBody(constraints, argIdToName);
+	const startStateInputs = `(${[
+		...bufferConfig.inputs.map(([name, _]) => `input_${name}`),
+		...bufferConfig.outputs.map(([name, _]) => `output_${name}`),
+	].join(" ")}: BufferAtTime)`;
+	const startStateBuffers = [
+		...bufferConfig.inputs.map(([name, _]) => `(⟨"${name}"⟩, [input_${name}])`),
+		...bufferConfig.outputs.map(([name, width]) => `(⟨"${name}"⟩, [output_${name}])`)
+	].join(", ");
+	const startStateBufferWidths = [
+		...bufferConfig.inputs.map(([name, width]) => `(⟨"${name}"⟩, ${width})`),
+		...bufferConfig.outputs.map(([name, width]) => `(⟨"${name}"⟩, ${width})`)
+	].join(", ");
+	const startStateBufferVars = [
+		...bufferConfig.inputs.map(([name, _]) => `⟨"${name}"⟩`),
+		...bufferConfig.outputs.map(([name, _]) => `⟨"${name}"⟩`)
+	].join(", ");
 	return [
 		"import Risc0.Lemmas",
 		"",
@@ -230,15 +251,14 @@ function createConstraintsCodeLean(funcName: string, constraints: string[], argI
 		"end Code",
 		"",
 		// TODO generalize start state
-		`def start_state (input data : BufferAtTime) : State :=`,
-		`  { buffers := Map.fromList [(⟨"${bufferConfig.inputName}"⟩, [input]), (⟨"${bufferConfig.outputName}"⟩, [data])]`,
-		`  , bufferWidths := Map.fromList [(⟨"${bufferConfig.inputName}"⟩, ${bufferConfig.inputWidth}), (⟨"${bufferConfig.outputName}"⟩, ${bufferConfig.outputWidth})]`,
-		`  , constraints := []`,
-		`  , cycle := 0`,
+		`def start_state ${startStateInputs} : State :=`,
+		`  { buffers := Map.fromList [${startStateBuffers}]`,
 		`  , felts := Map.empty`,
 		`  , props := Map.empty`,
-		`  , vars := [⟨"${bufferConfig.inputName}"⟩, ⟨"${bufferConfig.outputName}"⟩]`,
 		`  , isFailed := false`,
+		`  , bufferWidths := Map.fromList [${startStateBufferWidths}]`,
+		`  , cycle := 0`,
+		`  , vars := [${startStateBufferVars}]`,
 		`  }`,
 		"",
 		`end Risc0.${funcName}.Constraints`,
@@ -248,7 +268,7 @@ function createConstraintsCodeLean(funcName: string, constraints: string[], argI
 
 function createConstraintsCodeReorderedLean(funcName: string, witness: string[], argIdToName: Map<string, string>): [ir: IR.Statement[], lean: string] {
 	const IR = parseBody(witness, argIdToName);
-	const [reorderedIR, reorderedLean] = getStepwiseOptimisations(IR);
+	const [reorderedIR, reorderedLean] = getStepwiseOptimisations(IR, []);
 	console.log(`Reordered constraints code:`);
 	reorderedIR.forEach(x => console.log(x.toString()));
 	return [
@@ -270,7 +290,7 @@ function createConstraintsCodeReorderedLean(funcName: string, witness: string[],
 
 function createWitnessCodeReorderedLean(funcName: string, witness: string[], argIdToName: Map<string, string>): [ir: IR.Statement[], lean: string] {
 	const IR = parseBody(witness, argIdToName);
-	const [reorderedIR, reorderedLean] = getStepwiseOptimisations(IR);
+	const [reorderedIR, reorderedLean] = getStepwiseOptimisations(IR, ["res"]); // TODO generalise
 	console.log(`Reordered witness code:`);
 	reorderedIR.forEach(x => console.log(x.toString()));
 	return [

@@ -1,0 +1,88 @@
+module {
+  func.func @computeDecode(%arg0: !cirgen.buffer<1, constant> {cirgen.argName = "in"}, %arg1: !cirgen.buffer<18, mutable> {cirgen.argName = "data"}) {
+    %0 = cirgen.const 64
+    %1 = cirgen.const 8
+    %2 = cirgen.const 16
+    %3 = cirgen.const 0
+    %4 = cirgen.const 128
+    %5 = cirgen.const 4
+    %6 = cirgen.const 3
+    %7 = cirgen.const 2
+    %8 = cirgen.const 1
+    cirgen.nondet {
+      cirgen.set %arg1 : <18, mutable>[10] = %3 : <default>
+      cirgen.set %arg1 : <18, mutable>[1] = %3 : <default>
+      cirgen.set %arg1 : <18, mutable>[9] = %3 : <default>
+      cirgen.set %arg1 : <18, mutable>[8] = %3 : <default>
+      cirgen.set %arg1 : <18, mutable>[0] = %7 : <default>
+      cirgen.set %arg1 : <18, mutable>[13] = %3 : <default>
+      cirgen.set %arg1 : <18, mutable>[12] = %3 : <default>
+      cirgen.set %arg1 : <18, mutable>[2] = %3 : <default>
+      cirgen.set %arg1 : <18, mutable>[11] = %3 : <default>
+      cirgen.set %arg1 : <18, mutable>[4] = %3 : <default>
+      cirgen.set %arg1 : <18, mutable>[3] = %6 : <default>
+      cirgen.set %arg1 : <18, mutable>[14] = %3 : <default>
+      cirgen.set %arg1 : <18, mutable>[15] = %3 : <default>
+      cirgen.set %arg1 : <18, mutable>[5] = %3 : <default>
+      cirgen.set %arg1 : <18, mutable>[7] = %3 : <default>
+      cirgen.set %arg1 : <18, mutable>[6] = %7 : <default>
+      cirgen.set %arg1 : <18, mutable>[16] = %3 : <default>
+      cirgen.set %arg1 : <18, mutable>[17] = %8 : <default>
+    }
+    %9 = cirgen.get %arg1[13] back 0 : <18, mutable>
+    %10 = cirgen.get %arg1[0] back 0 : <18, mutable>
+    %11 = cirgen.get %arg1[8] back 0 : <18, mutable>
+    %12 = cirgen.mul %11 : <default>, %5 : <default>
+    %13 = cirgen.get %arg1[9] back 0 : <18, mutable>
+    %14 = cirgen.mul %13 : <default>, %1 : <default>
+    %15 = cirgen.get %arg1[1] back 0 : <18, mutable>
+    %16 = cirgen.mul %15 : <default>, %2 : <default>
+    %17 = cirgen.add %16 : <default>, %14 : <default>
+    %18 = cirgen.add %17 : <default>, %12 : <default>
+    %19 = cirgen.add %18 : <default>, %10 : <default>
+    %20 = cirgen.get %arg1[10] back 0 : <18, mutable>
+    %21 = cirgen.mul %20 : <default>, %0 : <default>
+    %22 = cirgen.add %21 : <default>, %19 : <default>
+    %23 = cirgen.mul %22 : <default>, %7 : <default>
+    %24 = cirgen.add %23 : <default>, %9 : <default>
+    %25 = cirgen.sub %5 : <default>, %24 : <default>
+    cirgen.eqz %25 : <default>
+    %26 = cirgen.get %arg1[3] back 0 : <18, mutable>
+    %27 = cirgen.get %arg1[4] back 0 : <18, mutable>
+    %28 = cirgen.mul %27 : <default>, %5 : <default>
+    %29 = cirgen.get %arg1[11] back 0 : <18, mutable>
+    %30 = cirgen.get %arg1[2] back 0 : <18, mutable>
+    %31 = cirgen.mul %30 : <default>, %7 : <default>
+    %32 = cirgen.get %arg1[12] back 0 : <18, mutable>
+    %33 = cirgen.mul %32 : <default>, %1 : <default>
+    %34 = cirgen.add %33 : <default>, %31 : <default>
+    %35 = cirgen.add %34 : <default>, %29 : <default>
+    %36 = cirgen.mul %35 : <default>, %2 : <default>
+    %37 = cirgen.add %36 : <default>, %28 : <default>
+    %38 = cirgen.add %37 : <default>, %26 : <default>
+    %39 = cirgen.sub %6 : <default>, %38 : <default>
+    cirgen.eqz %39 : <default>
+    %40 = cirgen.get %arg1[6] back 0 : <18, mutable>
+    %41 = cirgen.get %arg1[7] back 0 : <18, mutable>
+    %42 = cirgen.mul %41 : <default>, %5 : <default>
+    %43 = cirgen.get %arg1[5] back 0 : <18, mutable>
+    %44 = cirgen.get %arg1[15] back 0 : <18, mutable>
+    %45 = cirgen.mul %44 : <default>, %5 : <default>
+    %46 = cirgen.add %45 : <default>, %43 : <default>
+    %47 = cirgen.mul %46 : <default>, %2 : <default>
+    %48 = cirgen.get %arg1[14] back 0 : <18, mutable>
+    %49 = cirgen.mul %48 : <default>, %4 : <default>
+    %50 = cirgen.add %49 : <default>, %47 : <default>
+    %51 = cirgen.add %50 : <default>, %42 : <default>
+    %52 = cirgen.add %51 : <default>, %40 : <default>
+    %53 = cirgen.sub %7 : <default>, %52 : <default>
+    cirgen.eqz %53 : <default>
+    %54 = cirgen.get %arg1[17] back 0 : <18, mutable>
+    %55 = cirgen.get %arg1[16] back 0 : <18, mutable>
+    %56 = cirgen.mul %55 : <default>, %4 : <default>
+    %57 = cirgen.add %56 : <default>, %54 : <default>
+    %58 = cirgen.sub %8 : <default>, %57 : <default>
+    cirgen.eqz %58 : <default>
+    return
+  }
+}
