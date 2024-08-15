@@ -10,6 +10,7 @@ const skipToMid: number | null = null; // set to null to turn off
 export function constraintsWeakestPreFiles(leanPath: string, funcName: string, ir: IR.Statement[], linesPerPart: number, partDrops: IR.DropFelt[][], bufferConfig: BufferConfig, callback: ()=>void) {
 	console.log("Creating constraints weakest pre files");
 	if (skipFirst) {
+    console.log("YES SKIP FIRST");
 		if (skipToMid === null) {
 			recurseThroughMidFiles(leanPath, funcName, 1, ir , linesPerPart, partDrops, bufferConfig, callback);
 		} else {

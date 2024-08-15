@@ -181,7 +181,7 @@ export function swapForwards(currIdx: number, target: number, ir: IR.Statement[]
 		line = `${line} ${getHypotheses(current, next)})`;
 		comma = true;
 	}
-	return `${line}]\n    simp only [←MLIR.run_nondet]\n    rewrite [←MLIR.run_seq_def]`;
+	return `${line}]\n    try simp only [←MLIR.run_nondet]\n    rewrite [←MLIR.run_seq_def]`;
 }
 
 function getSwapLemma(current: IR.Statement, next: IR.Statement): string {

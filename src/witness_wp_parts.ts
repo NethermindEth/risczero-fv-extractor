@@ -356,6 +356,7 @@ export function codePartsRange(start: number, drops: IR.DropFelt[][], includeFir
 }
 
 function extractStateTransformers(stderr: string, funcName: string, part: number): [stateTransformer: string, cumulativeTransformer: string] {
+  // console.log(`STDERR-------------\n${stderr}`)
 	// console.log(`STDERR----------------\n${stderr.split("\n").join("----\n----")}\n-------------`);
 	const firstErrorStart = stderr.split("\n").findIndex(line => line.includes(`${funcName}/Witness/WeakestPresPart${part}.lean:`) && line.includes("error: unsolved goals"));
 	// console.log(`First error start line: ${firstErrorStart}`);
