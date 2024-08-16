@@ -22,7 +22,7 @@ export function constraintsWeakestPreFiles(leanPath: string, funcName: string, i
 		addToImportFile(leanPath, `${funcName}.Constraints.WeakestPresPart0`)
 		console.log("  0 - sorry");
 		exec(`cd ${leanPath}; lake build`, (error, stdout, stderr) => {
-			const [stateTransformer, cumulativeTransformer] = extractStateTransformers(stderr, funcName, 0);
+			const [stateTransformer, cumulativeTransformer] = extractStateTransformers(stdout, funcName, 0);
 			console.log(`State transformer: "${stateTransformer}"`);
 			console.log(`Cumulative transformer: "${cumulativeTransformer}"`);
 			const part0 = constraintsWeakestPrePart0(funcName, partDrops, bufferConfig, stateTransformer, cumulativeTransformer);
@@ -49,7 +49,7 @@ function recurseThroughMidFiles(leanPath: string, funcName: string, part: number
 		addToImportFile(leanPath, `${funcName}.Constraints.WeakestPresPart${part}`)
 		console.log(`  ${part} - sorry`);
 		exec(`cd ${leanPath}; lake build`, (error, stdout, stderr) => {
-			const [stateTransformer, cumulativeTransformer] = extractStateTransformers(stderr, funcName, part);
+			const [stateTransformer, cumulativeTransformer] = extractStateTransformers(stdout, funcName, part);
 			console.log(`State transformer: "${stateTransformer}"`);
 			console.log(`Cumulative transformer: "${cumulativeTransformer}"`);
 			const mid = constraintsWeakestPreMid(funcName, part, ir, linesPerPart, partDrops, bufferConfig, stateTransformer, cumulativeTransformer);
@@ -75,16 +75,18 @@ function lastFile(leanPath: string, funcName: string, ir: IR.Statement[], linesP
 	const last = constraintsWeakestPreLast(funcName, ir, linesPerPart, partDrops, bufferConfig, undefined, undefined, undefined);
 	fs.writeFileSync(`${leanPath}/Risc0/Gadgets/${funcName}/Constraints/WeakestPresPart${part}.lean`, last);
 	addToImportFile(leanPath, `${funcName}.Constraints.WeakestPresPart${part}`)
+  // DBG
+  // fs.writeFileSync(`${leanPath}/Risc0/Gadgets/${funcName}/Constraints/WeakestPresPart${part}.lean`, "-- WHA");
 	console.log(`  ${part} - sorry`);
 	exec(`cd ${leanPath}; lake build`, (error, stdout, stderr) => {
-		const [stateTransformer, cumulativeTransformer] = extractStateTransformers(stderr, funcName, part);
+		const [stateTransformer, cumulativeTransformer] = extractStateTransformers(stdout, funcName, part);
 		console.log(`State transformer: "${stateTransformer}"`);
 		console.log(`Cumulative transformer: "${cumulativeTransformer}"`);
 		const last = constraintsWeakestPreLast(funcName, ir, linesPerPart, partDrops, bufferConfig, stateTransformer, cumulativeTransformer, undefined);
 		console.log(`  ${part} - corrected`);
 		fs.writeFileSync(`${leanPath}/Risc0/Gadgets/${funcName}/Constraints/WeakestPresPart${part}.lean`, last);
 		exec(`cd ${leanPath}; lake build`, (error, stdout, stderr) => {
-			const closedForm = extractClosedForm(stderr);
+			const closedForm = extractClosedForm(stdout);
 			console.log(closedForm);
 			const last = constraintsWeakestPreLast(funcName, ir, linesPerPart, partDrops, bufferConfig, stateTransformer, cumulativeTransformer, closedForm);
 			console.log(`  closed form`);
@@ -200,7 +202,7 @@ function constraintsWeakestPreMid(
 		`lemma part${part}_wp {st : State} :`,
 		`  Code.getReturn (MLIR.runProgram (${codePartsRange(part, partDrops, true)}) st) ↔`,
 		`  Code.getReturn (part${part}_state_update st) := by`,
-		`  unfold MLIR.runProgram; simp only`,
+		`  unfold MLIR.runProgram; try simp only`,
 		`  generalize eq : (${codePartsRange(part, partDrops, false)}) = prog`,
 		`  unfold Code.part${part}`,
 		`  MLIR`,
@@ -217,7 +219,7 @@ function constraintsWeakestPreMid(
 		`lemma part${part}_updates_opaque {st : State} : `,
 		`  Code.getReturn (part${part-1}_state_update st) ↔`,
 		`  Code.getReturn (part${part}_state_update (part${part-1}_drops (part${part-1}_state st))) := by`,
-		`  simp [part${part-1}_state_update, part${part}_wp]`,
+		`  try simp [part${part-1}_state_update, part${part}_wp]`,
 		``,
 		`lemma part${part}_cumulative_wp {${[...bufferConfig.inputs, ...bufferConfig.outputs].map(([name, width]) => variableList(name," ",width)).join(" ")}: Felt} :`,
 		`  Code.run (start_state ${[...bufferConfig.inputs, ...bufferConfig.outputs].map(([name, width]) => `([${variableList(name,", ",width)}])`).join(" ")}) ↔`,
@@ -249,16 +251,17 @@ function cumulative_wp_proof(part: number, ir: IR.Statement[], linesPerPart: num
 		].join("\n")).join("\n"),
 		`    unfold part${part-1}_drops`,
 		`    -- ${dropCount} drop${dropCount === 1 ? "" : "s"}`,
-		`    ${dropCount === 0 ? "-- " : ""}simp only [State.drop_update_swap, State.drop_update_same, State.drop_updateProps_swap]`,
+		`    ${dropCount === 0 ? "-- " : ""}try simp [State.drop_update_swap, State.drop_update_same, State.drop_updateProps_swap]`,
 		`    ${dropCount === 0 ? "-- " : ""}rewrite [State.dropFelts]`,
-		`    ${dropCount === 0 ? "-- " : ""}simp only [State.dropFelts_buffers, State.dropFelts_bufferWidths, State.dropFelts_cycle, State.dropFelts_felts, State.dropFelts_isFailed, State.dropFelts_props, State.dropFelts_vars]`,
-		`    ${dropCount === 0 ? "-- " : ""}simp only [Map.drop_base, ne_eq, Map.update_drop_swap, Map.update_drop]`,
+		`    ${dropCount === 0 ? "-- " : ""}try simp [State.dropFelts_buffers, State.dropFelts_bufferWidths, State.dropFelts_cycle, State.dropFelts_felts, State.dropFelts_isFailed, State.dropFelts_props, State.dropFelts_vars]`,
+		`    ${dropCount === 0 ? "-- " : ""}try simp [Map.drop_base, ne_eq, Map.update_drop_swap, Map.update_drop]`,
 		`    -- ${setCount} set${setCount === 1 ? "" : "s"}`,
 		`    ${setCount === 0 ? "-- " : ""}rewrite [Map.drop_of_updates]`,
-		`    ${setCount === 0 ? "-- " : ""}simp only [Map.drop_base, ne_eq, Map.update_drop_swap, Map.update_drop]`,
+		`    ${setCount === 0 ? "-- " : ""}try simp [Map.drop_base, ne_eq, Map.update_drop_swap, Map.update_drop]`,
 		`    -- there are ${statementsAfterIf ? "" : "not any "}statements after an if`,
 		`    ${statementsAfterIf ? "" : "-- "}try simp [State.buffers_if_eq_if_buffers,State.bufferWidths_if_eq_if_bufferWidths,State.cycle_if_eq_if_cycle,State.felts_if_eq_if_felts,State.isFailed_if_eq_if_isFailed,State.props_if_eq_if_props,State.vars_if_eq_if_vars]`,
-		...(firstPass || (dropCount + setCount + eqzCount === 0 && !statementsAfterIf) ? [`    rfl`] : []),
+		...(firstPass || (dropCount + setCount + eqzCount === 0 && !statementsAfterIf) ? [`    rfl`] : [])
+    // `    try rfl`
 	].join("\n");
 }
 
@@ -299,7 +302,7 @@ function constraintsWeakestPreLast(
 		`lemma part${part}_wp {st : State}:`,
 		`  Code.getReturn (MLIR.runProgram (${codePartsRange(part, partDrops, true)}) st) ↔`,
 		`  Code.getReturn (part${part}_state_update st) := by`,
-		`  unfold MLIR.runProgram; simp only`,
+		`  unfold MLIR.runProgram; try simp only`,
 		`  generalize eq : (${codePartsRange(part, partDrops, false)}) = prog`,
 		`  unfold Code.part${part}`,
 		`  MLIR`,
@@ -316,7 +319,7 @@ function constraintsWeakestPreLast(
 		`lemma part${part}_updates_opaque {st : State} : `,
 		`  Code.getReturn (part${part-1}_state_update st) ↔`,
 		`  Code.getReturn (part${part}_state_update (part${part-1}_drops (part${part-1}_state st))) := by`,
-		`  simp [part${part-1}_state_update, part${part}_wp]`,
+		`  try simp [part${part-1}_state_update, part${part}_wp]`,
 		``,
 		`lemma part${part}_cumulative_wp {${[...bufferConfig.inputs, ...bufferConfig.outputs].map(([name, width]) => variableList(name," ",width)).join(" ")}: Felt} :`,
 		`  Code.run (start_state ${[...bufferConfig.inputs, ...bufferConfig.outputs].map(([name, width]) => `([${variableList(name,", ",width)}])`).join(" ")}) ↔`,
@@ -331,8 +334,8 @@ function constraintsWeakestPreLast(
 				`  ${closedForm ?? "sorry"} := by`,
 				cumulative_wp_proof(part+1, ir, linesPerPart, partDrops, false),
 				`    unfold Code.getReturn`,
-				`    simp only`,
-				`    simp only [Code.getReturn, State.constraintsInVar, State.updateProps_props_get_wobbly, Option.getD_some]`,
+				`    try simp only`,
+				`    try simp only [Code.getReturn, State.constraintsInVar, State.updateProps_props_get_wobbly, Option.getD_some]`,
 			]
 		),
 		`end Risc0.${funcName}.Constraints.WP`,
@@ -365,24 +368,29 @@ export function codePartsRange(start: number, drops: IR.DropFelt[][], includeFir
 		]).join(";");
 }
 
-function extractStateTransformers(stderr: string, funcName: string, part: number): [stateTransformer: string, cumulativeTransformer: string] {
+function extractStateTransformers(stdout: string, funcName: string, part: number): [stateTransformer: string, cumulativeTransformer: string] {
+  console.log(`RECEIVED(constraints)-------------\n${stdout}`)
 	// console.log(`STDERR----------------\n${stderr.split("\n").join("----\n----")}\n-------------`);
-	const firstErrorStart = stderr.split("\n").findIndex(line => line.includes(`${funcName}/Constraints/WeakestPresPart${part}.lean:`) && line.includes("error: unsolved goals"));
+	const firstErrorStart = stdout.split("\n").findIndex(line => line.includes(`${funcName}/Constraints/WeakestPresPart${part}.lean:`) && line.includes("unsolved goals"));
 	// console.log(`First error start line: ${firstErrorStart}`);
-	const secondErrorStart = stderr.split("\n").slice(firstErrorStart+1).findIndex(line => line.includes(`${funcName}/Constraints/WeakestPresPart${part}.lean:`) && line.includes("error: type mismatch")) + firstErrorStart + 1;
+	const secondErrorStart = stdout.split("\n").slice(firstErrorStart+1).findIndex(line => line.includes(`${funcName}/Constraints/WeakestPresPart${part}.lean:`) && line.includes("error:")) + firstErrorStart + 1;
 	// console.log(`Second error start line: ${secondErrorStart}`);
-	const firstError = stderr.split("\n").slice(firstErrorStart, secondErrorStart).join("\n");
-	const secondError = stderr.split("\n").slice(secondErrorStart).join("\n");
-	// console.log(`FIRST ERROR--\n--\n--\n${firstError}`);
-	// console.log(`\n\n\n\nSECOND ERROR--\n--\n--\n${secondError}`);
+	const firstError = stdout.split("\n").slice(firstErrorStart, secondErrorStart).join("\n");
+	const secondError = stdout.split("\n").slice(secondErrorStart).join("\n");
+	console.log(`FIRST ERROR--\n--\n--\n${firstError}`);
+	console.log(`\n\n\n\nSECOND ERROR--\n--\n--\n${secondError}`);
 
 	const gammaIdx = firstError.indexOf("Γ");
 	const codeStart = firstError.indexOf("⟦", gammaIdx);
 	const stateTransformer = firstError.slice(gammaIdx+1, codeStart);
 
+  console.log(`\n\n\n\nSTATE TRANSFORMER--\n--\n--\n${stateTransformer}`);
+
 	const getReturnIdx = secondError.indexOf("Code.getReturn");
 	const iffIdx = secondError.indexOf("↔");
 	const cumulativeTransformer = secondError.slice(getReturnIdx, iffIdx);
+
+  console.log(`\n\n\n\nCUMULATIVE STATE TRANSFORMER--\n--\n--\n${cumulativeTransformer}`);
 
 	if (stateTransformer.trim() === "") {
 		throw "Failed to extract state transformer from lake error message. There is likely an unexpected error";
@@ -393,10 +401,11 @@ function extractStateTransformers(stderr: string, funcName: string, part: number
 	return [stateTransformer, cumulativeTransformer];
 }
 
-function extractClosedForm(stderr: string): string {
-	const startIdx = stderr.indexOf("⊢") + 1;
-	const endIdx = stderr.indexOf("↔")
-	return stderr.slice(startIdx, endIdx);
+function extractClosedForm(stdout: string): string {
+  console.log(`closed form:\n\n\n\n ${stdout}\n\n end closed form`)
+	const startIdx = stdout.indexOf("⊢") + 1;
+	const endIdx = stdout.indexOf("↔")
+	return stdout.slice(startIdx, endIdx);
 }
 
 export function variableList(name: string, separator: string, count: number): string {

@@ -1,0 +1,1535 @@
+Extracted IR for nonzero-example
+Extracted IR for onehot-example1
+Extracted IR for onehot-example2
+Extracted IR for decode-example
+Extracted IR for onehot-example20
+IR extraction complete
+Creating code files  
+moved "%0" ←ₐ .Const 1 7
+Proved optimised_behaviour1
+moved "%1" ←ₐ .Get ⟨"in"⟩ 0 0 0
+moved "%2" ←ₐ .Get ⟨"data"⟩ 0 0 0
+Reordered witness code:
+"%1" ←ₐ .Get ⟨"in"⟩ 0 0
+"%4" ←ₐ ??₀⟨"%1"⟩
+⟨"data"⟩[0] ←ᵢ ⟨"%4"⟩
+"%5" ←ₐ Inv⟨"%1"⟩
+⟨"data"⟩[1] ←ᵢ ⟨"%5"⟩
+"%2" ←ₐ .Get ⟨"data"⟩ 0 0
+guard ⟨"%2"⟩ then (?₀ ⟨"%1"⟩)
+"%0" ←ₐ .Const 1
+"%3" ←ₐ .Sub ⟨"%0"⟩ ⟨"%2"⟩
+guard ⟨"%3"⟩ then ("%4" ←ₐ .Get ⟨"data"⟩ 0 1; "%5" ←ₐ .Mul ⟨"%1"⟩ ⟨"%4"⟩; "%6" ←ₐ .Sub ⟨"%5"⟩ ⟨"%0"⟩; ?₀ ⟨"%6"⟩)
+moved "%0" ←ₐ .Const 1 5
+Proved optimised_behaviour1
+moved "%2" ←ₐ .Get ⟨"in"⟩ 0 0 1
+Proved optimised_behaviour2
+moved "%3" ←ₐ .Get ⟨"data"⟩ 0 0 2
+Proved optimised_behaviour3
+moved "%7" ←ₐ .Get ⟨"data"⟩ 0 1 0
+Reordered constraints code:
+"%1" ←ₐ ⊤
+"%2" ←ₐ .Get ⟨"in"⟩ 0 0
+"%4" ←ₐ ⟨"%1"⟩ &₀ ⟨"%2"⟩
+"%3" ←ₐ .Get ⟨"data"⟩ 0 0
+"%5" ←ₐ guard ⟨"%3"⟩ & ⟨"%1"⟩ with ⟨"%4"⟩
+"%0" ←ₐ .Const 1
+"%6" ←ₐ .Sub ⟨"%0"⟩ ⟨"%3"⟩
+"%7" ←ₐ .Get ⟨"data"⟩ 0 1
+"%8" ←ₐ .Mul ⟨"%2"⟩ ⟨"%7"⟩
+"%9" ←ₐ .Sub ⟨"%8"⟩ ⟨"%0"⟩
+"%10" ←ₐ ⟨"%1"⟩ &₀ ⟨"%9"⟩
+"%11" ←ₐ guard ⟨"%6"⟩ & ⟨"%5"⟩ with ⟨"%10"⟩
+DUP %4
+DUP %5
+Drop %1 at line 10. Part2
+Drop %4 at line 10. Part2
+Drop %5 at line 10. Part2
+Drop %2 at line 9. Part2
+Drop %0 at line 10. Part2
+Drop %3 at line 10. Part2
+Drop %6 at line 10. Part2
+[
+  [],
+  [],
+  [
+    DropFelt { val: '%1', nondet: false, kind: 'dropFelt' },
+    DropFelt { val: '%4', nondet: false, kind: 'dropFelt' },
+    DropFelt { val: '%5', nondet: false, kind: 'dropFelt' },
+    DropFelt { val: '%2', nondet: false, kind: 'dropFelt' },
+    DropFelt { val: '%0', nondet: false, kind: 'dropFelt' },
+    DropFelt { val: '%3', nondet: false, kind: 'dropFelt' },
+    DropFelt { val: '%6', nondet: false, kind: 'dropFelt' }
+  ]
+]
+3
+---1---
+curr: 0 next: ⟨"data"⟩[1] ←ᵢ ⟨"%5"⟩
+%5
+Moving drop past set requires 1 hypotheses
+curr: 1 next: "%2" ←ₐ .Get ⟨"data"⟩ 0 0
+%2
+Moving drop past assign/get requires 1 hypotheses
+curr: 2 next: guard ⟨"%2"⟩ then (?₀ ⟨"%1"⟩)
+%1
+Moving drop past eqz requires 1 hypotheses
+curr: 3 next: "%0" ←ₐ .Const 1
+%0
+Moving drop past assign/const requires 1 hypotheses
+---2---
+curr: 0 next: "%3" ←ₐ .Sub ⟨"%0"⟩ ⟨"%2"⟩
+%3
+%0
+%2
+Moving drop past assign/binop requires 3 hypotheses
+curr: 1 next: guard ⟨"%3"⟩ then ("%4" ←ₐ .Get ⟨"data"⟩ 0 1; "%5" ←ₐ .Mul ⟨"%1"⟩ ⟨"%4"⟩; "%6" ←ₐ .Sub ⟨"%5"⟩ ⟨"%0"⟩; ?₀ ⟨"%6"⟩)
+%6
+Moving drop past eqz requires 1 hypotheses
+%6
+%5
+%0
+Moving drop past assign/binop requires 3 hypotheses
+%5
+%1
+%4
+Moving drop past assign/binop requires 3 hypotheses
+%4
+Moving drop past assign/get requires 1 hypotheses
+Drop %2 at line 9. Part2
+Drop %3 at line 7. Part1
+Drop %0 at line 10. Part2
+Drop %6 at line 12. Part2
+Drop %7 at line 9. Part2
+Drop %8 at line 10. Part2
+Drop %9 at line 11. Part2
+[
+  [],
+  [ DropFelt { val: '%3', nondet: false, kind: 'dropFelt' } ],
+  [
+    DropFelt { val: '%2', nondet: false, kind: 'dropFelt' },
+    DropFelt { val: '%0', nondet: false, kind: 'dropFelt' },
+    DropFelt { val: '%6', nondet: false, kind: 'dropFelt' },
+    DropFelt { val: '%7', nondet: false, kind: 'dropFelt' },
+    DropFelt { val: '%8', nondet: false, kind: 'dropFelt' },
+    DropFelt { val: '%9', nondet: false, kind: 'dropFelt' }
+  ]
+]
+3
+---1---
+curr: 0 next: "%5" ←ₐ guard ⟨"%3"⟩ & ⟨"%1"⟩ with ⟨"%4"⟩
+%3
+Moving drop past assign/andCond requires 1 hypotheses
+curr: 1 next: "%0" ←ₐ .Const 1
+%0
+Moving drop past assign/const requires 1 hypotheses
+curr: 2 next: "%6" ←ₐ .Sub ⟨"%0"⟩ ⟨"%3"⟩
+%6
+%0
+%3
+Moving drop past assign/binop requires 3 hypotheses
+curr: 3 next: "%7" ←ₐ .Get ⟨"data"⟩ 0 1
+%7
+Moving drop past assign/get requires 1 hypotheses
+---2---
+curr: 0 next: "%8" ←ₐ .Mul ⟨"%2"⟩ ⟨"%7"⟩
+%8
+%2
+%7
+Moving drop past assign/binop requires 3 hypotheses
+curr: 1 next: "%9" ←ₐ .Sub ⟨"%8"⟩ ⟨"%0"⟩
+%9
+%8
+%0
+Moving drop past assign/binop requires 3 hypotheses
+curr: 2 next: "%10" ←ₐ ⟨"%1"⟩ &₀ ⟨"%9"⟩
+%9
+Moving drop past assign/andEqz requires 1 hypotheses
+curr: 3 next: "%11" ←ₐ guard ⟨"%6"⟩ & ⟨"%5"⟩ with ⟨"%10"⟩
+%6
+Moving drop past assign/andCond requires 1 hypotheses
+✔ [1934/1938] Built Risc0
+✔ [1935/1938] Built Risc0:c.o
+✔ [1936/1938] Built Main
+✔ [1938/1938] Built risc0
+Build completed successfully.
+---stdout---:
+
+
+✔ [1934/1938] Built Risc0
+✔ [1935/1938] Built Risc0:c.o
+✔ [1936/1938] Built Main
+✔ [1938/1938] Built risc0
+Build completed successfully.
+
+[]
+Creating constraints weakest pre files
+  0 - sorry
+✖ [1934/1940] Building Risc0.Gadgets.IsZero.Constraints.WeakestPresPart0
+trace: .> LEAN_PATH=././.lake/packages/batteries/.lake/build/lib:././.lake/packages/Qq/.lake/build/lib:././.lake/packages/aesop/.lake/build/lib:././.lake/packages/proofwidgets/.lake/build/lib:././.lake/packages/Cli/.lake/build/lib:././.lake/packages/importGraph/.lake/build/lib:././.lake/packages/mathlib/.lake/build/lib:././.lake/build/lib LD_LIBRARY_PATH= /home/ferinko/.elan/toolchains/leanprover--lean4---v4.11.0-rc1/bin/lean -Dlinter.deprecated=false -Dlinter.suspiciousUnexpanderPatterns=false -Dlinter.unusedVariables=false -DwarningAsError=true ././././Risc0/Gadgets/IsZero/Constraints/WeakestPresPart0.lean -R ./././. -o ././.lake/build/lib/Risc0/Gadgets/IsZero/Constraints/WeakestPresPart0.olean -i ././.lake/build/lib/Risc0/Gadgets/IsZero/Constraints/WeakestPresPart0.ilean -c ././.lake/build/ir/Risc0/Gadgets/IsZero/Constraints/WeakestPresPart0.c --json
+error: ././././Risc0/Gadgets/IsZero/Constraints/WeakestPresPart0.lean:11:4: declaration uses 'sorry'
+error: ././././Risc0/Gadgets/IsZero/Constraints/WeakestPresPart0.lean:24:44: unsolved goals
+st : State
+prog : MLIR IsNondet.NotInNondet
+eq :
+  (Code.part1;
+      dropfelt { name := "%3" : FeltVar };
+        Code.part2;
+          dropfelt { name := "%2" : FeltVar };
+            dropfelt { name := "%0" : FeltVar };
+              dropfelt { name := "%6" : FeltVar };
+                dropfelt { name := "%7" : FeltVar };
+                  dropfelt { name := "%8" : FeltVar }; dropfelt { name := "%9" : FeltVar }) =
+    prog
+⊢ Code.getReturn
+      (Γ
+        ((((st[props][{ name := "%1" : PropVar }] ← True)["%2"] ←ₛ
+              getImpl st { name := "in" : BufferVar } (0 : Back) (0 : ℕ))[props][{ name := "%4" : PropVar }] ←
+            ((((st[props][{ name := "%1" : PropVar }] ← True)["%2"] ←ₛ
+                      getImpl st { name := "in" : BufferVar } (0 : Back) (0 : ℕ)).props
+                  { name := "%1" : PropVar }).get! ∧
+              (((st[props][{ name := "%1" : PropVar }] ← True)["%2"] ←ₛ
+                        getImpl st { name := "in" : BufferVar } (0 : Back) (0 : ℕ)).felts
+                    { name := "%2" : FeltVar }).get! =
+                (0 : Felt)))["%3"] ←ₛ
+          getImpl st { name := "data" : BufferVar } (0 : Back) (0 : ℕ)) ⟦prog⟧) ↔
+    Code.getReturn (part0_state_update st)
+error: ././././Risc0/Gadgets/IsZero/Constraints/WeakestPresPart0.lean:39:4: The rfl tactic failed. Possible reasons:
+- The goal is not a reflexive relation (neither `=` nor a relation with a @[refl] lemma).
+- The arguments of the relation are not equal.
+Try using the reflexivity lemma for your relation explicitly, e.g. `exact Eq.refl _` or
+`exact HEq.rfl` etc.
+in0 data0 data1 : Felt
+⊢ Code.getReturn
+      (part0_state_update
+        {
+          buffers :=
+            Map.fromList
+              [({ name := "in" : BufferVar }, [[some in0]]),
+                ({ name := "data" : BufferVar }, [[some data0, some data1]])],
+          bufferWidths :=
+            Map.fromList [({ name := "in" : BufferVar }, (1 : ℕ)), ({ name := "data" : BufferVar }, (2 : ℕ))],
+          cycle := (0 : ℕ), felts := Map.empty, isFailed := false = true, props := Map.empty,
+          vars := [{ name := "in" : BufferVar }, { name := "data" : BufferVar }] }) ↔
+    sorryAx Prop
+error: Lean exited with code 1
+Some required builds logged failures:
+- Risc0.Gadgets.IsZero.Constraints.WeakestPresPart0
+RECEIVED(constraints)-------------
+✖ [1934/1940] Building Risc0.Gadgets.IsZero.Constraints.WeakestPresPart0
+trace: .> LEAN_PATH=././.lake/packages/batteries/.lake/build/lib:././.lake/packages/Qq/.lake/build/lib:././.lake/packages/aesop/.lake/build/lib:././.lake/packages/proofwidgets/.lake/build/lib:././.lake/packages/Cli/.lake/build/lib:././.lake/packages/importGraph/.lake/build/lib:././.lake/packages/mathlib/.lake/build/lib:././.lake/build/lib LD_LIBRARY_PATH= /home/ferinko/.elan/toolchains/leanprover--lean4---v4.11.0-rc1/bin/lean -Dlinter.deprecated=false -Dlinter.suspiciousUnexpanderPatterns=false -Dlinter.unusedVariables=false -DwarningAsError=true ././././Risc0/Gadgets/IsZero/Constraints/WeakestPresPart0.lean -R ./././. -o ././.lake/build/lib/Risc0/Gadgets/IsZero/Constraints/WeakestPresPart0.olean -i ././.lake/build/lib/Risc0/Gadgets/IsZero/Constraints/WeakestPresPart0.ilean -c ././.lake/build/ir/Risc0/Gadgets/IsZero/Constraints/WeakestPresPart0.c --json
+error: ././././Risc0/Gadgets/IsZero/Constraints/WeakestPresPart0.lean:11:4: declaration uses 'sorry'
+error: ././././Risc0/Gadgets/IsZero/Constraints/WeakestPresPart0.lean:24:44: unsolved goals
+st : State
+prog : MLIR IsNondet.NotInNondet
+eq :
+  (Code.part1;
+      dropfelt { name := "%3" : FeltVar };
+        Code.part2;
+          dropfelt { name := "%2" : FeltVar };
+            dropfelt { name := "%0" : FeltVar };
+              dropfelt { name := "%6" : FeltVar };
+                dropfelt { name := "%7" : FeltVar };
+                  dropfelt { name := "%8" : FeltVar }; dropfelt { name := "%9" : FeltVar }) =
+    prog
+⊢ Code.getReturn
+      (Γ
+        ((((st[props][{ name := "%1" : PropVar }] ← True)["%2"] ←ₛ
+              getImpl st { name := "in" : BufferVar } (0 : Back) (0 : ℕ))[props][{ name := "%4" : PropVar }] ←
+            ((((st[props][{ name := "%1" : PropVar }] ← True)["%2"] ←ₛ
+                      getImpl st { name := "in" : BufferVar } (0 : Back) (0 : ℕ)).props
+                  { name := "%1" : PropVar }).get! ∧
+              (((st[props][{ name := "%1" : PropVar }] ← True)["%2"] ←ₛ
+                        getImpl st { name := "in" : BufferVar } (0 : Back) (0 : ℕ)).felts
+                    { name := "%2" : FeltVar }).get! =
+                (0 : Felt)))["%3"] ←ₛ
+          getImpl st { name := "data" : BufferVar } (0 : Back) (0 : ℕ)) ⟦prog⟧) ↔
+    Code.getReturn (part0_state_update st)
+error: ././././Risc0/Gadgets/IsZero/Constraints/WeakestPresPart0.lean:39:4: The rfl tactic failed. Possible reasons:
+- The goal is not a reflexive relation (neither `=` nor a relation with a @[refl] lemma).
+- The arguments of the relation are not equal.
+Try using the reflexivity lemma for your relation explicitly, e.g. `exact Eq.refl _` or
+`exact HEq.rfl` etc.
+in0 data0 data1 : Felt
+⊢ Code.getReturn
+      (part0_state_update
+        {
+          buffers :=
+            Map.fromList
+              [({ name := "in" : BufferVar }, [[some in0]]),
+                ({ name := "data" : BufferVar }, [[some data0, some data1]])],
+          bufferWidths :=
+            Map.fromList [({ name := "in" : BufferVar }, (1 : ℕ)), ({ name := "data" : BufferVar }, (2 : ℕ))],
+          cycle := (0 : ℕ), felts := Map.empty, isFailed := false = true, props := Map.empty,
+          vars := [{ name := "in" : BufferVar }, { name := "data" : BufferVar }] }) ↔
+    sorryAx Prop
+error: Lean exited with code 1
+Some required builds logged failures:
+- Risc0.Gadgets.IsZero.Constraints.WeakestPresPart0
+
+FIRST ERROR--
+--
+--
+error: ././././Risc0/Gadgets/IsZero/Constraints/WeakestPresPart0.lean:24:44: unsolved goals
+st : State
+prog : MLIR IsNondet.NotInNondet
+eq :
+  (Code.part1;
+      dropfelt { name := "%3" : FeltVar };
+        Code.part2;
+          dropfelt { name := "%2" : FeltVar };
+            dropfelt { name := "%0" : FeltVar };
+              dropfelt { name := "%6" : FeltVar };
+                dropfelt { name := "%7" : FeltVar };
+                  dropfelt { name := "%8" : FeltVar }; dropfelt { name := "%9" : FeltVar }) =
+    prog
+⊢ Code.getReturn
+      (Γ
+        ((((st[props][{ name := "%1" : PropVar }] ← True)["%2"] ←ₛ
+              getImpl st { name := "in" : BufferVar } (0 : Back) (0 : ℕ))[props][{ name := "%4" : PropVar }] ←
+            ((((st[props][{ name := "%1" : PropVar }] ← True)["%2"] ←ₛ
+                      getImpl st { name := "in" : BufferVar } (0 : Back) (0 : ℕ)).props
+                  { name := "%1" : PropVar }).get! ∧
+              (((st[props][{ name := "%1" : PropVar }] ← True)["%2"] ←ₛ
+                        getImpl st { name := "in" : BufferVar } (0 : Back) (0 : ℕ)).felts
+                    { name := "%2" : FeltVar }).get! =
+                (0 : Felt)))["%3"] ←ₛ
+          getImpl st { name := "data" : BufferVar } (0 : Back) (0 : ℕ)) ⟦prog⟧) ↔
+    Code.getReturn (part0_state_update st)
+
+
+
+
+SECOND ERROR--
+--
+--
+error: ././././Risc0/Gadgets/IsZero/Constraints/WeakestPresPart0.lean:39:4: The rfl tactic failed. Possible reasons:
+- The goal is not a reflexive relation (neither `=` nor a relation with a @[refl] lemma).
+- The arguments of the relation are not equal.
+Try using the reflexivity lemma for your relation explicitly, e.g. `exact Eq.refl _` or
+`exact HEq.rfl` etc.
+in0 data0 data1 : Felt
+⊢ Code.getReturn
+      (part0_state_update
+        {
+          buffers :=
+            Map.fromList
+              [({ name := "in" : BufferVar }, [[some in0]]),
+                ({ name := "data" : BufferVar }, [[some data0, some data1]])],
+          bufferWidths :=
+            Map.fromList [({ name := "in" : BufferVar }, (1 : ℕ)), ({ name := "data" : BufferVar }, (2 : ℕ))],
+          cycle := (0 : ℕ), felts := Map.empty, isFailed := false = true, props := Map.empty,
+          vars := [{ name := "in" : BufferVar }, { name := "data" : BufferVar }] }) ↔
+    sorryAx Prop
+error: Lean exited with code 1
+Some required builds logged failures:
+- Risc0.Gadgets.IsZero.Constraints.WeakestPresPart0
+
+
+
+
+
+STATE TRANSFORMER--
+--
+--
+
+        ((((st[props][{ name := "%1" : PropVar }] ← True)["%2"] ←ₛ
+              getImpl st { name := "in" : BufferVar } (0 : Back) (0 : ℕ))[props][{ name := "%4" : PropVar }] ←
+            ((((st[props][{ name := "%1" : PropVar }] ← True)["%2"] ←ₛ
+                      getImpl st { name := "in" : BufferVar } (0 : Back) (0 : ℕ)).props
+                  { name := "%1" : PropVar }).get! ∧
+              (((st[props][{ name := "%1" : PropVar }] ← True)["%2"] ←ₛ
+                        getImpl st { name := "in" : BufferVar } (0 : Back) (0 : ℕ)).felts
+                    { name := "%2" : FeltVar }).get! =
+                (0 : Felt)))["%3"] ←ₛ
+          getImpl st { name := "data" : BufferVar } (0 : Back) (0 : ℕ)) 
+
+
+
+
+CUMULATIVE STATE TRANSFORMER--
+--
+--
+Code.getReturn
+      (part0_state_update
+        {
+          buffers :=
+            Map.fromList
+              [({ name := "in" : BufferVar }, [[some in0]]),
+                ({ name := "data" : BufferVar }, [[some data0, some data1]])],
+          bufferWidths :=
+            Map.fromList [({ name := "in" : BufferVar }, (1 : ℕ)), ({ name := "data" : BufferVar }, (2 : ℕ))],
+          cycle := (0 : ℕ), felts := Map.empty, isFailed := false = true, props := Map.empty,
+          vars := [{ name := "in" : BufferVar }, { name := "data" : BufferVar }] }) 
+State transformer: "
+        ((((st[props][{ name := "%1" : PropVar }] ← True)["%2"] ←ₛ
+              getImpl st { name := "in" : BufferVar } (0 : Back) (0 : ℕ))[props][{ name := "%4" : PropVar }] ←
+            ((((st[props][{ name := "%1" : PropVar }] ← True)["%2"] ←ₛ
+                      getImpl st { name := "in" : BufferVar } (0 : Back) (0 : ℕ)).props
+                  { name := "%1" : PropVar }).get! ∧
+              (((st[props][{ name := "%1" : PropVar }] ← True)["%2"] ←ₛ
+                        getImpl st { name := "in" : BufferVar } (0 : Back) (0 : ℕ)).felts
+                    { name := "%2" : FeltVar }).get! =
+                (0 : Felt)))["%3"] ←ₛ
+          getImpl st { name := "data" : BufferVar } (0 : Back) (0 : ℕ)) "
+Cumulative transformer: "Code.getReturn
+      (part0_state_update
+        {
+          buffers :=
+            Map.fromList
+              [({ name := "in" : BufferVar }, [[some in0]]),
+                ({ name := "data" : BufferVar }, [[some data0, some data1]])],
+          bufferWidths :=
+            Map.fromList [({ name := "in" : BufferVar }, (1 : ℕ)), ({ name := "data" : BufferVar }, (2 : ℕ))],
+          cycle := (0 : ℕ), felts := Map.empty, isFailed := false = true, props := Map.empty,
+          vars := [{ name := "in" : BufferVar }, { name := "data" : BufferVar }] }) "
+  0 - corrected
+Part 1 of 3
+  1 - sorry
+✖ [1936/1942] Building Risc0.Gadgets.IsZero.Constraints.WeakestPresPart1
+trace: .> LEAN_PATH=././.lake/packages/batteries/.lake/build/lib:././.lake/packages/Qq/.lake/build/lib:././.lake/packages/aesop/.lake/build/lib:././.lake/packages/proofwidgets/.lake/build/lib:././.lake/packages/Cli/.lake/build/lib:././.lake/packages/importGraph/.lake/build/lib:././.lake/packages/mathlib/.lake/build/lib:././.lake/build/lib LD_LIBRARY_PATH= /home/ferinko/.elan/toolchains/leanprover--lean4---v4.11.0-rc1/bin/lean -Dlinter.deprecated=false -Dlinter.suspiciousUnexpanderPatterns=false -Dlinter.unusedVariables=false -DwarningAsError=true ././././Risc0/Gadgets/IsZero/Constraints/WeakestPresPart1.lean -R ./././. -o ././.lake/build/lib/Risc0/Gadgets/IsZero/Constraints/WeakestPresPart1.olean -i ././.lake/build/lib/Risc0/Gadgets/IsZero/Constraints/WeakestPresPart1.ilean -c ././.lake/build/ir/Risc0/Gadgets/IsZero/Constraints/WeakestPresPart1.c --json
+error: ././././Risc0/Gadgets/IsZero/Constraints/WeakestPresPart1.lean:12:4: declaration uses 'sorry'
+error: ././././Risc0/Gadgets/IsZero/Constraints/WeakestPresPart1.lean:25:44: unsolved goals
+st : State
+prog : MLIR IsNondet.NotInNondet
+eq :
+  (dropfelt { name := "%3" : FeltVar };
+      Code.part2;
+        dropfelt { name := "%2" : FeltVar };
+          dropfelt { name := "%0" : FeltVar };
+            dropfelt { name := "%6" : FeltVar };
+              dropfelt { name := "%7" : FeltVar };
+                dropfelt { name := "%8" : FeltVar }; dropfelt { name := "%9" : FeltVar }) =
+    prog
+⊢ Code.getReturn
+      (Γ
+        ((((st[props][{ name := "%5" : PropVar }] ←
+                ((st.props { name := "%1" : PropVar }).get! ∧
+                  if (st.felts { name := "%3" : FeltVar }).get! = (0 : Felt) then True
+                  else (st.props { name := "%4" : PropVar }).get!))[felts][{ name := "%0" : FeltVar }] ←
+              (1 : Felt))[felts][{ name := "%6" : FeltVar }] ←
+            (1 : Felt) - (st.felts { name := "%3" : FeltVar }).get!)["%7"] ←ₛ
+          getImpl st { name := "data" : BufferVar } (0 : Back) (1 : ℕ)) ⟦prog⟧) ↔
+    Code.getReturn (part1_state_update st)
+error: ././././Risc0/Gadgets/IsZero/Constraints/WeakestPresPart1.lean:57:4: The rfl tactic failed. Possible reasons:
+- The goal is not a reflexive relation (neither `=` nor a relation with a @[refl] lemma).
+- The arguments of the relation are not equal.
+Try using the reflexivity lemma for your relation explicitly, e.g. `exact Eq.refl _` or
+`exact HEq.rfl` etc.
+in0 data0 data1 : Felt
+⊢ Code.getReturn
+      (part1_state_update
+        (((({
+                  buffers :=
+                    (Map.empty[{ name := "data" : BufferVar }] ←ₘ
+                        [[some data0, some data1]])[{ name := "in" : BufferVar }] ←ₘ
+                      [[some in0]],
+                  bufferWidths :=
+                    (Map.empty[{ name := "data" : BufferVar }] ←ₘ (2 : ℕ))[{ name := "in" : BufferVar }] ←ₘ (1 : ℕ),
+                  cycle := (0 : ℕ), felts := Map.empty, isFailed := False, props := Map.empty,
+                  vars :=
+                    [{ name := "in" : BufferVar },
+                      { name := "data" : BufferVar }] }[props][{ name := "%1" : PropVar }] ←
+                True)[felts][{ name := "%2" : FeltVar }] ←
+              in0)[props][{ name := "%4" : PropVar }] ←
+            in0 = (0 : Felt))[felts][{ name := "%3" : FeltVar }] ←
+          data0)) ↔
+    sorryAx Prop
+error: Lean exited with code 1
+Some required builds logged failures:
+- Risc0.Gadgets.IsZero.Constraints.WeakestPresPart1
+RECEIVED(constraints)-------------
+✖ [1936/1942] Building Risc0.Gadgets.IsZero.Constraints.WeakestPresPart1
+trace: .> LEAN_PATH=././.lake/packages/batteries/.lake/build/lib:././.lake/packages/Qq/.lake/build/lib:././.lake/packages/aesop/.lake/build/lib:././.lake/packages/proofwidgets/.lake/build/lib:././.lake/packages/Cli/.lake/build/lib:././.lake/packages/importGraph/.lake/build/lib:././.lake/packages/mathlib/.lake/build/lib:././.lake/build/lib LD_LIBRARY_PATH= /home/ferinko/.elan/toolchains/leanprover--lean4---v4.11.0-rc1/bin/lean -Dlinter.deprecated=false -Dlinter.suspiciousUnexpanderPatterns=false -Dlinter.unusedVariables=false -DwarningAsError=true ././././Risc0/Gadgets/IsZero/Constraints/WeakestPresPart1.lean -R ./././. -o ././.lake/build/lib/Risc0/Gadgets/IsZero/Constraints/WeakestPresPart1.olean -i ././.lake/build/lib/Risc0/Gadgets/IsZero/Constraints/WeakestPresPart1.ilean -c ././.lake/build/ir/Risc0/Gadgets/IsZero/Constraints/WeakestPresPart1.c --json
+error: ././././Risc0/Gadgets/IsZero/Constraints/WeakestPresPart1.lean:12:4: declaration uses 'sorry'
+error: ././././Risc0/Gadgets/IsZero/Constraints/WeakestPresPart1.lean:25:44: unsolved goals
+st : State
+prog : MLIR IsNondet.NotInNondet
+eq :
+  (dropfelt { name := "%3" : FeltVar };
+      Code.part2;
+        dropfelt { name := "%2" : FeltVar };
+          dropfelt { name := "%0" : FeltVar };
+            dropfelt { name := "%6" : FeltVar };
+              dropfelt { name := "%7" : FeltVar };
+                dropfelt { name := "%8" : FeltVar }; dropfelt { name := "%9" : FeltVar }) =
+    prog
+⊢ Code.getReturn
+      (Γ
+        ((((st[props][{ name := "%5" : PropVar }] ←
+                ((st.props { name := "%1" : PropVar }).get! ∧
+                  if (st.felts { name := "%3" : FeltVar }).get! = (0 : Felt) then True
+                  else (st.props { name := "%4" : PropVar }).get!))[felts][{ name := "%0" : FeltVar }] ←
+              (1 : Felt))[felts][{ name := "%6" : FeltVar }] ←
+            (1 : Felt) - (st.felts { name := "%3" : FeltVar }).get!)["%7"] ←ₛ
+          getImpl st { name := "data" : BufferVar } (0 : Back) (1 : ℕ)) ⟦prog⟧) ↔
+    Code.getReturn (part1_state_update st)
+error: ././././Risc0/Gadgets/IsZero/Constraints/WeakestPresPart1.lean:57:4: The rfl tactic failed. Possible reasons:
+- The goal is not a reflexive relation (neither `=` nor a relation with a @[refl] lemma).
+- The arguments of the relation are not equal.
+Try using the reflexivity lemma for your relation explicitly, e.g. `exact Eq.refl _` or
+`exact HEq.rfl` etc.
+in0 data0 data1 : Felt
+⊢ Code.getReturn
+      (part1_state_update
+        (((({
+                  buffers :=
+                    (Map.empty[{ name := "data" : BufferVar }] ←ₘ
+                        [[some data0, some data1]])[{ name := "in" : BufferVar }] ←ₘ
+                      [[some in0]],
+                  bufferWidths :=
+                    (Map.empty[{ name := "data" : BufferVar }] ←ₘ (2 : ℕ))[{ name := "in" : BufferVar }] ←ₘ (1 : ℕ),
+                  cycle := (0 : ℕ), felts := Map.empty, isFailed := False, props := Map.empty,
+                  vars :=
+                    [{ name := "in" : BufferVar },
+                      { name := "data" : BufferVar }] }[props][{ name := "%1" : PropVar }] ←
+                True)[felts][{ name := "%2" : FeltVar }] ←
+              in0)[props][{ name := "%4" : PropVar }] ←
+            in0 = (0 : Felt))[felts][{ name := "%3" : FeltVar }] ←
+          data0)) ↔
+    sorryAx Prop
+error: Lean exited with code 1
+Some required builds logged failures:
+- Risc0.Gadgets.IsZero.Constraints.WeakestPresPart1
+
+FIRST ERROR--
+--
+--
+error: ././././Risc0/Gadgets/IsZero/Constraints/WeakestPresPart1.lean:25:44: unsolved goals
+st : State
+prog : MLIR IsNondet.NotInNondet
+eq :
+  (dropfelt { name := "%3" : FeltVar };
+      Code.part2;
+        dropfelt { name := "%2" : FeltVar };
+          dropfelt { name := "%0" : FeltVar };
+            dropfelt { name := "%6" : FeltVar };
+              dropfelt { name := "%7" : FeltVar };
+                dropfelt { name := "%8" : FeltVar }; dropfelt { name := "%9" : FeltVar }) =
+    prog
+⊢ Code.getReturn
+      (Γ
+        ((((st[props][{ name := "%5" : PropVar }] ←
+                ((st.props { name := "%1" : PropVar }).get! ∧
+                  if (st.felts { name := "%3" : FeltVar }).get! = (0 : Felt) then True
+                  else (st.props { name := "%4" : PropVar }).get!))[felts][{ name := "%0" : FeltVar }] ←
+              (1 : Felt))[felts][{ name := "%6" : FeltVar }] ←
+            (1 : Felt) - (st.felts { name := "%3" : FeltVar }).get!)["%7"] ←ₛ
+          getImpl st { name := "data" : BufferVar } (0 : Back) (1 : ℕ)) ⟦prog⟧) ↔
+    Code.getReturn (part1_state_update st)
+
+
+
+
+SECOND ERROR--
+--
+--
+error: ././././Risc0/Gadgets/IsZero/Constraints/WeakestPresPart1.lean:57:4: The rfl tactic failed. Possible reasons:
+- The goal is not a reflexive relation (neither `=` nor a relation with a @[refl] lemma).
+- The arguments of the relation are not equal.
+Try using the reflexivity lemma for your relation explicitly, e.g. `exact Eq.refl _` or
+`exact HEq.rfl` etc.
+in0 data0 data1 : Felt
+⊢ Code.getReturn
+      (part1_state_update
+        (((({
+                  buffers :=
+                    (Map.empty[{ name := "data" : BufferVar }] ←ₘ
+                        [[some data0, some data1]])[{ name := "in" : BufferVar }] ←ₘ
+                      [[some in0]],
+                  bufferWidths :=
+                    (Map.empty[{ name := "data" : BufferVar }] ←ₘ (2 : ℕ))[{ name := "in" : BufferVar }] ←ₘ (1 : ℕ),
+                  cycle := (0 : ℕ), felts := Map.empty, isFailed := False, props := Map.empty,
+                  vars :=
+                    [{ name := "in" : BufferVar },
+                      { name := "data" : BufferVar }] }[props][{ name := "%1" : PropVar }] ←
+                True)[felts][{ name := "%2" : FeltVar }] ←
+              in0)[props][{ name := "%4" : PropVar }] ←
+            in0 = (0 : Felt))[felts][{ name := "%3" : FeltVar }] ←
+          data0)) ↔
+    sorryAx Prop
+error: Lean exited with code 1
+Some required builds logged failures:
+- Risc0.Gadgets.IsZero.Constraints.WeakestPresPart1
+
+
+
+
+
+STATE TRANSFORMER--
+--
+--
+
+        ((((st[props][{ name := "%5" : PropVar }] ←
+                ((st.props { name := "%1" : PropVar }).get! ∧
+                  if (st.felts { name := "%3" : FeltVar }).get! = (0 : Felt) then True
+                  else (st.props { name := "%4" : PropVar }).get!))[felts][{ name := "%0" : FeltVar }] ←
+              (1 : Felt))[felts][{ name := "%6" : FeltVar }] ←
+            (1 : Felt) - (st.felts { name := "%3" : FeltVar }).get!)["%7"] ←ₛ
+          getImpl st { name := "data" : BufferVar } (0 : Back) (1 : ℕ)) 
+
+
+
+
+CUMULATIVE STATE TRANSFORMER--
+--
+--
+Code.getReturn
+      (part1_state_update
+        (((({
+                  buffers :=
+                    (Map.empty[{ name := "data" : BufferVar }] ←ₘ
+                        [[some data0, some data1]])[{ name := "in" : BufferVar }] ←ₘ
+                      [[some in0]],
+                  bufferWidths :=
+                    (Map.empty[{ name := "data" : BufferVar }] ←ₘ (2 : ℕ))[{ name := "in" : BufferVar }] ←ₘ (1 : ℕ),
+                  cycle := (0 : ℕ), felts := Map.empty, isFailed := False, props := Map.empty,
+                  vars :=
+                    [{ name := "in" : BufferVar },
+                      { name := "data" : BufferVar }] }[props][{ name := "%1" : PropVar }] ←
+                True)[felts][{ name := "%2" : FeltVar }] ←
+              in0)[props][{ name := "%4" : PropVar }] ←
+            in0 = (0 : Felt))[felts][{ name := "%3" : FeltVar }] ←
+          data0)) 
+State transformer: "
+        ((((st[props][{ name := "%5" : PropVar }] ←
+                ((st.props { name := "%1" : PropVar }).get! ∧
+                  if (st.felts { name := "%3" : FeltVar }).get! = (0 : Felt) then True
+                  else (st.props { name := "%4" : PropVar }).get!))[felts][{ name := "%0" : FeltVar }] ←
+              (1 : Felt))[felts][{ name := "%6" : FeltVar }] ←
+            (1 : Felt) - (st.felts { name := "%3" : FeltVar }).get!)["%7"] ←ₛ
+          getImpl st { name := "data" : BufferVar } (0 : Back) (1 : ℕ)) "
+Cumulative transformer: "Code.getReturn
+      (part1_state_update
+        (((({
+                  buffers :=
+                    (Map.empty[{ name := "data" : BufferVar }] ←ₘ
+                        [[some data0, some data1]])[{ name := "in" : BufferVar }] ←ₘ
+                      [[some in0]],
+                  bufferWidths :=
+                    (Map.empty[{ name := "data" : BufferVar }] ←ₘ (2 : ℕ))[{ name := "in" : BufferVar }] ←ₘ (1 : ℕ),
+                  cycle := (0 : ℕ), felts := Map.empty, isFailed := False, props := Map.empty,
+                  vars :=
+                    [{ name := "in" : BufferVar },
+                      { name := "data" : BufferVar }] }[props][{ name := "%1" : PropVar }] ←
+                True)[felts][{ name := "%2" : FeltVar }] ←
+              in0)[props][{ name := "%4" : PropVar }] ←
+            in0 = (0 : Felt))[felts][{ name := "%3" : FeltVar }] ←
+          data0)) "
+  1 - corrected
+✔ [1936/1942] Built Risc0.Gadgets.IsZero.Constraints.WeakestPresPart1
+✔ [1938/1942] Built Risc0
+✔ [1939/1942] Built Risc0:c.o
+✔ [1940/1942] Built Main
+✔ [1942/1942] Built risc0
+Build completed successfully.
+  2 - sorry
+✖ [1938/1944] Building Risc0.Gadgets.IsZero.Constraints.WeakestPresPart2
+trace: .> LEAN_PATH=././.lake/packages/batteries/.lake/build/lib:././.lake/packages/Qq/.lake/build/lib:././.lake/packages/aesop/.lake/build/lib:././.lake/packages/proofwidgets/.lake/build/lib:././.lake/packages/Cli/.lake/build/lib:././.lake/packages/importGraph/.lake/build/lib:././.lake/packages/mathlib/.lake/build/lib:././.lake/build/lib LD_LIBRARY_PATH= /home/ferinko/.elan/toolchains/leanprover--lean4---v4.11.0-rc1/bin/lean -Dlinter.deprecated=false -Dlinter.suspiciousUnexpanderPatterns=false -Dlinter.unusedVariables=false -DwarningAsError=true ././././Risc0/Gadgets/IsZero/Constraints/WeakestPresPart2.lean -R ./././. -o ././.lake/build/lib/Risc0/Gadgets/IsZero/Constraints/WeakestPresPart2.olean -i ././.lake/build/lib/Risc0/Gadgets/IsZero/Constraints/WeakestPresPart2.ilean -c ././.lake/build/ir/Risc0/Gadgets/IsZero/Constraints/WeakestPresPart2.c --json
+error: ././././Risc0/Gadgets/IsZero/Constraints/WeakestPresPart2.lean:12:4: declaration uses 'sorry'
+error: ././././Risc0/Gadgets/IsZero/Constraints/WeakestPresPart2.lean:25:44: unsolved goals
+st : State
+prog : MLIR IsNondet.NotInNondet
+eq :
+  (dropfelt { name := "%2" : FeltVar };
+      dropfelt { name := "%0" : FeltVar };
+        dropfelt { name := "%6" : FeltVar };
+          dropfelt { name := "%7" : FeltVar };
+            dropfelt { name := "%8" : FeltVar }; dropfelt { name := "%9" : FeltVar }) =
+    prog
+⊢ Code.getReturn
+      (Γ
+        ((((st[felts][{ name := "%8" : FeltVar }] ←
+                (st.felts { name := "%2" : FeltVar }).get! *
+                  (st.felts { name := "%7" : FeltVar }).get!)[felts][{ name := "%9" : FeltVar }] ←
+              (st.felts { name := "%2" : FeltVar }).get! * (st.felts { name := "%7" : FeltVar }).get! -
+                (st.felts { name := "%0" : FeltVar }).get!)[props][{ name := "%10" : PropVar }] ←
+            ((st.props { name := "%1" : PropVar }).get! ∧
+              (st.felts { name := "%2" : FeltVar }).get! * (st.felts { name := "%7" : FeltVar }).get! -
+                  (st.felts { name := "%0" : FeltVar }).get! =
+                (0 : Felt)))[props][{ name := "%11" : PropVar }] ←
+          (((((st[felts][{ name := "%8" : FeltVar }] ←
+                        (st.felts { name := "%2" : FeltVar }).get! *
+                          (st.felts { name := "%7" : FeltVar }).get!)[felts][{ name := "%9" : FeltVar }] ←
+                      (st.felts { name := "%2" : FeltVar }).get! * (st.felts { name := "%7" : FeltVar }).get! -
+                        (st.felts { name := "%0" : FeltVar }).get!)[props][{ name := "%10" : PropVar }] ←
+                    ((st.props { name := "%1" : PropVar }).get! ∧
+                      (st.felts { name := "%2" : FeltVar }).get! * (st.felts { name := "%7" : FeltVar }).get! -
+                          (st.felts { name := "%0" : FeltVar }).get! =
+                        (0 : Felt))).props
+                { name := "%5" : PropVar }).get! ∧
+            if (st.felts { name := "%6" : FeltVar }).get! = (0 : Felt) then True
+            else
+              (st.props { name := "%1" : PropVar }).get! ∧
+                (st.felts { name := "%2" : FeltVar }).get! * (st.felts { name := "%7" : FeltVar }).get! -
+                    (st.felts { name := "%0" : FeltVar }).get! =
+                  (0 : Felt))) ⟦prog⟧) ↔
+    Code.getReturn (part2_state_update st)
+error: ././././Risc0/Gadgets/IsZero/Constraints/WeakestPresPart2.lean:57:4: The rfl tactic failed. Possible reasons:
+- The goal is not a reflexive relation (neither `=` nor a relation with a @[refl] lemma).
+- The arguments of the relation are not equal.
+Try using the reflexivity lemma for your relation explicitly, e.g. `exact Eq.refl _` or
+`exact HEq.rfl` etc.
+in0 data0 data1 : Felt
+⊢ Code.getReturn
+      (part2_state_update
+        ((((((({
+                        buffers :=
+                          (Map.empty[{ name := "data" : BufferVar }] ←ₘ
+                              [[some data0, some data1]])[{ name := "in" : BufferVar }] ←ₘ
+                            [[some in0]],
+                        bufferWidths :=
+                          (Map.empty[{ name := "data" : BufferVar }] ←ₘ (2 : ℕ))[{ name := "in" : BufferVar }] ←ₘ
+                            (1 : ℕ),
+                        cycle := (0 : ℕ), felts := Map.empty, isFailed := False, props := Map.empty,
+                        vars :=
+                          [{ name := "in" : BufferVar },
+                            { name := "data" : BufferVar }] }[props][{ name := "%1" : PropVar }] ←
+                      True)[felts][{ name := "%2" : FeltVar }] ←
+                    in0)[props][{ name := "%4" : PropVar }] ←
+                  in0 = (0 : Felt))[props][{ name := "%5" : PropVar }] ←
+                (¬data0 = (0 : Felt) → in0 = (0 : Felt)))[felts][{ name := "%0" : FeltVar }] ←
+              (1 : Felt))[felts][{ name := "%6" : FeltVar }] ←
+            (1 : Felt) - data0)[felts][{ name := "%7" : FeltVar }] ←
+          data1)) ↔
+    sorryAx Prop
+error: Lean exited with code 1
+Some required builds logged failures:
+- Risc0.Gadgets.IsZero.Constraints.WeakestPresPart2
+RECEIVED(constraints)-------------
+✖ [1938/1944] Building Risc0.Gadgets.IsZero.Constraints.WeakestPresPart2
+trace: .> LEAN_PATH=././.lake/packages/batteries/.lake/build/lib:././.lake/packages/Qq/.lake/build/lib:././.lake/packages/aesop/.lake/build/lib:././.lake/packages/proofwidgets/.lake/build/lib:././.lake/packages/Cli/.lake/build/lib:././.lake/packages/importGraph/.lake/build/lib:././.lake/packages/mathlib/.lake/build/lib:././.lake/build/lib LD_LIBRARY_PATH= /home/ferinko/.elan/toolchains/leanprover--lean4---v4.11.0-rc1/bin/lean -Dlinter.deprecated=false -Dlinter.suspiciousUnexpanderPatterns=false -Dlinter.unusedVariables=false -DwarningAsError=true ././././Risc0/Gadgets/IsZero/Constraints/WeakestPresPart2.lean -R ./././. -o ././.lake/build/lib/Risc0/Gadgets/IsZero/Constraints/WeakestPresPart2.olean -i ././.lake/build/lib/Risc0/Gadgets/IsZero/Constraints/WeakestPresPart2.ilean -c ././.lake/build/ir/Risc0/Gadgets/IsZero/Constraints/WeakestPresPart2.c --json
+error: ././././Risc0/Gadgets/IsZero/Constraints/WeakestPresPart2.lean:12:4: declaration uses 'sorry'
+error: ././././Risc0/Gadgets/IsZero/Constraints/WeakestPresPart2.lean:25:44: unsolved goals
+st : State
+prog : MLIR IsNondet.NotInNondet
+eq :
+  (dropfelt { name := "%2" : FeltVar };
+      dropfelt { name := "%0" : FeltVar };
+        dropfelt { name := "%6" : FeltVar };
+          dropfelt { name := "%7" : FeltVar };
+            dropfelt { name := "%8" : FeltVar }; dropfelt { name := "%9" : FeltVar }) =
+    prog
+⊢ Code.getReturn
+      (Γ
+        ((((st[felts][{ name := "%8" : FeltVar }] ←
+                (st.felts { name := "%2" : FeltVar }).get! *
+                  (st.felts { name := "%7" : FeltVar }).get!)[felts][{ name := "%9" : FeltVar }] ←
+              (st.felts { name := "%2" : FeltVar }).get! * (st.felts { name := "%7" : FeltVar }).get! -
+                (st.felts { name := "%0" : FeltVar }).get!)[props][{ name := "%10" : PropVar }] ←
+            ((st.props { name := "%1" : PropVar }).get! ∧
+              (st.felts { name := "%2" : FeltVar }).get! * (st.felts { name := "%7" : FeltVar }).get! -
+                  (st.felts { name := "%0" : FeltVar }).get! =
+                (0 : Felt)))[props][{ name := "%11" : PropVar }] ←
+          (((((st[felts][{ name := "%8" : FeltVar }] ←
+                        (st.felts { name := "%2" : FeltVar }).get! *
+                          (st.felts { name := "%7" : FeltVar }).get!)[felts][{ name := "%9" : FeltVar }] ←
+                      (st.felts { name := "%2" : FeltVar }).get! * (st.felts { name := "%7" : FeltVar }).get! -
+                        (st.felts { name := "%0" : FeltVar }).get!)[props][{ name := "%10" : PropVar }] ←
+                    ((st.props { name := "%1" : PropVar }).get! ∧
+                      (st.felts { name := "%2" : FeltVar }).get! * (st.felts { name := "%7" : FeltVar }).get! -
+                          (st.felts { name := "%0" : FeltVar }).get! =
+                        (0 : Felt))).props
+                { name := "%5" : PropVar }).get! ∧
+            if (st.felts { name := "%6" : FeltVar }).get! = (0 : Felt) then True
+            else
+              (st.props { name := "%1" : PropVar }).get! ∧
+                (st.felts { name := "%2" : FeltVar }).get! * (st.felts { name := "%7" : FeltVar }).get! -
+                    (st.felts { name := "%0" : FeltVar }).get! =
+                  (0 : Felt))) ⟦prog⟧) ↔
+    Code.getReturn (part2_state_update st)
+error: ././././Risc0/Gadgets/IsZero/Constraints/WeakestPresPart2.lean:57:4: The rfl tactic failed. Possible reasons:
+- The goal is not a reflexive relation (neither `=` nor a relation with a @[refl] lemma).
+- The arguments of the relation are not equal.
+Try using the reflexivity lemma for your relation explicitly, e.g. `exact Eq.refl _` or
+`exact HEq.rfl` etc.
+in0 data0 data1 : Felt
+⊢ Code.getReturn
+      (part2_state_update
+        ((((((({
+                        buffers :=
+                          (Map.empty[{ name := "data" : BufferVar }] ←ₘ
+                              [[some data0, some data1]])[{ name := "in" : BufferVar }] ←ₘ
+                            [[some in0]],
+                        bufferWidths :=
+                          (Map.empty[{ name := "data" : BufferVar }] ←ₘ (2 : ℕ))[{ name := "in" : BufferVar }] ←ₘ
+                            (1 : ℕ),
+                        cycle := (0 : ℕ), felts := Map.empty, isFailed := False, props := Map.empty,
+                        vars :=
+                          [{ name := "in" : BufferVar },
+                            { name := "data" : BufferVar }] }[props][{ name := "%1" : PropVar }] ←
+                      True)[felts][{ name := "%2" : FeltVar }] ←
+                    in0)[props][{ name := "%4" : PropVar }] ←
+                  in0 = (0 : Felt))[props][{ name := "%5" : PropVar }] ←
+                (¬data0 = (0 : Felt) → in0 = (0 : Felt)))[felts][{ name := "%0" : FeltVar }] ←
+              (1 : Felt))[felts][{ name := "%6" : FeltVar }] ←
+            (1 : Felt) - data0)[felts][{ name := "%7" : FeltVar }] ←
+          data1)) ↔
+    sorryAx Prop
+error: Lean exited with code 1
+Some required builds logged failures:
+- Risc0.Gadgets.IsZero.Constraints.WeakestPresPart2
+
+FIRST ERROR--
+--
+--
+error: ././././Risc0/Gadgets/IsZero/Constraints/WeakestPresPart2.lean:25:44: unsolved goals
+st : State
+prog : MLIR IsNondet.NotInNondet
+eq :
+  (dropfelt { name := "%2" : FeltVar };
+      dropfelt { name := "%0" : FeltVar };
+        dropfelt { name := "%6" : FeltVar };
+          dropfelt { name := "%7" : FeltVar };
+            dropfelt { name := "%8" : FeltVar }; dropfelt { name := "%9" : FeltVar }) =
+    prog
+⊢ Code.getReturn
+      (Γ
+        ((((st[felts][{ name := "%8" : FeltVar }] ←
+                (st.felts { name := "%2" : FeltVar }).get! *
+                  (st.felts { name := "%7" : FeltVar }).get!)[felts][{ name := "%9" : FeltVar }] ←
+              (st.felts { name := "%2" : FeltVar }).get! * (st.felts { name := "%7" : FeltVar }).get! -
+                (st.felts { name := "%0" : FeltVar }).get!)[props][{ name := "%10" : PropVar }] ←
+            ((st.props { name := "%1" : PropVar }).get! ∧
+              (st.felts { name := "%2" : FeltVar }).get! * (st.felts { name := "%7" : FeltVar }).get! -
+                  (st.felts { name := "%0" : FeltVar }).get! =
+                (0 : Felt)))[props][{ name := "%11" : PropVar }] ←
+          (((((st[felts][{ name := "%8" : FeltVar }] ←
+                        (st.felts { name := "%2" : FeltVar }).get! *
+                          (st.felts { name := "%7" : FeltVar }).get!)[felts][{ name := "%9" : FeltVar }] ←
+                      (st.felts { name := "%2" : FeltVar }).get! * (st.felts { name := "%7" : FeltVar }).get! -
+                        (st.felts { name := "%0" : FeltVar }).get!)[props][{ name := "%10" : PropVar }] ←
+                    ((st.props { name := "%1" : PropVar }).get! ∧
+                      (st.felts { name := "%2" : FeltVar }).get! * (st.felts { name := "%7" : FeltVar }).get! -
+                          (st.felts { name := "%0" : FeltVar }).get! =
+                        (0 : Felt))).props
+                { name := "%5" : PropVar }).get! ∧
+            if (st.felts { name := "%6" : FeltVar }).get! = (0 : Felt) then True
+            else
+              (st.props { name := "%1" : PropVar }).get! ∧
+                (st.felts { name := "%2" : FeltVar }).get! * (st.felts { name := "%7" : FeltVar }).get! -
+                    (st.felts { name := "%0" : FeltVar }).get! =
+                  (0 : Felt))) ⟦prog⟧) ↔
+    Code.getReturn (part2_state_update st)
+
+
+
+
+SECOND ERROR--
+--
+--
+error: ././././Risc0/Gadgets/IsZero/Constraints/WeakestPresPart2.lean:57:4: The rfl tactic failed. Possible reasons:
+- The goal is not a reflexive relation (neither `=` nor a relation with a @[refl] lemma).
+- The arguments of the relation are not equal.
+Try using the reflexivity lemma for your relation explicitly, e.g. `exact Eq.refl _` or
+`exact HEq.rfl` etc.
+in0 data0 data1 : Felt
+⊢ Code.getReturn
+      (part2_state_update
+        ((((((({
+                        buffers :=
+                          (Map.empty[{ name := "data" : BufferVar }] ←ₘ
+                              [[some data0, some data1]])[{ name := "in" : BufferVar }] ←ₘ
+                            [[some in0]],
+                        bufferWidths :=
+                          (Map.empty[{ name := "data" : BufferVar }] ←ₘ (2 : ℕ))[{ name := "in" : BufferVar }] ←ₘ
+                            (1 : ℕ),
+                        cycle := (0 : ℕ), felts := Map.empty, isFailed := False, props := Map.empty,
+                        vars :=
+                          [{ name := "in" : BufferVar },
+                            { name := "data" : BufferVar }] }[props][{ name := "%1" : PropVar }] ←
+                      True)[felts][{ name := "%2" : FeltVar }] ←
+                    in0)[props][{ name := "%4" : PropVar }] ←
+                  in0 = (0 : Felt))[props][{ name := "%5" : PropVar }] ←
+                (¬data0 = (0 : Felt) → in0 = (0 : Felt)))[felts][{ name := "%0" : FeltVar }] ←
+              (1 : Felt))[felts][{ name := "%6" : FeltVar }] ←
+            (1 : Felt) - data0)[felts][{ name := "%7" : FeltVar }] ←
+          data1)) ↔
+    sorryAx Prop
+error: Lean exited with code 1
+Some required builds logged failures:
+- Risc0.Gadgets.IsZero.Constraints.WeakestPresPart2
+
+
+
+
+
+STATE TRANSFORMER--
+--
+--
+
+        ((((st[felts][{ name := "%8" : FeltVar }] ←
+                (st.felts { name := "%2" : FeltVar }).get! *
+                  (st.felts { name := "%7" : FeltVar }).get!)[felts][{ name := "%9" : FeltVar }] ←
+              (st.felts { name := "%2" : FeltVar }).get! * (st.felts { name := "%7" : FeltVar }).get! -
+                (st.felts { name := "%0" : FeltVar }).get!)[props][{ name := "%10" : PropVar }] ←
+            ((st.props { name := "%1" : PropVar }).get! ∧
+              (st.felts { name := "%2" : FeltVar }).get! * (st.felts { name := "%7" : FeltVar }).get! -
+                  (st.felts { name := "%0" : FeltVar }).get! =
+                (0 : Felt)))[props][{ name := "%11" : PropVar }] ←
+          (((((st[felts][{ name := "%8" : FeltVar }] ←
+                        (st.felts { name := "%2" : FeltVar }).get! *
+                          (st.felts { name := "%7" : FeltVar }).get!)[felts][{ name := "%9" : FeltVar }] ←
+                      (st.felts { name := "%2" : FeltVar }).get! * (st.felts { name := "%7" : FeltVar }).get! -
+                        (st.felts { name := "%0" : FeltVar }).get!)[props][{ name := "%10" : PropVar }] ←
+                    ((st.props { name := "%1" : PropVar }).get! ∧
+                      (st.felts { name := "%2" : FeltVar }).get! * (st.felts { name := "%7" : FeltVar }).get! -
+                          (st.felts { name := "%0" : FeltVar }).get! =
+                        (0 : Felt))).props
+                { name := "%5" : PropVar }).get! ∧
+            if (st.felts { name := "%6" : FeltVar }).get! = (0 : Felt) then True
+            else
+              (st.props { name := "%1" : PropVar }).get! ∧
+                (st.felts { name := "%2" : FeltVar }).get! * (st.felts { name := "%7" : FeltVar }).get! -
+                    (st.felts { name := "%0" : FeltVar }).get! =
+                  (0 : Felt))) 
+
+
+
+
+CUMULATIVE STATE TRANSFORMER--
+--
+--
+Code.getReturn
+      (part2_state_update
+        ((((((({
+                        buffers :=
+                          (Map.empty[{ name := "data" : BufferVar }] ←ₘ
+                              [[some data0, some data1]])[{ name := "in" : BufferVar }] ←ₘ
+                            [[some in0]],
+                        bufferWidths :=
+                          (Map.empty[{ name := "data" : BufferVar }] ←ₘ (2 : ℕ))[{ name := "in" : BufferVar }] ←ₘ
+                            (1 : ℕ),
+                        cycle := (0 : ℕ), felts := Map.empty, isFailed := False, props := Map.empty,
+                        vars :=
+                          [{ name := "in" : BufferVar },
+                            { name := "data" : BufferVar }] }[props][{ name := "%1" : PropVar }] ←
+                      True)[felts][{ name := "%2" : FeltVar }] ←
+                    in0)[props][{ name := "%4" : PropVar }] ←
+                  in0 = (0 : Felt))[props][{ name := "%5" : PropVar }] ←
+                (¬data0 = (0 : Felt) → in0 = (0 : Felt)))[felts][{ name := "%0" : FeltVar }] ←
+              (1 : Felt))[felts][{ name := "%6" : FeltVar }] ←
+            (1 : Felt) - data0)[felts][{ name := "%7" : FeltVar }] ←
+          data1)) 
+State transformer: "
+        ((((st[felts][{ name := "%8" : FeltVar }] ←
+                (st.felts { name := "%2" : FeltVar }).get! *
+                  (st.felts { name := "%7" : FeltVar }).get!)[felts][{ name := "%9" : FeltVar }] ←
+              (st.felts { name := "%2" : FeltVar }).get! * (st.felts { name := "%7" : FeltVar }).get! -
+                (st.felts { name := "%0" : FeltVar }).get!)[props][{ name := "%10" : PropVar }] ←
+            ((st.props { name := "%1" : PropVar }).get! ∧
+              (st.felts { name := "%2" : FeltVar }).get! * (st.felts { name := "%7" : FeltVar }).get! -
+                  (st.felts { name := "%0" : FeltVar }).get! =
+                (0 : Felt)))[props][{ name := "%11" : PropVar }] ←
+          (((((st[felts][{ name := "%8" : FeltVar }] ←
+                        (st.felts { name := "%2" : FeltVar }).get! *
+                          (st.felts { name := "%7" : FeltVar }).get!)[felts][{ name := "%9" : FeltVar }] ←
+                      (st.felts { name := "%2" : FeltVar }).get! * (st.felts { name := "%7" : FeltVar }).get! -
+                        (st.felts { name := "%0" : FeltVar }).get!)[props][{ name := "%10" : PropVar }] ←
+                    ((st.props { name := "%1" : PropVar }).get! ∧
+                      (st.felts { name := "%2" : FeltVar }).get! * (st.felts { name := "%7" : FeltVar }).get! -
+                          (st.felts { name := "%0" : FeltVar }).get! =
+                        (0 : Felt))).props
+                { name := "%5" : PropVar }).get! ∧
+            if (st.felts { name := "%6" : FeltVar }).get! = (0 : Felt) then True
+            else
+              (st.props { name := "%1" : PropVar }).get! ∧
+                (st.felts { name := "%2" : FeltVar }).get! * (st.felts { name := "%7" : FeltVar }).get! -
+                    (st.felts { name := "%0" : FeltVar }).get! =
+                  (0 : Felt))) "
+Cumulative transformer: "Code.getReturn
+      (part2_state_update
+        ((((((({
+                        buffers :=
+                          (Map.empty[{ name := "data" : BufferVar }] ←ₘ
+                              [[some data0, some data1]])[{ name := "in" : BufferVar }] ←ₘ
+                            [[some in0]],
+                        bufferWidths :=
+                          (Map.empty[{ name := "data" : BufferVar }] ←ₘ (2 : ℕ))[{ name := "in" : BufferVar }] ←ₘ
+                            (1 : ℕ),
+                        cycle := (0 : ℕ), felts := Map.empty, isFailed := False, props := Map.empty,
+                        vars :=
+                          [{ name := "in" : BufferVar },
+                            { name := "data" : BufferVar }] }[props][{ name := "%1" : PropVar }] ←
+                      True)[felts][{ name := "%2" : FeltVar }] ←
+                    in0)[props][{ name := "%4" : PropVar }] ←
+                  in0 = (0 : Felt))[props][{ name := "%5" : PropVar }] ←
+                (¬data0 = (0 : Felt) → in0 = (0 : Felt)))[felts][{ name := "%0" : FeltVar }] ←
+              (1 : Felt))[felts][{ name := "%6" : FeltVar }] ←
+            (1 : Felt) - data0)[felts][{ name := "%7" : FeltVar }] ←
+          data1)) "
+  2 - corrected
+✖ [1938/1944] Building Risc0.Gadgets.IsZero.Constraints.WeakestPresPart2
+trace: .> LEAN_PATH=././.lake/packages/batteries/.lake/build/lib:././.lake/packages/Qq/.lake/build/lib:././.lake/packages/aesop/.lake/build/lib:././.lake/packages/proofwidgets/.lake/build/lib:././.lake/packages/Cli/.lake/build/lib:././.lake/packages/importGraph/.lake/build/lib:././.lake/packages/mathlib/.lake/build/lib:././.lake/build/lib LD_LIBRARY_PATH= /home/ferinko/.elan/toolchains/leanprover--lean4---v4.11.0-rc1/bin/lean -Dlinter.deprecated=false -Dlinter.suspiciousUnexpanderPatterns=false -Dlinter.unusedVariables=false -DwarningAsError=true ././././Risc0/Gadgets/IsZero/Constraints/WeakestPresPart2.lean -R ./././. -o ././.lake/build/lib/Risc0/Gadgets/IsZero/Constraints/WeakestPresPart2.olean -i ././.lake/build/lib/Risc0/Gadgets/IsZero/Constraints/WeakestPresPart2.ilean -c ././.lake/build/ir/Risc0/Gadgets/IsZero/Constraints/WeakestPresPart2.c --json
+error: ././././Risc0/Gadgets/IsZero/Constraints/WeakestPresPart2.lean:109:11: unsolved goals
+in0 data0 data1 : Felt
+⊢ (¬data0 = (0 : Felt) → in0 = (0 : Felt)) ∧
+      (¬(1 : Felt) - data0 = (0 : Felt) → in0 * data1 - (1 : Felt) = (0 : Felt)) ↔
+    sorryAx Prop
+error: Lean exited with code 1
+Some required builds logged failures:
+- Risc0.Gadgets.IsZero.Constraints.WeakestPresPart2
+closed form:
+
+
+
+ ✖ [1938/1944] Building Risc0.Gadgets.IsZero.Constraints.WeakestPresPart2
+trace: .> LEAN_PATH=././.lake/packages/batteries/.lake/build/lib:././.lake/packages/Qq/.lake/build/lib:././.lake/packages/aesop/.lake/build/lib:././.lake/packages/proofwidgets/.lake/build/lib:././.lake/packages/Cli/.lake/build/lib:././.lake/packages/importGraph/.lake/build/lib:././.lake/packages/mathlib/.lake/build/lib:././.lake/build/lib LD_LIBRARY_PATH= /home/ferinko/.elan/toolchains/leanprover--lean4---v4.11.0-rc1/bin/lean -Dlinter.deprecated=false -Dlinter.suspiciousUnexpanderPatterns=false -Dlinter.unusedVariables=false -DwarningAsError=true ././././Risc0/Gadgets/IsZero/Constraints/WeakestPresPart2.lean -R ./././. -o ././.lake/build/lib/Risc0/Gadgets/IsZero/Constraints/WeakestPresPart2.olean -i ././.lake/build/lib/Risc0/Gadgets/IsZero/Constraints/WeakestPresPart2.ilean -c ././.lake/build/ir/Risc0/Gadgets/IsZero/Constraints/WeakestPresPart2.c --json
+error: ././././Risc0/Gadgets/IsZero/Constraints/WeakestPresPart2.lean:109:11: unsolved goals
+in0 data0 data1 : Felt
+⊢ (¬data0 = (0 : Felt) → in0 = (0 : Felt)) ∧
+      (¬(1 : Felt) - data0 = (0 : Felt) → in0 * data1 - (1 : Felt) = (0 : Felt)) ↔
+    sorryAx Prop
+error: Lean exited with code 1
+Some required builds logged failures:
+- Risc0.Gadgets.IsZero.Constraints.WeakestPresPart2
+
+
+ end closed form
+ (¬data0 = (0 : Felt) → in0 = (0 : Felt)) ∧
+      (¬(1 : Felt) - data0 = (0 : Felt) → in0 * data1 - (1 : Felt) = (0 : Felt)) 
+  closed form
+✔ [1938/1944] Built Risc0.Gadgets.IsZero.Constraints.WeakestPresPart2
+✔ [1939/1944] Built Risc0.Gadgets.IsZero.Constraints.WeakestPresPart2:c.o
+✔ [1940/1944] Built Risc0
+✔ [1941/1944] Built Risc0:c.o
+✔ [1942/1944] Built Main
+✔ [1944/1944] Built risc0
+Build completed successfully.
+Creating witness weakest pre files
+  0 - sorry
+---stdout---:
+
+
+✔ [1938/1944] Built Risc0.Gadgets.IsZero.Constraints.WeakestPresPart2
+✔ [1939/1944] Built Risc0.Gadgets.IsZero.Constraints.WeakestPresPart2:c.o
+✔ [1940/1944] Built Risc0
+✔ [1941/1944] Built Risc0:c.o
+✔ [1942/1944] Built Main
+✔ [1944/1944] Built risc0
+Build completed successfully.
+
+Done
+✖ [1940/1946] Building Risc0.Gadgets.IsZero.Witness.WeakestPresPart0
+trace: .> LEAN_PATH=././.lake/packages/batteries/.lake/build/lib:././.lake/packages/Qq/.lake/build/lib:././.lake/packages/aesop/.lake/build/lib:././.lake/packages/proofwidgets/.lake/build/lib:././.lake/packages/Cli/.lake/build/lib:././.lake/packages/importGraph/.lake/build/lib:././.lake/packages/mathlib/.lake/build/lib:././.lake/build/lib LD_LIBRARY_PATH= /home/ferinko/.elan/toolchains/leanprover--lean4---v4.11.0-rc1/bin/lean -Dlinter.deprecated=false -Dlinter.suspiciousUnexpanderPatterns=false -Dlinter.unusedVariables=false -DwarningAsError=true ././././Risc0/Gadgets/IsZero/Witness/WeakestPresPart0.lean -R ./././. -o ././.lake/build/lib/Risc0/Gadgets/IsZero/Witness/WeakestPresPart0.olean -i ././.lake/build/lib/Risc0/Gadgets/IsZero/Witness/WeakestPresPart0.ilean -c ././.lake/build/ir/Risc0/Gadgets/IsZero/Witness/WeakestPresPart0.c --json
+error: ././././Risc0/Gadgets/IsZero/Witness/WeakestPresPart0.lean:11:4: declaration uses 'sorry'
+error: ././././Risc0/Gadgets/IsZero/Witness/WeakestPresPart0.lean:24:61: unsolved goals
+st : State
+data0 data1 : Option Felt
+prog : MLIR IsNondet.NotInNondet
+eq :
+  (Code.part1;
+      Code.part2;
+        dropfelt { name := "%1" : FeltVar };
+          dropfelt { name := "%4" : FeltVar };
+            dropfelt { name := "%5" : FeltVar };
+              dropfelt { name := "%2" : FeltVar };
+                dropfelt { name := "%0" : FeltVar };
+                  dropfelt { name := "%3" : FeltVar }; dropfelt { name := "%6" : FeltVar }) =
+    prog
+⊢ Code.getReturn
+      (Γ
+        ((((st["%1"] ←ₛ getImpl st { name := "in" : BufferVar } (0 : Back) (0 : ℕ))[felts][{ name := "%4" : FeltVar }] ←
+                if
+                    ((st["%1"] ←ₛ getImpl st { name := "in" : BufferVar } (0 : Back) (0 : ℕ)).felts
+                          { name := "%1" : FeltVar }).get! =
+                      (0 : Felt) then
+                  (1 : Felt)
+                else (0 : Felt)).set!
+            { name := "data" : BufferVar } (0 : ℕ)
+            (if
+                ((st["%1"] ←ₛ getImpl st { name := "in" : BufferVar } (0 : Back) (0 : ℕ)).felts
+                      { name := "%1" : FeltVar }).get! =
+                  (0 : Felt) then
+              (1 : Felt)
+            else (0 : Felt)))[felts][{ name := "%5" : FeltVar }] ←
+          if
+              (st["%1"] ←ₛ
+                        getImpl st { name := "in" : BufferVar } (0 : Back)
+                          (0 : ℕ)).felts[{ name := "%1" : FeltVar }].get! =
+                (0 : Felt) then
+            (0 : Felt)
+          else
+            (st["%1"] ←ₛ
+                      getImpl st { name := "in" : BufferVar } (0 : Back)
+                        (0 : ℕ)).felts[{ name := "%1" : FeltVar }].get!⁻¹) ⟦prog⟧)
+      [data0, data1] ↔
+    Code.getReturn (part0_state_update st) [data0, data1]
+error: ././././Risc0/Gadgets/IsZero/Witness/WeakestPresPart0.lean:40:4: The rfl tactic failed. Possible reasons:
+- The goal is not a reflexive relation (neither `=` nor a relation with a @[refl] lemma).
+- The arguments of the relation are not equal.
+Try using the reflexivity lemma for your relation explicitly, e.g. `exact Eq.refl _` or
+`exact HEq.rfl` etc.
+in0 : Felt
+data0 data1 : Option Felt
+⊢ Code.getReturn
+      (part0_state_update
+        {
+          buffers :=
+            Map.fromList
+              [({ name := "in" : BufferVar }, [[some in0]]), ({ name := "data" : BufferVar }, [[none, none]])],
+          bufferWidths :=
+            Map.fromList [({ name := "in" : BufferVar }, (1 : ℕ)), ({ name := "data" : BufferVar }, (2 : ℕ))],
+          cycle := (0 : ℕ), felts := Map.empty, isFailed := false = true, props := Map.empty,
+          vars := [{ name := "in" : BufferVar }, { name := "data" : BufferVar }] })
+      [data0, data1] ↔
+    sorryAx Prop
+error: Lean exited with code 1
+Some required builds logged failures:
+- Risc0.Gadgets.IsZero.Witness.WeakestPresPart0
+RECEIVED(witness)-------------
+✖ [1940/1946] Building Risc0.Gadgets.IsZero.Witness.WeakestPresPart0
+trace: .> LEAN_PATH=././.lake/packages/batteries/.lake/build/lib:././.lake/packages/Qq/.lake/build/lib:././.lake/packages/aesop/.lake/build/lib:././.lake/packages/proofwidgets/.lake/build/lib:././.lake/packages/Cli/.lake/build/lib:././.lake/packages/importGraph/.lake/build/lib:././.lake/packages/mathlib/.lake/build/lib:././.lake/build/lib LD_LIBRARY_PATH= /home/ferinko/.elan/toolchains/leanprover--lean4---v4.11.0-rc1/bin/lean -Dlinter.deprecated=false -Dlinter.suspiciousUnexpanderPatterns=false -Dlinter.unusedVariables=false -DwarningAsError=true ././././Risc0/Gadgets/IsZero/Witness/WeakestPresPart0.lean -R ./././. -o ././.lake/build/lib/Risc0/Gadgets/IsZero/Witness/WeakestPresPart0.olean -i ././.lake/build/lib/Risc0/Gadgets/IsZero/Witness/WeakestPresPart0.ilean -c ././.lake/build/ir/Risc0/Gadgets/IsZero/Witness/WeakestPresPart0.c --json
+error: ././././Risc0/Gadgets/IsZero/Witness/WeakestPresPart0.lean:11:4: declaration uses 'sorry'
+error: ././././Risc0/Gadgets/IsZero/Witness/WeakestPresPart0.lean:24:61: unsolved goals
+st : State
+data0 data1 : Option Felt
+prog : MLIR IsNondet.NotInNondet
+eq :
+  (Code.part1;
+      Code.part2;
+        dropfelt { name := "%1" : FeltVar };
+          dropfelt { name := "%4" : FeltVar };
+            dropfelt { name := "%5" : FeltVar };
+              dropfelt { name := "%2" : FeltVar };
+                dropfelt { name := "%0" : FeltVar };
+                  dropfelt { name := "%3" : FeltVar }; dropfelt { name := "%6" : FeltVar }) =
+    prog
+⊢ Code.getReturn
+      (Γ
+        ((((st["%1"] ←ₛ getImpl st { name := "in" : BufferVar } (0 : Back) (0 : ℕ))[felts][{ name := "%4" : FeltVar }] ←
+                if
+                    ((st["%1"] ←ₛ getImpl st { name := "in" : BufferVar } (0 : Back) (0 : ℕ)).felts
+                          { name := "%1" : FeltVar }).get! =
+                      (0 : Felt) then
+                  (1 : Felt)
+                else (0 : Felt)).set!
+            { name := "data" : BufferVar } (0 : ℕ)
+            (if
+                ((st["%1"] ←ₛ getImpl st { name := "in" : BufferVar } (0 : Back) (0 : ℕ)).felts
+                      { name := "%1" : FeltVar }).get! =
+                  (0 : Felt) then
+              (1 : Felt)
+            else (0 : Felt)))[felts][{ name := "%5" : FeltVar }] ←
+          if
+              (st["%1"] ←ₛ
+                        getImpl st { name := "in" : BufferVar } (0 : Back)
+                          (0 : ℕ)).felts[{ name := "%1" : FeltVar }].get! =
+                (0 : Felt) then
+            (0 : Felt)
+          else
+            (st["%1"] ←ₛ
+                      getImpl st { name := "in" : BufferVar } (0 : Back)
+                        (0 : ℕ)).felts[{ name := "%1" : FeltVar }].get!⁻¹) ⟦prog⟧)
+      [data0, data1] ↔
+    Code.getReturn (part0_state_update st) [data0, data1]
+error: ././././Risc0/Gadgets/IsZero/Witness/WeakestPresPart0.lean:40:4: The rfl tactic failed. Possible reasons:
+- The goal is not a reflexive relation (neither `=` nor a relation with a @[refl] lemma).
+- The arguments of the relation are not equal.
+Try using the reflexivity lemma for your relation explicitly, e.g. `exact Eq.refl _` or
+`exact HEq.rfl` etc.
+in0 : Felt
+data0 data1 : Option Felt
+⊢ Code.getReturn
+      (part0_state_update
+        {
+          buffers :=
+            Map.fromList
+              [({ name := "in" : BufferVar }, [[some in0]]), ({ name := "data" : BufferVar }, [[none, none]])],
+          bufferWidths :=
+            Map.fromList [({ name := "in" : BufferVar }, (1 : ℕ)), ({ name := "data" : BufferVar }, (2 : ℕ))],
+          cycle := (0 : ℕ), felts := Map.empty, isFailed := false = true, props := Map.empty,
+          vars := [{ name := "in" : BufferVar }, { name := "data" : BufferVar }] })
+      [data0, data1] ↔
+    sorryAx Prop
+error: Lean exited with code 1
+Some required builds logged failures:
+- Risc0.Gadgets.IsZero.Witness.WeakestPresPart0
+
+FIRST ERROR--
+--
+--
+error: ././././Risc0/Gadgets/IsZero/Witness/WeakestPresPart0.lean:24:61: unsolved goals
+st : State
+data0 data1 : Option Felt
+prog : MLIR IsNondet.NotInNondet
+eq :
+  (Code.part1;
+      Code.part2;
+        dropfelt { name := "%1" : FeltVar };
+          dropfelt { name := "%4" : FeltVar };
+            dropfelt { name := "%5" : FeltVar };
+              dropfelt { name := "%2" : FeltVar };
+                dropfelt { name := "%0" : FeltVar };
+                  dropfelt { name := "%3" : FeltVar }; dropfelt { name := "%6" : FeltVar }) =
+    prog
+⊢ Code.getReturn
+      (Γ
+        ((((st["%1"] ←ₛ getImpl st { name := "in" : BufferVar } (0 : Back) (0 : ℕ))[felts][{ name := "%4" : FeltVar }] ←
+                if
+                    ((st["%1"] ←ₛ getImpl st { name := "in" : BufferVar } (0 : Back) (0 : ℕ)).felts
+                          { name := "%1" : FeltVar }).get! =
+                      (0 : Felt) then
+                  (1 : Felt)
+                else (0 : Felt)).set!
+            { name := "data" : BufferVar } (0 : ℕ)
+            (if
+                ((st["%1"] ←ₛ getImpl st { name := "in" : BufferVar } (0 : Back) (0 : ℕ)).felts
+                      { name := "%1" : FeltVar }).get! =
+                  (0 : Felt) then
+              (1 : Felt)
+            else (0 : Felt)))[felts][{ name := "%5" : FeltVar }] ←
+          if
+              (st["%1"] ←ₛ
+                        getImpl st { name := "in" : BufferVar } (0 : Back)
+                          (0 : ℕ)).felts[{ name := "%1" : FeltVar }].get! =
+                (0 : Felt) then
+            (0 : Felt)
+          else
+            (st["%1"] ←ₛ
+                      getImpl st { name := "in" : BufferVar } (0 : Back)
+                        (0 : ℕ)).felts[{ name := "%1" : FeltVar }].get!⁻¹) ⟦prog⟧)
+      [data0, data1] ↔
+    Code.getReturn (part0_state_update st) [data0, data1]
+
+
+
+
+SECOND ERROR--
+--
+--
+error: ././././Risc0/Gadgets/IsZero/Witness/WeakestPresPart0.lean:40:4: The rfl tactic failed. Possible reasons:
+- The goal is not a reflexive relation (neither `=` nor a relation with a @[refl] lemma).
+- The arguments of the relation are not equal.
+Try using the reflexivity lemma for your relation explicitly, e.g. `exact Eq.refl _` or
+`exact HEq.rfl` etc.
+in0 : Felt
+data0 data1 : Option Felt
+⊢ Code.getReturn
+      (part0_state_update
+        {
+          buffers :=
+            Map.fromList
+              [({ name := "in" : BufferVar }, [[some in0]]), ({ name := "data" : BufferVar }, [[none, none]])],
+          bufferWidths :=
+            Map.fromList [({ name := "in" : BufferVar }, (1 : ℕ)), ({ name := "data" : BufferVar }, (2 : ℕ))],
+          cycle := (0 : ℕ), felts := Map.empty, isFailed := false = true, props := Map.empty,
+          vars := [{ name := "in" : BufferVar }, { name := "data" : BufferVar }] })
+      [data0, data1] ↔
+    sorryAx Prop
+error: Lean exited with code 1
+Some required builds logged failures:
+- Risc0.Gadgets.IsZero.Witness.WeakestPresPart0
+
+State transformer: "
+        ((((st["%1"] ←ₛ getImpl st { name := "in" : BufferVar } (0 : Back) (0 : ℕ))[felts][{ name := "%4" : FeltVar }] ←
+                if
+                    ((st["%1"] ←ₛ getImpl st { name := "in" : BufferVar } (0 : Back) (0 : ℕ)).felts
+                          { name := "%1" : FeltVar }).get! =
+                      (0 : Felt) then
+                  (1 : Felt)
+                else (0 : Felt)).set!
+            { name := "data" : BufferVar } (0 : ℕ)
+            (if
+                ((st["%1"] ←ₛ getImpl st { name := "in" : BufferVar } (0 : Back) (0 : ℕ)).felts
+                      { name := "%1" : FeltVar }).get! =
+                  (0 : Felt) then
+              (1 : Felt)
+            else (0 : Felt)))[felts][{ name := "%5" : FeltVar }] ←
+          if
+              (st["%1"] ←ₛ
+                        getImpl st { name := "in" : BufferVar } (0 : Back)
+                          (0 : ℕ)).felts[{ name := "%1" : FeltVar }].get! =
+                (0 : Felt) then
+            (0 : Felt)
+          else
+            (st["%1"] ←ₛ
+                      getImpl st { name := "in" : BufferVar } (0 : Back)
+                        (0 : ℕ)).felts[{ name := "%1" : FeltVar }].get!⁻¹) "
+Cumulative transformer: "Code.getReturn
+      (part0_state_update
+        {
+          buffers :=
+            Map.fromList
+              [({ name := "in" : BufferVar }, [[some in0]]), ({ name := "data" : BufferVar }, [[none, none]])],
+          bufferWidths :=
+            Map.fromList [({ name := "in" : BufferVar }, (1 : ℕ)), ({ name := "data" : BufferVar }, (2 : ℕ))],
+          cycle := (0 : ℕ), felts := Map.empty, isFailed := false = true, props := Map.empty,
+          vars := [{ name := "in" : BufferVar }, { name := "data" : BufferVar }] })
+      ([data0, data1]) "
+  0 - corrected
+Part 1 of 3
+  1 - sorry
+✖ [1942/1948] Building Risc0.Gadgets.IsZero.Witness.WeakestPresPart1
+trace: .> LEAN_PATH=././.lake/packages/batteries/.lake/build/lib:././.lake/packages/Qq/.lake/build/lib:././.lake/packages/aesop/.lake/build/lib:././.lake/packages/proofwidgets/.lake/build/lib:././.lake/packages/Cli/.lake/build/lib:././.lake/packages/importGraph/.lake/build/lib:././.lake/packages/mathlib/.lake/build/lib:././.lake/build/lib LD_LIBRARY_PATH= /home/ferinko/.elan/toolchains/leanprover--lean4---v4.11.0-rc1/bin/lean -Dlinter.deprecated=false -Dlinter.suspiciousUnexpanderPatterns=false -Dlinter.unusedVariables=false -DwarningAsError=true ././././Risc0/Gadgets/IsZero/Witness/WeakestPresPart1.lean -R ./././. -o ././.lake/build/lib/Risc0/Gadgets/IsZero/Witness/WeakestPresPart1.olean -i ././.lake/build/lib/Risc0/Gadgets/IsZero/Witness/WeakestPresPart1.ilean -c ././.lake/build/ir/Risc0/Gadgets/IsZero/Witness/WeakestPresPart1.c --json
+error: ././././Risc0/Gadgets/IsZero/Witness/WeakestPresPart1.lean:12:4: declaration uses 'sorry'
+error: ././././Risc0/Gadgets/IsZero/Witness/WeakestPresPart1.lean:25:61: unsolved goals
+st : State
+data0 data1 : Option Felt
+prog : MLIR IsNondet.NotInNondet
+eq :
+  (Code.part2;
+      dropfelt { name := "%1" : FeltVar };
+        dropfelt { name := "%4" : FeltVar };
+          dropfelt { name := "%5" : FeltVar };
+            dropfelt { name := "%2" : FeltVar };
+              dropfelt { name := "%0" : FeltVar };
+                dropfelt { name := "%3" : FeltVar }; dropfelt { name := "%6" : FeltVar }) =
+    prog
+⊢ Code.getReturn
+      (Γ
+        ((if
+              ((st.set! { name := "data" : BufferVar } (1 : ℕ) st.felts[{ name := "%5" : FeltVar }]!.get!)["%2"] ←ₛ
+                        getImpl st { name := "data" : BufferVar } (0 : Back)
+                          (0 : ℕ)).felts[{ name := "%2" : FeltVar }]!.get! =
+                (0 : Felt) then
+            (st.set! { name := "data" : BufferVar } (1 : ℕ) st.felts[{ name := "%5" : FeltVar }]!.get!)["%2"] ←ₛ
+              getImpl st { name := "data" : BufferVar } (0 : Back) (0 : ℕ)
+          else
+            withEqZero
+              ((st.set! { name := "data" : BufferVar } (1 : ℕ) st.felts[{ name := "%5" : FeltVar }]!.get!)["%2"] ←ₛ
+                      getImpl st { name := "data" : BufferVar } (0 : Back)
+                        (0 : ℕ)).felts[{ name := "%1" : FeltVar }]!.get!
+              ((st.set! { name := "data" : BufferVar } (1 : ℕ) st.felts[{ name := "%5" : FeltVar }]!.get!)["%2"] ←ₛ
+                getImpl st { name := "data" : BufferVar } (0 : Back) (0 : ℕ)))[felts][{ name := "%0" : FeltVar }] ←
+          (1 : Felt)) ⟦prog⟧)
+      [data0, data1] ↔
+    Code.getReturn (part1_state_update st) [data0, data1]
+error: ././././Risc0/Gadgets/IsZero/Witness/WeakestPresPart1.lean:58:4: The rfl tactic failed. Possible reasons:
+- The goal is not a reflexive relation (neither `=` nor a relation with a @[refl] lemma).
+- The arguments of the relation are not equal.
+Try using the reflexivity lemma for your relation explicitly, e.g. `exact Eq.refl _` or
+`exact HEq.rfl` etc.
+in0 : Felt
+data0 data1 : Option Felt
+⊢ Code.getReturn
+      (part1_state_update
+        ({
+            buffers :=
+              ((Map.empty[{ name := "data" : BufferVar }] ←ₘ [[none, none]])[{ name := "in" : BufferVar }] ←ₘ
+                      [[some in0]]).drop
+                  { name := "data" : BufferVar }[{ name := "data" : BufferVar }] ←ₘ
+                [[some (if in0 = (0 : Felt) then (1 : Felt) else (0 : Felt)), none]],
+            bufferWidths :=
+              (Map.empty[{ name := "data" : BufferVar }] ←ₘ (2 : ℕ))[{ name := "in" : BufferVar }] ←ₘ (1 : ℕ),
+            cycle := (0 : ℕ),
+            felts :=
+              (Map.empty[{ name := "%1" : FeltVar }] ←ₘ in0)[{ name := "%4" : FeltVar }] ←ₘ
+                if in0 = (0 : Felt) then (1 : Felt) else (0 : Felt),
+            isFailed := False, props := Map.empty,
+            vars :=
+              [{ name := "in" : BufferVar }, { name := "data" : BufferVar }] }[felts][{ name := "%5" : FeltVar }] ←
+          if in0 = (0 : Felt) then (0 : Felt) else in0⁻¹))
+      [data0, data1] ↔
+    sorryAx Prop
+error: Lean exited with code 1
+Some required builds logged failures:
+- Risc0.Gadgets.IsZero.Witness.WeakestPresPart1
+RECEIVED(witness)-------------
+✖ [1942/1948] Building Risc0.Gadgets.IsZero.Witness.WeakestPresPart1
+trace: .> LEAN_PATH=././.lake/packages/batteries/.lake/build/lib:././.lake/packages/Qq/.lake/build/lib:././.lake/packages/aesop/.lake/build/lib:././.lake/packages/proofwidgets/.lake/build/lib:././.lake/packages/Cli/.lake/build/lib:././.lake/packages/importGraph/.lake/build/lib:././.lake/packages/mathlib/.lake/build/lib:././.lake/build/lib LD_LIBRARY_PATH= /home/ferinko/.elan/toolchains/leanprover--lean4---v4.11.0-rc1/bin/lean -Dlinter.deprecated=false -Dlinter.suspiciousUnexpanderPatterns=false -Dlinter.unusedVariables=false -DwarningAsError=true ././././Risc0/Gadgets/IsZero/Witness/WeakestPresPart1.lean -R ./././. -o ././.lake/build/lib/Risc0/Gadgets/IsZero/Witness/WeakestPresPart1.olean -i ././.lake/build/lib/Risc0/Gadgets/IsZero/Witness/WeakestPresPart1.ilean -c ././.lake/build/ir/Risc0/Gadgets/IsZero/Witness/WeakestPresPart1.c --json
+error: ././././Risc0/Gadgets/IsZero/Witness/WeakestPresPart1.lean:12:4: declaration uses 'sorry'
+error: ././././Risc0/Gadgets/IsZero/Witness/WeakestPresPart1.lean:25:61: unsolved goals
+st : State
+data0 data1 : Option Felt
+prog : MLIR IsNondet.NotInNondet
+eq :
+  (Code.part2;
+      dropfelt { name := "%1" : FeltVar };
+        dropfelt { name := "%4" : FeltVar };
+          dropfelt { name := "%5" : FeltVar };
+            dropfelt { name := "%2" : FeltVar };
+              dropfelt { name := "%0" : FeltVar };
+                dropfelt { name := "%3" : FeltVar }; dropfelt { name := "%6" : FeltVar }) =
+    prog
+⊢ Code.getReturn
+      (Γ
+        ((if
+              ((st.set! { name := "data" : BufferVar } (1 : ℕ) st.felts[{ name := "%5" : FeltVar }]!.get!)["%2"] ←ₛ
+                        getImpl st { name := "data" : BufferVar } (0 : Back)
+                          (0 : ℕ)).felts[{ name := "%2" : FeltVar }]!.get! =
+                (0 : Felt) then
+            (st.set! { name := "data" : BufferVar } (1 : ℕ) st.felts[{ name := "%5" : FeltVar }]!.get!)["%2"] ←ₛ
+              getImpl st { name := "data" : BufferVar } (0 : Back) (0 : ℕ)
+          else
+            withEqZero
+              ((st.set! { name := "data" : BufferVar } (1 : ℕ) st.felts[{ name := "%5" : FeltVar }]!.get!)["%2"] ←ₛ
+                      getImpl st { name := "data" : BufferVar } (0 : Back)
+                        (0 : ℕ)).felts[{ name := "%1" : FeltVar }]!.get!
+              ((st.set! { name := "data" : BufferVar } (1 : ℕ) st.felts[{ name := "%5" : FeltVar }]!.get!)["%2"] ←ₛ
+                getImpl st { name := "data" : BufferVar } (0 : Back) (0 : ℕ)))[felts][{ name := "%0" : FeltVar }] ←
+          (1 : Felt)) ⟦prog⟧)
+      [data0, data1] ↔
+    Code.getReturn (part1_state_update st) [data0, data1]
+error: ././././Risc0/Gadgets/IsZero/Witness/WeakestPresPart1.lean:58:4: The rfl tactic failed. Possible reasons:
+- The goal is not a reflexive relation (neither `=` nor a relation with a @[refl] lemma).
+- The arguments of the relation are not equal.
+Try using the reflexivity lemma for your relation explicitly, e.g. `exact Eq.refl _` or
+`exact HEq.rfl` etc.
+in0 : Felt
+data0 data1 : Option Felt
+⊢ Code.getReturn
+      (part1_state_update
+        ({
+            buffers :=
+              ((Map.empty[{ name := "data" : BufferVar }] ←ₘ [[none, none]])[{ name := "in" : BufferVar }] ←ₘ
+                      [[some in0]]).drop
+                  { name := "data" : BufferVar }[{ name := "data" : BufferVar }] ←ₘ
+                [[some (if in0 = (0 : Felt) then (1 : Felt) else (0 : Felt)), none]],
+            bufferWidths :=
+              (Map.empty[{ name := "data" : BufferVar }] ←ₘ (2 : ℕ))[{ name := "in" : BufferVar }] ←ₘ (1 : ℕ),
+            cycle := (0 : ℕ),
+            felts :=
+              (Map.empty[{ name := "%1" : FeltVar }] ←ₘ in0)[{ name := "%4" : FeltVar }] ←ₘ
+                if in0 = (0 : Felt) then (1 : Felt) else (0 : Felt),
+            isFailed := False, props := Map.empty,
+            vars :=
+              [{ name := "in" : BufferVar }, { name := "data" : BufferVar }] }[felts][{ name := "%5" : FeltVar }] ←
+          if in0 = (0 : Felt) then (0 : Felt) else in0⁻¹))
+      [data0, data1] ↔
+    sorryAx Prop
+error: Lean exited with code 1
+Some required builds logged failures:
+- Risc0.Gadgets.IsZero.Witness.WeakestPresPart1
+
+FIRST ERROR--
+--
+--
+error: ././././Risc0/Gadgets/IsZero/Witness/WeakestPresPart1.lean:25:61: unsolved goals
+st : State
+data0 data1 : Option Felt
+prog : MLIR IsNondet.NotInNondet
+eq :
+  (Code.part2;
+      dropfelt { name := "%1" : FeltVar };
+        dropfelt { name := "%4" : FeltVar };
+          dropfelt { name := "%5" : FeltVar };
+            dropfelt { name := "%2" : FeltVar };
+              dropfelt { name := "%0" : FeltVar };
+                dropfelt { name := "%3" : FeltVar }; dropfelt { name := "%6" : FeltVar }) =
+    prog
+⊢ Code.getReturn
+      (Γ
+        ((if
+              ((st.set! { name := "data" : BufferVar } (1 : ℕ) st.felts[{ name := "%5" : FeltVar }]!.get!)["%2"] ←ₛ
+                        getImpl st { name := "data" : BufferVar } (0 : Back)
+                          (0 : ℕ)).felts[{ name := "%2" : FeltVar }]!.get! =
+                (0 : Felt) then
+            (st.set! { name := "data" : BufferVar } (1 : ℕ) st.felts[{ name := "%5" : FeltVar }]!.get!)["%2"] ←ₛ
+              getImpl st { name := "data" : BufferVar } (0 : Back) (0 : ℕ)
+          else
+            withEqZero
+              ((st.set! { name := "data" : BufferVar } (1 : ℕ) st.felts[{ name := "%5" : FeltVar }]!.get!)["%2"] ←ₛ
+                      getImpl st { name := "data" : BufferVar } (0 : Back)
+                        (0 : ℕ)).felts[{ name := "%1" : FeltVar }]!.get!
+              ((st.set! { name := "data" : BufferVar } (1 : ℕ) st.felts[{ name := "%5" : FeltVar }]!.get!)["%2"] ←ₛ
+                getImpl st { name := "data" : BufferVar } (0 : Back) (0 : ℕ)))[felts][{ name := "%0" : FeltVar }] ←
+          (1 : Felt)) ⟦prog⟧)
+      [data0, data1] ↔
+    Code.getReturn (part1_state_update st) [data0, data1]
+
+
+
+
+SECOND ERROR--
+--
+--
+error: ././././Risc0/Gadgets/IsZero/Witness/WeakestPresPart1.lean:58:4: The rfl tactic failed. Possible reasons:
+- The goal is not a reflexive relation (neither `=` nor a relation with a @[refl] lemma).
+- The arguments of the relation are not equal.
+Try using the reflexivity lemma for your relation explicitly, e.g. `exact Eq.refl _` or
+`exact HEq.rfl` etc.
+in0 : Felt
+data0 data1 : Option Felt
+⊢ Code.getReturn
+      (part1_state_update
+        ({
+            buffers :=
+              ((Map.empty[{ name := "data" : BufferVar }] ←ₘ [[none, none]])[{ name := "in" : BufferVar }] ←ₘ
+                      [[some in0]]).drop
+                  { name := "data" : BufferVar }[{ name := "data" : BufferVar }] ←ₘ
+                [[some (if in0 = (0 : Felt) then (1 : Felt) else (0 : Felt)), none]],
+            bufferWidths :=
+              (Map.empty[{ name := "data" : BufferVar }] ←ₘ (2 : ℕ))[{ name := "in" : BufferVar }] ←ₘ (1 : ℕ),
+            cycle := (0 : ℕ),
+            felts :=
+              (Map.empty[{ name := "%1" : FeltVar }] ←ₘ in0)[{ name := "%4" : FeltVar }] ←ₘ
+                if in0 = (0 : Felt) then (1 : Felt) else (0 : Felt),
+            isFailed := False, props := Map.empty,
+            vars :=
+              [{ name := "in" : BufferVar }, { name := "data" : BufferVar }] }[felts][{ name := "%5" : FeltVar }] ←
+          if in0 = (0 : Felt) then (0 : Felt) else in0⁻¹))
+      [data0, data1] ↔
+    sorryAx Prop
+error: Lean exited with code 1
+Some required builds logged failures:
+- Risc0.Gadgets.IsZero.Witness.WeakestPresPart1
+
+State transformer: "
+        ((if
+              ((st.set! { name := "data" : BufferVar } (1 : ℕ) st.felts[{ name := "%5" : FeltVar }]!.get!)["%2"] ←ₛ
+                        getImpl st { name := "data" : BufferVar } (0 : Back)
+                          (0 : ℕ)).felts[{ name := "%2" : FeltVar }]!.get! =
+                (0 : Felt) then
+            (st.set! { name := "data" : BufferVar } (1 : ℕ) st.felts[{ name := "%5" : FeltVar }]!.get!)["%2"] ←ₛ
+              getImpl st { name := "data" : BufferVar } (0 : Back) (0 : ℕ)
+          else
+            withEqZero
+              ((st.set! { name := "data" : BufferVar } (1 : ℕ) st.felts[{ name := "%5" : FeltVar }]!.get!)["%2"] ←ₛ
+                      getImpl st { name := "data" : BufferVar } (0 : Back)
+                        (0 : ℕ)).felts[{ name := "%1" : FeltVar }]!.get!
+              ((st.set! { name := "data" : BufferVar } (1 : ℕ) st.felts[{ name := "%5" : FeltVar }]!.get!)["%2"] ←ₛ
+                getImpl st { name := "data" : BufferVar } (0 : Back) (0 : ℕ)))[felts][{ name := "%0" : FeltVar }] ←
+          (1 : Felt)) "
+Cumulative transformer: "Code.getReturn
+      (part1_state_update
+        ({
+            buffers :=
+              ((Map.empty[{ name := "data" : BufferVar }] ←ₘ [[none, none]])[{ name := "in" : BufferVar }] ←ₘ
+                      [[some in0]]).drop
+                  { name := "data" : BufferVar }[{ name := "data" : BufferVar }] ←ₘ
+                [[some (if in0 = (0 : Felt) then (1 : Felt) else (0 : Felt)), none]],
+            bufferWidths :=
+              (Map.empty[{ name := "data" : BufferVar }] ←ₘ (2 : ℕ))[{ name := "in" : BufferVar }] ←ₘ (1 : ℕ),
+            cycle := (0 : ℕ),
+            felts :=
+              (Map.empty[{ name := "%1" : FeltVar }] ←ₘ in0)[{ name := "%4" : FeltVar }] ←ₘ
+                if in0 = (0 : Felt) then (1 : Felt) else (0 : Felt),
+            isFailed := False, props := Map.empty,
+            vars :=
+              [{ name := "in" : BufferVar }, { name := "data" : BufferVar }] }[felts][{ name := "%5" : FeltVar }] ←
+          if in0 = (0 : Felt) then (0 : Felt) else in0⁻¹))
+      ([data0, data1]) "
+  1 - corrected
+✖ [1942/1948] Building Risc0.Gadgets.IsZero.Witness.WeakestPresPart1
+trace: .> LEAN_PATH=././.lake/packages/batteries/.lake/build/lib:././.lake/packages/Qq/.lake/build/lib:././.lake/packages/aesop/.lake/build/lib:././.lake/packages/proofwidgets/.lake/build/lib:././.lake/packages/Cli/.lake/build/lib:././.lake/packages/importGraph/.lake/build/lib:././.lake/packages/mathlib/.lake/build/lib:././.lake/build/lib LD_LIBRARY_PATH= /home/ferinko/.elan/toolchains/leanprover--lean4---v4.11.0-rc1/bin/lean -Dlinter.deprecated=false -Dlinter.suspiciousUnexpanderPatterns=false -Dlinter.unusedVariables=false -DwarningAsError=true ././././Risc0/Gadgets/IsZero/Witness/WeakestPresPart1.lean -R ./././. -o ././.lake/build/lib/Risc0/Gadgets/IsZero/Witness/WeakestPresPart1.olean -i ././.lake/build/lib/Risc0/Gadgets/IsZero/Witness/WeakestPresPart1.ilean -c ././.lake/build/ir/Risc0/Gadgets/IsZero/Witness/WeakestPresPart1.c --json
+error: ././././Risc0/Gadgets/IsZero/Witness/WeakestPresPart1.lean:63:80: unexpected token '←ₘ'; expected '}'
+error: Lean exited with code 1
+Some required builds logged failures:
+- Risc0.Gadgets.IsZero.Witness.WeakestPresPart1
+  2 - sorry
+✖ [1942/1950] Building Risc0.Gadgets.IsZero.Witness.WeakestPresPart1
+trace: .> LEAN_PATH=././.lake/packages/batteries/.lake/build/lib:././.lake/packages/Qq/.lake/build/lib:././.lake/packages/aesop/.lake/build/lib:././.lake/packages/proofwidgets/.lake/build/lib:././.lake/packages/Cli/.lake/build/lib:././.lake/packages/importGraph/.lake/build/lib:././.lake/packages/mathlib/.lake/build/lib:././.lake/build/lib LD_LIBRARY_PATH= /home/ferinko/.elan/toolchains/leanprover--lean4---v4.11.0-rc1/bin/lean -Dlinter.deprecated=false -Dlinter.suspiciousUnexpanderPatterns=false -Dlinter.unusedVariables=false -DwarningAsError=true ././././Risc0/Gadgets/IsZero/Witness/WeakestPresPart1.lean -R ./././. -o ././.lake/build/lib/Risc0/Gadgets/IsZero/Witness/WeakestPresPart1.olean -i ././.lake/build/lib/Risc0/Gadgets/IsZero/Witness/WeakestPresPart1.ilean -c ././.lake/build/ir/Risc0/Gadgets/IsZero/Witness/WeakestPresPart1.c --json
+error: ././././Risc0/Gadgets/IsZero/Witness/WeakestPresPart1.lean:63:80: unexpected token '←ₘ'; expected '}'
+error: Lean exited with code 1
+Some required builds logged failures:
+- Risc0.Gadgets.IsZero.Witness.WeakestPresPart1
+RECEIVED(witness)-------------
+✖ [1942/1950] Building Risc0.Gadgets.IsZero.Witness.WeakestPresPart1
+trace: .> LEAN_PATH=././.lake/packages/batteries/.lake/build/lib:././.lake/packages/Qq/.lake/build/lib:././.lake/packages/aesop/.lake/build/lib:././.lake/packages/proofwidgets/.lake/build/lib:././.lake/packages/Cli/.lake/build/lib:././.lake/packages/importGraph/.lake/build/lib:././.lake/packages/mathlib/.lake/build/lib:././.lake/build/lib LD_LIBRARY_PATH= /home/ferinko/.elan/toolchains/leanprover--lean4---v4.11.0-rc1/bin/lean -Dlinter.deprecated=false -Dlinter.suspiciousUnexpanderPatterns=false -Dlinter.unusedVariables=false -DwarningAsError=true ././././Risc0/Gadgets/IsZero/Witness/WeakestPresPart1.lean -R ./././. -o ././.lake/build/lib/Risc0/Gadgets/IsZero/Witness/WeakestPresPart1.olean -i ././.lake/build/lib/Risc0/Gadgets/IsZero/Witness/WeakestPresPart1.ilean -c ././.lake/build/ir/Risc0/Gadgets/IsZero/Witness/WeakestPresPart1.c --json
+error: ././././Risc0/Gadgets/IsZero/Witness/WeakestPresPart1.lean:63:80: unexpected token '←ₘ'; expected '}'
+error: Lean exited with code 1
+Some required builds logged failures:
+- Risc0.Gadgets.IsZero.Witness.WeakestPresPart1
+
+FIRST ERROR--
+--
+--
+
+
+
+
+
+SECOND ERROR--
+--
+--
+
