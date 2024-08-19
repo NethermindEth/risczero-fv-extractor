@@ -127,7 +127,7 @@ function witnessWeakestPrePart0(funcName: string, partDrops: IR.DropFelt[][], bu
 		...(stateTransformer === undefined
 			? []
 			: [
-				`  rewrite [←eq]`,
+				`  simp [←eq]`,
 				`  ${getDropEvaluationRewrites(partDrops, 0)}`,
 				`  unfold part0_state_update part0_drops part0_state`,
 				`  rfl`,
@@ -356,7 +356,7 @@ export function codePartsRange(start: number, drops: IR.DropFelt[][], includeFir
 }
 
 function extractStateTransformers(stdout: string, funcName: string, part: number): [stateTransformer: string, cumulativeTransformer: string] {
-  console.log(`RECEIVED(witness)-------------\n${stdout}`)
+  // console.log(`RECEIVED(witness)-------------\n${stdout}`)
 	// console.log(`STDERR----------------\n${stderr.split("\n").join("----\n----")}\n-------------`);
 	const firstErrorStart = stdout.split("\n").findIndex(line => line.includes(`${funcName}/Witness/WeakestPresPart${part}.lean:`) && line.includes("unsolved goals"));
 	// console.log(`First error start line: ${firstErrorStart}`);
@@ -364,8 +364,8 @@ function extractStateTransformers(stdout: string, funcName: string, part: number
 	// console.log(`Second error start line: ${secondErrorStart}`);
 	const firstError = stdout.split("\n").slice(firstErrorStart, secondErrorStart).join("\n");
 	const secondError = stdout.split("\n").slice(secondErrorStart).join("\n");
-	console.log(`FIRST ERROR--\n--\n--\n${firstError}`);
-	console.log(`\n\n\n\nSECOND ERROR--\n--\n--\n${secondError}`);
+	// console.log(`FIRST ERROR--\n--\n--\n${firstError}`);
+	// console.log(`\n\n\n\nSECOND ERROR--\n--\n--\n${secondError}`);
 
 	const gammaIdx = firstError.indexOf("Γ");
 	const codeStart = firstError.indexOf("⟦", gammaIdx);

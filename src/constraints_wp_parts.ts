@@ -369,7 +369,7 @@ export function codePartsRange(start: number, drops: IR.DropFelt[][], includeFir
 }
 
 function extractStateTransformers(stdout: string, funcName: string, part: number): [stateTransformer: string, cumulativeTransformer: string] {
-  console.log(`RECEIVED(constraints)-------------\n${stdout}`)
+  // console.log(`RECEIVED(constraints)-------------\n${stdout}`)
 	// console.log(`STDERR----------------\n${stderr.split("\n").join("----\n----")}\n-------------`);
 	const firstErrorStart = stdout.split("\n").findIndex(line => line.includes(`${funcName}/Constraints/WeakestPresPart${part}.lean:`) && line.includes("unsolved goals"));
 	// console.log(`First error start line: ${firstErrorStart}`);
@@ -377,20 +377,20 @@ function extractStateTransformers(stdout: string, funcName: string, part: number
 	// console.log(`Second error start line: ${secondErrorStart}`);
 	const firstError = stdout.split("\n").slice(firstErrorStart, secondErrorStart).join("\n");
 	const secondError = stdout.split("\n").slice(secondErrorStart).join("\n");
-	console.log(`FIRST ERROR--\n--\n--\n${firstError}`);
-	console.log(`\n\n\n\nSECOND ERROR--\n--\n--\n${secondError}`);
+	// console.log(`FIRST ERROR--\n--\n--\n${firstError}`);
+	// console.log(`\n\n\n\nSECOND ERROR--\n--\n--\n${secondError}`);
 
 	const gammaIdx = firstError.indexOf("Γ");
 	const codeStart = firstError.indexOf("⟦", gammaIdx);
 	const stateTransformer = firstError.slice(gammaIdx+1, codeStart);
 
-  console.log(`\n\n\n\nSTATE TRANSFORMER--\n--\n--\n${stateTransformer}`);
+  // console.log(`\n\n\n\nSTATE TRANSFORMER--\n--\n--\n${stateTransformer}`);
 
 	const getReturnIdx = secondError.indexOf("Code.getReturn");
 	const iffIdx = secondError.indexOf("↔");
 	const cumulativeTransformer = secondError.slice(getReturnIdx, iffIdx);
 
-  console.log(`\n\n\n\nCUMULATIVE STATE TRANSFORMER--\n--\n--\n${cumulativeTransformer}`);
+  // console.log(`\n\n\n\nCUMULATIVE STATE TRANSFORMER--\n--\n--\n${cumulativeTransformer}`);
 
 	if (stateTransformer.trim() === "") {
 		throw "Failed to extract state transformer from lake error message. There is likely an unexpected error";
