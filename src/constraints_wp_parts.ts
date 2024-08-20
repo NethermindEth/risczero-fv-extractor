@@ -402,7 +402,7 @@ function extractStateTransformers(stdout: string, funcName: string, part: number
 }
 
 function extractClosedForm(stdout: string): string {
-  console.log(`closed form:\n\n\n\n ${stdout}\n\n end closed form`)
+  // console.log(`closed form:\n\n\n\n ${stdout}\n\n end closed form`)
 	const startIdx = stdout.indexOf("⊢") + 1;
 	const endIdx = stdout.indexOf("↔")
 	return stdout.slice(startIdx, endIdx);

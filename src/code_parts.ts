@@ -1,6 +1,7 @@
 import * as IR from "./IR";
 
 export function createCodePartsLean(funcName: string, ir: IR.Statement[], linesPerPart: number, witnessOrConstraints: "Witness" | "Constraints"): string {
+  console.log(`HELLO: ${funcName} ir: ${ir}`)
 	const cumulativeParts = getCumulativeParts(ir, linesPerPart);
 	return [
 		`import Risc0.Gadgets.${funcName}.${witnessOrConstraints}.CodeReordered`,

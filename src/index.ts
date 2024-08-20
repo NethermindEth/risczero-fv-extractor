@@ -10,13 +10,13 @@ const cPlusPlusPath = "../risczero-wip";
 const linesPerPart = 4;
 const autoExcludeFiles = true; // Comment out files in Risc0.lean before execution
 const gadgets = [
-	"nonzero-example",
-	"onehot-example1",
-	"onehot-example2",
-	"decode-example",
-	"onehot-example20"
+	// "nonzero-example",
+	// "onehot-example1",
+	// "onehot-example2",
+	"decode-example"
+	// "onehot-example20"
 ];
-const regenerateIR = true;
+const regenerateIR = false;
 const bazel = "bazelisk";
 // const bazel = "bazel";
 
