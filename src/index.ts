@@ -16,7 +16,7 @@ const gadgets = [
 	"decode-example",
 	"onehot-example20"
 ];
-const regenerateIR = true;
+const regenerateIR = false;
 const bazel = "bazelisk";
 // const bazel = "bazel";
 
